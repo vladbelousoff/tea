@@ -9,7 +9,7 @@ ASTNode* create_node(NodeType type, const char *value) {
     }
     
     node->type = type;
-    node->value = value ? strdup(value) : NULL;
+    node->value = value ? _strdup(value) : NULL;
     node->children = NULL;
     node->child_count = 0;
     node->line = 0;
