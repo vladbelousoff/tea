@@ -1,6 +1,7 @@
 #include "tea_lang.h"
 
 #include <rtl_log.h>
+#include <rtl_memory.h>
 
 // Create a new AST node
 ASTNode *create_node(NodeType type, const char *value) {
@@ -43,7 +44,9 @@ void free_ast(ASTNode *node) {
 
     // Free all children first
     for (int i = 0; i < node->child_count; i++) {
-        free_ast(node->children[i]);
+        if (node->children[i]) {
+            free_ast(node->children[i]);
+        }
     }
 
     // Free the children array

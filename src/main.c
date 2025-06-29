@@ -2,6 +2,8 @@
 
 #include <rtl_log.h>
 
+#include "rtl.h"
+
 void print_usage(const char *program_name) {
     rtl_log_inf("Usage: %s [options] <tea_file>\n", program_name);
     rtl_log_inf("Options:\n");
@@ -62,6 +64,8 @@ int main(const int argc, char *argv[]) {
     bool run_tests = false;
     const char *filename = NULL;
 
+    rtl_init();
+
     // Parse command line arguments
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
@@ -86,7 +90,7 @@ int main(const int argc, char *argv[]) {
 
     // Check if filename was provided
     if (!filename) {
-        rtl_log_err("Error: No input file specified\n\n");
+        rtl_log_err("Error: No input file specified\n");
         print_usage(argv[0]);
         return 1;
     }
@@ -99,18 +103,17 @@ int main(const int argc, char *argv[]) {
     }
     fclose(test_file);
 
-    rtl_log_inf("Parsing file: %s\n\n", filename);
+    rtl_log_inf("Parsing file: %s\n", filename);
 
     // Parse the TEA file
     ASTNode *ast = parse_tea_file(filename);
 
     if (ast) {
-        rtl_log_inf("\n=== Abstract Syntax Tree ===\n");
         print_ast(ast, 0);
 
-        rtl_log_inf("\n=== Parsing Summary ===\n");
+        rtl_log_inf("Parsing summary:\n");
         rtl_log_inf("File: %s\n", filename);
-        rtl_log_inf("Status: Successfully parsed\n");
+        rtl_log_inf("Status: successfully parsed\n");
         rtl_log_inf("Root node type: %s\n",
                     ast->type == NODE_PROGRAM ? "PROGRAM" : "OTHER");
         rtl_log_inf("Child nodes: %d\n", ast->child_count);
@@ -118,14 +121,15 @@ int main(const int argc, char *argv[]) {
         // Clean up
         free_ast(ast);
 
-        rtl_log_inf("\nParsing completed successfully!\n");
+        rtl_log_inf("Parsing completed successfully!\n");
+        rtl_cleanup();
         return 0;
-    } else {
-        rtl_log_inf("\n=== Parsing Failed ===\n");
-        rtl_log_inf("File: %s\n", filename);
-        rtl_log_inf("Status: Failed to parse\n");
-        rtl_log_inf("Check the error messages above for details.\n");
-
-        return 1;
     }
+
+    rtl_log_inf("File: %s\n", filename);
+    rtl_log_err("Status: failed to parse\n");
+    rtl_log_inf("Check the error messages above for details.\n");
+
+    rtl_cleanup();
+    return 1;
 }
