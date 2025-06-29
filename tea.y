@@ -1,4 +1,6 @@
 %include {
+    #include <rtl_log.h>
+
     #include <stdio.h>
     #include <stdlib.h>
     #include <string.h>
@@ -46,7 +48,6 @@ program(A) ::= item_list(B). {
         }
     }
     *result = A;
-    printf("Parsed TEA program successfully!\n");
 }
 
 item_list(A) ::= item_list(B) item(C). {

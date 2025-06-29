@@ -55,7 +55,7 @@ add_custom_command(
         lemon_exe
         ${CMAKE_CURRENT_SOURCE_DIR}/tea.y
         ${LEMON_TEMPLATE}
-        COMMENT "Generating simplified TEA parser with Lemon"
+        COMMENT "Generating Tea parser with Lemon"
         VERBATIM
 )
 
@@ -72,7 +72,8 @@ target_include_directories(tea_parser PUBLIC
         include/
 )
 
-# Simplified TEA language implementation - only what we need
+target_link_libraries(tea_parser PUBLIC rtlib::rtlib)
+
 add_library(tea_lang
         src/tokenizer.c
         src/ast.c

@@ -14,7 +14,7 @@ extern void Parse(void *yyp, int yymajor, ASTNode *yyminor, ASTNode **result);
 char *read_file(const char *filename) {
     FILE *file = fopen(filename, "r");
     if (!file) {
-        rtl_log_err(, "Error: Cannot open file '%s'\n", filename);
+        rtl_log_err("Error: Cannot open file '%s'\n", filename);
         return NULL;
     }
 
@@ -26,7 +26,7 @@ char *read_file(const char *filename) {
     // Allocate buffer
     char *buffer = malloc(file_size + 1);
     if (!buffer) {
-        rtl_log_err(, "Error: Cannot allocate memory for file '%s'\n", filename);
+        rtl_log_err("Error: Cannot allocate memory for file '%s'\n", filename);
         fclose(file);
         return NULL;
     }
@@ -44,14 +44,14 @@ ASTNode *parse_tea_string(const char *input) {
     // Create tokenizer
     Tokenizer *tokenizer = tokenizer_create(input);
     if (!tokenizer) {
-        rtl_log_err(, "Error: Failed to create tokenizer\n");
+        rtl_log_err("Error: Failed to create tokenizer\n");
         return NULL;
     }
 
     // Create parser
     void *parser = ParseAlloc(malloc);
     if (!parser) {
-        rtl_log_err(, "Error: Failed to create parser\n");
+        rtl_log_err("Error: Failed to create parser\n");
         tokenizer_free(tokenizer);
         return NULL;
     }
@@ -65,7 +65,7 @@ ASTNode *parse_tea_string(const char *input) {
 
         if (token.type < 0) {
             // Error token
-            rtl_log_err(, "Tokenizer error at line %d, column %d\n", token.line, token.column);
+            rtl_log_err("Tokenizer error at line %d, column %d\n", token.line, token.column);
             parse_error = true;
             break;
         }
@@ -83,7 +83,7 @@ ASTNode *parse_tea_string(const char *input) {
         }
 
         if (!token_node) {
-            rtl_log_err(, "Failed to create token node for token %d\n", token.type);
+            rtl_log_err("Failed to create token node for token %d\n", token.type);
             parse_error = true;
             break;
         }
