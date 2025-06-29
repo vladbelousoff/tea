@@ -1,11 +1,19 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.20)
 
-project(TEA_Language_Simplified)
+project(tea-lang)
 
 set(CMAKE_C_STANDARD 99)
 
 # Include FetchContent for downloading external dependencies
 include(FetchContent)
+
+FetchContent_Declare(
+        rtlib
+        GIT_REPOSITORY https://github.com/vladbelousoff/rtlib.git
+        GIT_TAG 014269c729d83b4b7d6c9ee0619a680f4ca11e88
+)
+
+FetchContent_MakeAvailable(rtlib)
 
 # Download and build Lemon parser generator
 FetchContent_Declare(
@@ -81,7 +89,15 @@ target_link_libraries(tea_lang PUBLIC tea_parser)
 # Main executable for testing the simplified parser
 add_executable(tea src/main.c)
 
-target_link_libraries(tea PRIVATE tea_lang tea_parser)
+target_link_libraries(tea PRIVATE
+        tea_lang
+        tea_parser
+        rtlib::rtlib
+)
+
+target_compile_definitions(rtlib PUBLIC
+        $<$<PLATFORM_ID:Windows>:_CRT_SECURE_NO_WARNINGS>
+)
 
 # Optional: Add custom target for easier grammar regeneration
 add_custom_target(regenerate_parser
