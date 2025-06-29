@@ -84,7 +84,14 @@ target_include_directories(tea_lang PUBLIC
         ${CMAKE_CURRENT_BINARY_DIR}
 )
 
-target_link_libraries(tea_lang PUBLIC tea_parser)
+target_compile_definitions(tea_lang PUBLIC
+        $<$<PLATFORM_ID:Windows>:_CRT_SECURE_NO_WARNINGS>
+)
+
+target_link_libraries(tea_lang PUBLIC
+        tea_parser
+        rtlib::rtlib
+)
 
 # Main executable for testing the simplified parser
 add_executable(tea src/main.c)
@@ -92,11 +99,6 @@ add_executable(tea src/main.c)
 target_link_libraries(tea PRIVATE
         tea_lang
         tea_parser
-        rtlib::rtlib
-)
-
-target_compile_definitions(rtlib PUBLIC
-        $<$<PLATFORM_ID:Windows>:_CRT_SECURE_NO_WARNINGS>
 )
 
 # Optional: Add custom target for easier grammar regeneration
