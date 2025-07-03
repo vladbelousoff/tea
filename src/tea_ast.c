@@ -44,10 +44,6 @@ void tea_ast_node_add_children(tea_ast_node_t *parent, const rtl_list_entry_t *c
 
 void tea_ast_node_free(tea_ast_node_t *node)
 {
-  if (!node) {
-    return;
-  }
-
   rtl_list_entry_t *entry;
   rtl_list_entry_t *safe;
 
@@ -57,13 +53,6 @@ void tea_ast_node_free(tea_ast_node_t *node)
     rtl_list_remove(entry);
     tea_ast_node_free(child);
   }
-
-  // it is handled by lexer
-#if 0
-  if (node->token) {
-    rtl_free(node->token);
-  }
-#endif
 
   rtl_free(node);
 }

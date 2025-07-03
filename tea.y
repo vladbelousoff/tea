@@ -15,7 +15,10 @@
 
 program(A) ::= item_list(B). {
     A = tea_ast_node_create(TEA_AST_NODE_PROGRAM, NULL);
-    if (B) tea_ast_node_add_children(A, &B->children);
+    if (B) {
+        tea_ast_node_add_children(A, &B->children);
+        tea_ast_node_free(B);
+    }
     *result = A;
 }
 
@@ -31,7 +34,10 @@ item_list(A) ::= item(B). {
 
 item(A) ::= attr_list(B) function(C). {
     A = C;
-    if (B) tea_ast_node_add_children(A, &B->children);
+    if (B) {
+        tea_ast_node_add_children(A, &B->children);
+        tea_ast_node_free(B);
+    }
 }
 
 item(A) ::= function(B). { A = B; }
