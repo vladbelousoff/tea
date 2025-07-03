@@ -5,7 +5,7 @@
 #include "tea_ast.h"
 }
 
-%token_type {tea_ast_node_t*}
+%token_type {tea_token_t*}
 %default_type {tea_ast_node_t*}
 %extra_argument {tea_ast_node_t **result}
 
@@ -47,11 +47,11 @@ attr_list(A) ::= attribute(B). {
 }
 
 attribute(A) ::= AT IDENT(B). {
-    A = tea_ast_node_create(TEA_AST_NODE_ATTR, B->token);
+    A = tea_ast_node_create(TEA_AST_NODE_ATTR, B);
 }
 
 function(A) ::= FN IDENT(B) LPAREN param_list(C) RPAREN LBRACE RBRACE. {
-    A = tea_ast_node_create(TEA_AST_NODE_FUNCTION, B->token);
+    A = tea_ast_node_create(TEA_AST_NODE_FUNCTION, B);
     if (C) tea_ast_node_add_child(A, C);
 }
 
@@ -68,8 +68,8 @@ param_list(A) ::= parameter(B). {
 param_list(A) ::= . { A = NULL; }
 
 parameter(A) ::= IDENT(B) COLON IDENT(C). {
-    A = tea_ast_node_create(TEA_AST_NODE_PARAM, B->token);
-    tea_ast_node_add_child(A, tea_ast_node_create(TEA_AST_NODE_PARAM, C->token));
+    A = tea_ast_node_create(TEA_AST_NODE_PARAM, B);
+    tea_ast_node_add_child(A, tea_ast_node_create(TEA_AST_NODE_PARAM, C));
 }
 
 %syntax_error {

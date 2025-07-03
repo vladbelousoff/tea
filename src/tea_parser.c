@@ -17,7 +17,7 @@ static void parser_free(void *ptr)
 
 extern void *ParseAlloc(void *(*cb_malloc)(size_t));
 extern void ParseFree(void *p, void (*cb_free)(void *));
-extern void Parse(void *yyp, int yymajor, tea_ast_node_t *yyminor, tea_ast_node_t **result);
+extern void Parse(void *yyp, int yymajor, tea_token_t *yyminor, tea_ast_node_t **result);
 
 static char *read_file(const char *filename)
 {
@@ -61,8 +61,7 @@ tea_ast_node_t *tea_parse_string(tea_lexer_t *lexer, const char *input)
   rtl_list_for_each(entry, &lexer->tokens)
   {
     tea_token_t *token = rtl_list_record(entry, tea_token_t, link);
-    tea_ast_node_t *node = tea_ast_node_create(TEA_AST_NODE_PROGRAM, token);
-    Parse(parser, token->type, node, &result);
+    Parse(parser, token->type, token, &result);
   }
 
   Parse(parser, 0, NULL, &result);
