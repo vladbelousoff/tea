@@ -75,9 +75,10 @@ target_include_directories(tea_parser PUBLIC
 target_link_libraries(tea_parser PUBLIC rtlib::rtlib)
 
 add_library(tea_lang
-        src/tokenizer.c
-        src/ast.c
-        src/parser.c
+        src/tea_lexer.c
+        src/tea_token.c
+        src/tea_ast.c
+        src/tea_parser.c
 )
 
 target_include_directories(tea_lang PUBLIC
