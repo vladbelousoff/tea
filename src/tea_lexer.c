@@ -31,10 +31,8 @@ void tea_lexer_cleanup(const tea_lexer_t *self)
   rtl_list_for_each_safe(entry, safe, &self->tokens)
   {
     tea_token_t *token = rtl_list_record(entry, tea_token_t, link);
-    rtl_log_dbg("Deallocating token, type: %d, line: %d, column: %d, value: '%s'", token->type,
-      token->line, token->column, token->buffer_size > 0 ? token->buffer : "");
-    rtl_free(token);
     rtl_list_remove(entry);
+    rtl_free(token);
   }
 }
 

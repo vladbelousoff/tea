@@ -1,12 +1,8 @@
-%include {
-    #include <rtl_log.h>
-
-    #include <stdio.h>
-    #include <stdlib.h>
-    #include <string.h>
-    #include <assert.h>
-
-    #include "tea_ast.h"
+%include
+{
+#include <stdlib.h>
+#include <assert.h>
+#include "tea_ast.h"
 }
 
 %token_type {tea_ast_node_t*}
@@ -35,9 +31,7 @@ item_list(A) ::= item(B). {
 
 item(A) ::= attr_list(B) function(C). {
     A = C;
-    if (B) {
-        tea_ast_node_add_children(A, &B->children);
-    }
+    if (B) tea_ast_node_add_children(A, &B->children);
 }
 
 item(A) ::= function(B). { A = B; }

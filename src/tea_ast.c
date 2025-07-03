@@ -5,9 +5,10 @@
 #include <rtl_log.h>
 #include <string.h>
 
-tea_ast_node_t *tea_ast_node_create(const tea_ast_node_type_t type, tea_token_t *token)
+tea_ast_node_t *__tea_ast_node_create(
+  const char *file, const unsigned long line, const tea_ast_node_type_t type, tea_token_t *token)
 {
-  tea_ast_node_t *node = rtl_malloc(sizeof(tea_ast_node_t));
+  tea_ast_node_t *node = __rtl_malloc(file, line, sizeof(*node));
   if (!node) {
     rtl_log_err("Failed to allocate memory for AST node!\n");
     return NULL;
@@ -36,6 +37,7 @@ void tea_ast_node_add_children(tea_ast_node_t *parent, const rtl_list_entry_t *c
   rtl_list_for_each_safe(entry, safe, children)
   {
     tea_ast_node_t *child = rtl_list_record(entry, tea_ast_node_t, link);
+    rtl_list_remove(entry);
     tea_ast_node_add_child(parent, child);
   }
 }
@@ -52,13 +54,16 @@ void tea_ast_node_free(tea_ast_node_t *node)
   rtl_list_for_each_safe(entry, safe, &node->children)
   {
     tea_ast_node_t *child = rtl_list_record(entry, tea_ast_node_t, link);
+    rtl_list_remove(entry);
     tea_ast_node_free(child);
-    // rtl_free(entry);
   }
 
+  // it is handled by lexer
+#if 0
   if (node->token) {
     rtl_free(node->token);
   }
+#endif
 
   rtl_free(node);
 }

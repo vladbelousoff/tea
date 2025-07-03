@@ -46,11 +46,8 @@ static char *read_file(const char *filename)
   return buffer;
 }
 
-tea_ast_node_t *tea_parse_string(const char *input)
+tea_ast_node_t *tea_parse_string(tea_lexer_t *lexer, const char *input)
 {
-  tea_lexer_t lexer;
-  tea_lexer_init(&lexer);
-
   void *parser = ParseAlloc(parser_malloc);
   if (!parser) {
     rtl_log_err("Failed to create parser!\n");
@@ -58,10 +55,10 @@ tea_ast_node_t *tea_parse_string(const char *input)
   }
 
   tea_ast_node_t *result = NULL;
-  tea_lexer_tokenize(&lexer, input);
+  tea_lexer_tokenize(lexer, input);
 
   rtl_list_entry_t *entry;
-  rtl_list_for_each(entry, &lexer.tokens)
+  rtl_list_for_each(entry, &lexer->tokens)
   {
     tea_token_t *token = rtl_list_record(entry, tea_token_t, link);
     tea_ast_node_t *node = tea_ast_node_create(TEA_AST_NODE_PROGRAM, token);
@@ -74,14 +71,14 @@ tea_ast_node_t *tea_parse_string(const char *input)
   return result;
 }
 
-tea_ast_node_t *tea_parse_file(const char *filename)
+tea_ast_node_t *tea_parse_file(tea_lexer_t *lexer, const char *filename)
 {
   char *content = read_file(filename);
   if (!content) {
     return NULL;
   }
 
-  tea_ast_node_t *result = tea_parse_string(content);
+  tea_ast_node_t *result = tea_parse_string(lexer, content);
   rtl_free(content);
 
   return result;
