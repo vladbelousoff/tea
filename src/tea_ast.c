@@ -32,7 +32,8 @@ void tea_ast_node_add_child(tea_ast_node_t *parent, tea_ast_node_t *child)
 void tea_ast_node_add_children(tea_ast_node_t *parent, const rtl_list_entry_t *children)
 {
   rtl_list_entry_t *entry;
-  rtl_list_for_each(entry, children)
+  rtl_list_entry_t *safe;
+  rtl_list_for_each_safe(entry, safe, children)
   {
     tea_ast_node_t *child = rtl_list_record(entry, tea_ast_node_t, link);
     tea_ast_node_add_child(parent, child);
@@ -52,7 +53,7 @@ void tea_ast_node_free(tea_ast_node_t *node)
   {
     tea_ast_node_t *child = rtl_list_record(entry, tea_ast_node_t, link);
     tea_ast_node_free(child);
-    rtl_free(entry);
+    // rtl_free(entry);
   }
 
   if (node->token) {
@@ -91,8 +92,8 @@ void tea_ast_node_print(tea_ast_node_t *node, const int depth)
   printf("%s", get_node_type_name(node->type));
 
   const tea_token_t *token = node->token;
-  if (token) {
-    printf(": %s", token->buffer);
+  if (token && token->buffer_size > 0) {
+    printf(": %*.s", token->buffer_size, token->buffer);
   }
 
   if (token && token->line > 0 && token->column > 0) {

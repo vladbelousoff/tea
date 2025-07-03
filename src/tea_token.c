@@ -15,7 +15,7 @@ static bool equals(const char *a, const char *b, const int n)
   return !strcmp(a, b);
 }
 
-int tea_ident_token_type(const char *ident, const int length)
+int tea_get_ident_token_type(const char *ident, const int length)
 {
   for (int i = 0; tea_keywords[i].keyword; ++i) {
     if (equals(ident, tea_keywords[i].keyword, length)) {

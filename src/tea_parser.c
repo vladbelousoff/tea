@@ -58,9 +58,9 @@ tea_ast_node_t *tea_parse_string(const char *input)
   }
 
   tea_ast_node_t *result = NULL;
-
   tea_lexer_tokenize(&lexer, input);
 
+#if 1
   rtl_list_entry_t *entry;
   rtl_list_for_each(entry, &lexer.tokens)
   {
@@ -70,8 +70,9 @@ tea_ast_node_t *tea_parse_string(const char *input)
   }
 
   Parse(parser, 0, NULL, &result);
-  ParseFree(parser, parser_free);
+#endif
 
+  ParseFree(parser, parser_free);
   return result;
 }
 

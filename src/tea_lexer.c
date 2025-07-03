@@ -61,6 +61,7 @@ static void create_token(
     token->buffer[buffer_size] = EOS;
   }
 
+  rtl_log_dbg("New token: %d, buffer: '%.*s'\n", token_type, buffer_size, buffer);
   rtl_list_add_tail(&self->tokens, &token->link);
 }
 
@@ -204,11 +205,11 @@ static bool scan_ident(tea_lexer_t *self, const char *input)
   return false;
 }
 
-static void report_unknown_character(const tea_lexer_t *self, const char *input)
+static void unknown_character(const tea_lexer_t *self, const char *input)
 {
   const char c = input[self->position];
   if (c != EOS) {
-    rtl_log_err("Unknown character: '%c', line: %d, column: %d, position: %d", c, self->line,
+    rtl_log_err("Unknown character: 0x%d, line: %d, column: %d, position: %d", c, self->line,
       self->column, self->position);
     exit(-1);
   }
@@ -219,7 +220,7 @@ void tea_lexer_tokenize(tea_lexer_t *self, const char *input)
   while (input[self->position] != EOS) {
     skip_whitespaces(self, input);
 
-    if (!scan_single_character(self, input)) {
+    if (scan_single_character(self, input)) {
       continue;
     }
 
@@ -233,10 +234,10 @@ void tea_lexer_tokenize(tea_lexer_t *self, const char *input)
     }
 #endif
 
-    if (!scan_ident(self, input)) {
+    if (scan_ident(self, input)) {
       continue;
     }
 
-    report_unknown_character(self, input);
+    unknown_character(self, input);
   }
 }
