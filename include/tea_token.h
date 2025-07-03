@@ -20,3 +20,4 @@ typedef struct
 } tea_token_t;
 
 int tea_get_ident_token_type(const char *ident, int length);
+const char *tea_get_token_name(int token_type);

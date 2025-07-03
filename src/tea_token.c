@@ -25,3 +25,29 @@ int tea_get_ident_token_type(const char *ident, const int length)
 
   return TEA_TOKEN_IDENT;
 }
+
+const char *tea_get_token_name(const int token_type)
+{
+  switch (token_type) {
+    case TEA_TOKEN_FN:
+      return "FN";
+    case TEA_TOKEN_IDENT:
+      return "IDENT";
+    case TEA_TOKEN_LPAREN:
+      return "LPAREN";
+    case TEA_TOKEN_RPAREN:
+      return "RPAREN";
+    case TEA_TOKEN_LBRACE:
+      return "LBRACE";
+    case TEA_TOKEN_RBRACE:
+      return "RBRACE";
+    case TEA_TOKEN_AT:
+      return "AT";
+    case TEA_TOKEN_COLON:
+      return "COLON";
+    case TEA_TOKEN_COMMA:
+      return "COMMA";
+    default:
+      return NULL;
+  }
+}

@@ -19,9 +19,7 @@
 
 program(A) ::= item_list(B). {
     A = tea_ast_node_create(TEA_AST_NODE_PROGRAM, NULL);
-    if (B) {
-        tea_ast_node_add_children(A, &B->children);
-    }
+    if (B) tea_ast_node_add_children(A, &B->children);
     *result = A;
 }
 
