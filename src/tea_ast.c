@@ -92,8 +92,8 @@ void tea_ast_node_print(tea_ast_node_t *node, const int depth)
   printf("%s", get_node_type_name(node->type));
 
   const tea_token_t *token = node->token;
-  if (token && token->buffer_size > 0) {
-    printf(": %*.s", token->buffer_size, token->buffer);
+  if (token) {
+    printf(": %.*s", token->buffer_size, token->buffer);
   }
 
   if (token && token->line > 0 && token->column > 0) {
