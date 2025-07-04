@@ -68,6 +68,22 @@ static const char *get_node_type_name(const tea_ast_node_type_t type)
       return "PARAM";
     case TEA_AST_NODE_ATTR:
       return "ATTR";
+    case TEA_AST_NODE_STMT:
+      return "STMT";
+    case TEA_AST_NODE_LET:
+      return "LET";
+    case TEA_AST_NODE_LET_MUT:
+      return "LET_MUT";
+    case TEA_AST_NODE_ASSIGN:
+      return "ASSIGN";
+    case TEA_AST_NODE_BINOP:
+      return "BINOP";
+    case TEA_AST_NODE_UNARY:
+      return "UNARY";
+    case TEA_AST_NODE_IDENT:
+      return "IDENT";
+    case TEA_AST_NODE_NUMBER:
+      return "NUMBER";
     default:
       return "UNKNOWN";
   }

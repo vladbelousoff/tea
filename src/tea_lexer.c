@@ -59,7 +59,7 @@ static void create_token(
     token->buffer[buffer_size] = EOS;
   }
 
-  if (token_type == TEA_TOKEN_IDENT) {
+  if (token_type == TEA_TOKEN_IDENT || token_type == TEA_TOKEN_NUMBER) {
     rtl_log_dbg("New token: %.*s\n", buffer_size, buffer);
   } else {
     rtl_log_dbg("New token: <%s>\n", tea_get_token_name(token_type));
@@ -104,6 +104,21 @@ static bool scan_single_character(tea_lexer_t *self, const char *input)
     case ',':
       token_type = TEA_TOKEN_COMMA;
       break;
+    case ';':
+      token_type = TEA_TOKEN_SEMICOLON;
+      break;
+    case '=':
+      token_type = TEA_TOKEN_ASSIGN;
+      break;
+    case '-':
+      token_type = TEA_TOKEN_MINUS;
+      break;
+    case '+':
+      token_type = TEA_TOKEN_PLUS;
+      break;
+    case '*':
+      token_type = TEA_TOKEN_STAR;
+      break;
     case '(':
       token_type = TEA_TOKEN_LPAREN;
       break;
@@ -127,7 +142,7 @@ static bool scan_single_character(tea_lexer_t *self, const char *input)
 
   return true;
 }
-#if 0
+
 static bool scan_number(tea_lexer_t *self, const char *input)
 {
   const char first_char = input[self->position];
@@ -164,7 +179,7 @@ static bool scan_number(tea_lexer_t *self, const char *input)
     const int length = current_position - start_position;
     const char *buffer = &input[start_position];
 
-    create_token(lexer, MINT_TOKEN_ID_NUMBER, buffer, length);
+    create_token(self, TEA_TOKEN_NUMBER, buffer, length);
 
     self->column += length;
     self->position = current_position;
@@ -174,7 +189,6 @@ static bool scan_number(tea_lexer_t *self, const char *input)
 
   return false;
 }
-#endif
 
 static bool scan_ident(tea_lexer_t *self, const char *input)
 {
@@ -227,15 +241,9 @@ void tea_lexer_tokenize(tea_lexer_t *self, const char *input)
       continue;
     }
 
-#if 0
-    if (!scan_number(self, input)) {
+    if (scan_number(self, input)) {
       continue;
     }
-
-    if (!scan_operator(self, input)) {
-      continue;
-    }
-#endif
 
     if (scan_ident(self, input)) {
       continue;
