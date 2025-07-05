@@ -227,7 +227,7 @@ static void unknown_character(const tea_lexer_t *self, const char *input)
 {
   const char c = input[self->position];
   if (c != EOS) {
-    rtl_log_err("Unknown character: 0x%d, line: %d, column: %d, position: %d", c, self->line,
+    rtl_log_err("Unknown character: %c, line: %d, column: %d, position: %d", c, self->line,
       self->column, self->position);
     exit(-1);
   }
