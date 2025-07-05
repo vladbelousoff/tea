@@ -124,14 +124,14 @@ void tea_interp_cleanup(tea_context_t *context)
   context->variables = NULL;
 }
 
-void tea_value_print(const tea_value_t *value)
+void tea_value_print(const char *name, const tea_value_t *value)
 {
   switch (value->type) {
     case TEA_VALUE_FLOAT:
-      printf("%.2f", value->float_value);
+      rtl_log_dbg("%s = %.2f", name, value->float_value);
       break;
     case TEA_VALUE_UNDEFINED:
-      printf("undefined");
+      rtl_log_err("%s is undefined", name);
       break;
   }
 }
@@ -270,9 +270,7 @@ bool tea_interp_execute(tea_context_t *context, tea_ast_node_t *node)
       const bool success = tea_context_set_variable(context, name, value, is_mutable);
 
       if (success) {
-        printf("%s = ", name);
-        tea_value_print(&value);
-        printf("\n");
+        tea_value_print(name, &value);
       }
 
       rtl_free(name);
@@ -301,9 +299,7 @@ bool tea_interp_execute(tea_context_t *context, tea_ast_node_t *node)
       const bool success = tea_context_set_variable(context, name, value, true);
 
       if (success) {
-        printf("%s = ", name);
-        tea_value_print(&value);
-        printf("\n");
+        tea_value_print(name, &value);
       }
 
       rtl_free(name);
