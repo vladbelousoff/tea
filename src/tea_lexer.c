@@ -60,9 +60,9 @@ static void create_token(
   }
 
   if (token_type == TEA_TOKEN_IDENT || token_type == TEA_TOKEN_NUMBER) {
-    rtl_log_dbg("New token: %.*s\n", buffer_size, buffer);
+    rtl_log_dbg("New token: %.*s", buffer_size, buffer);
   } else {
-    rtl_log_dbg("New token: <%s>\n", tea_get_token_name(token_type));
+    rtl_log_dbg("New token: <%s>", tea_get_token_name(token_type));
   }
 
   rtl_list_add_tail(&self->tokens, &token->link);

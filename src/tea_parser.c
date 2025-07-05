@@ -23,7 +23,7 @@ static char *read_file(const char *filename)
 {
   FILE *file = fopen(filename, "r");
   if (!file) {
-    rtl_log_err("Cannot open file '%s'\n", filename);
+    rtl_log_err("Cannot open file '%s'", filename);
     return NULL;
   }
 
@@ -33,7 +33,7 @@ static char *read_file(const char *filename)
 
   char *buffer = rtl_malloc(file_size + 1);
   if (!buffer) {
-    rtl_log_err("Cannot allocate memory for file '%s'\n", filename);
+    rtl_log_err("Cannot allocate memory for file '%s'", filename);
     fclose(file);
     return NULL;
   }
@@ -50,7 +50,7 @@ tea_ast_node_t *tea_parse_string(tea_lexer_t *lexer, const char *input)
 {
   void *parser = ParseAlloc(parser_malloc);
   if (!parser) {
-    rtl_log_err("Failed to create parser!\n");
+    rtl_log_err("Failed to create parser!");
     return NULL;
   }
 

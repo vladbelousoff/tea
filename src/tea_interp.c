@@ -78,7 +78,7 @@ static bool tea_context_set_variable(
 
   if (existing) {
     if (!existing->is_mutable) {
-      rtl_log_err("Cannot assign to immutable variable '%s'\n", name);
+      rtl_log_err("Cannot assign to immutable variable '%s'", name);
       return false;
     }
     existing->value = value;
@@ -103,7 +103,7 @@ static tea_value_t tea_context_get_variable(const tea_context_t *context, const 
     return var->value;
   }
 
-  rtl_log_err("Undefined variable '%s'\n", name);
+  rtl_log_err("Undefined variable '%s'", name);
   return tea_value_create_undefined();
 }
 
@@ -248,7 +248,7 @@ bool tea_interp_execute(tea_context_t *context, tea_ast_node_t *node)
     case TEA_AST_NODE_LET:
     case TEA_AST_NODE_LET_MUT: {
       if (!node->token || node->token->buffer_size == 0) {
-        rtl_log_err("Let statement missing variable name\n");
+        rtl_log_err("Let statement missing variable name");
         return false;
       }
 
@@ -258,7 +258,7 @@ bool tea_interp_execute(tea_context_t *context, tea_ast_node_t *node)
 
       rtl_list_entry_t *entry = rtl_list_first(&node->children);
       if (!entry) {
-        rtl_log_err("Let statement missing expression\n");
+        rtl_log_err("Let statement missing expression");
         rtl_free(name);
         return false;
       }
@@ -280,7 +280,7 @@ bool tea_interp_execute(tea_context_t *context, tea_ast_node_t *node)
     }
     case TEA_AST_NODE_ASSIGN: {
       if (!node->token || node->token->buffer_size == 0) {
-        rtl_log_err("Assignment statement missing variable name\n");
+        rtl_log_err("Assignment statement missing variable name");
         return false;
       }
 
@@ -290,7 +290,7 @@ bool tea_interp_execute(tea_context_t *context, tea_ast_node_t *node)
 
       rtl_list_entry_t *entry = rtl_list_first(&node->children);
       if (!entry) {
-        rtl_log_err("Assignment statement missing expression\n");
+        rtl_log_err("Assignment statement missing expression");
         rtl_free(name);
         return false;
       }

@@ -10,7 +10,7 @@ tea_ast_node_t *_tea_ast_node_create(
 {
   tea_ast_node_t *node = _rtl_malloc(file, line, sizeof(*node));
   if (!node) {
-    rtl_log_err("Failed to allocate memory for AST node!\n");
+    rtl_log_err("Failed to allocate memory for AST node!");
     return NULL;
   }
 
