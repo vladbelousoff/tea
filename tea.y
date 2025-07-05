@@ -165,5 +165,11 @@ primary_expr(A) ::= NUMBER(B). {
 }
 
 %syntax_error {
-    fprintf(stderr, "Syntax error in parser\n");
+    if (yyminor) {
+        fprintf(stderr, "Syntax error: Unexpected token '%.*s' at line %d, column %d\n",
+                yyminor->buffer_size, yyminor->buffer, yyminor->line, yyminor->column);
+        fprintf(stderr, "Token type: %s\n", tea_get_token_name(yymajor));
+    } else {
+        fprintf(stderr, "Syntax error: Unexpected end of input\n");
+    }
 }
