@@ -126,30 +126,27 @@ assign_stmt(A) ::= IDENT(B) ASSIGN expression(C) SEMICOLON. {
 
 expression(A) ::= add_expr(B). { A = B; }
 
-add_expr(A) ::= add_expr(B) PLUS mul_expr(C). {
-    A = tea_ast_node_create(TEA_AST_NODE_BINOP, NULL);
-    if (B) tea_ast_node_add_child(A, B);
-    if (C) tea_ast_node_add_child(A, C);
+add_expr(A) ::= add_expr(B) PLUS(D) mul_expr(C). {
+    A = tea_ast_node_create(TEA_AST_NODE_BINOP, D);
+    tea_ast_node_set_binop_children(A, B, C);
 }
 
-add_expr(A) ::= add_expr(B) MINUS mul_expr(C). {
-    A = tea_ast_node_create(TEA_AST_NODE_BINOP, NULL);
-    if (B) tea_ast_node_add_child(A, B);
-    if (C) tea_ast_node_add_child(A, C);
+add_expr(A) ::= add_expr(B) MINUS(D) mul_expr(C). {
+    A = tea_ast_node_create(TEA_AST_NODE_BINOP, D);
+    tea_ast_node_set_binop_children(A, B, C);
 }
 
 add_expr(A) ::= mul_expr(B). { A = B; }
 
-mul_expr(A) ::= mul_expr(B) STAR unary_expr(C). {
-    A = tea_ast_node_create(TEA_AST_NODE_BINOP, NULL);
-    if (B) tea_ast_node_add_child(A, B);
-    if (C) tea_ast_node_add_child(A, C);
+mul_expr(A) ::= mul_expr(B) STAR(D) unary_expr(C). {
+    A = tea_ast_node_create(TEA_AST_NODE_BINOP, D);
+    tea_ast_node_set_binop_children(A, B, C);
 }
 
 mul_expr(A) ::= unary_expr(B). { A = B; }
 
-unary_expr(A) ::= MINUS unary_expr(B). {
-    A = tea_ast_node_create(TEA_AST_NODE_UNARY, NULL);
+unary_expr(A) ::= MINUS(D) unary_expr(B). {
+    A = tea_ast_node_create(TEA_AST_NODE_UNARY, D);
     if (B) tea_ast_node_add_child(A, B);
 }
 

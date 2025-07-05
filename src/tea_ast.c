@@ -5,10 +5,10 @@
 #include <rtl_log.h>
 #include <string.h>
 
-tea_ast_node_t *__tea_ast_node_create(
+tea_ast_node_t *_tea_ast_node_create(
   const char *file, const unsigned long line, const tea_ast_node_type_t type, tea_token_t *token)
 {
-  tea_ast_node_t *node = __rtl_malloc(file, line, sizeof(*node));
+  tea_ast_node_t *node = _rtl_malloc(file, line, sizeof(*node));
   if (!node) {
     rtl_log_err("Failed to allocate memory for AST node!\n");
     return NULL;
@@ -16,7 +16,14 @@ tea_ast_node_t *__tea_ast_node_create(
 
   node->type = type;
   node->token = token;
-  rtl_list_init(&node->children);
+
+  // Initialize union based on node type
+  if (type == TEA_AST_NODE_BINOP) {
+    node->binop.lhs = NULL;
+    node->binop.rhs = NULL;
+  } else {
+    rtl_list_init(&node->children);
+  }
 
   return node;
 }
@@ -44,14 +51,27 @@ void tea_ast_node_add_children(tea_ast_node_t *parent, const rtl_list_entry_t *c
 
 void tea_ast_node_free(tea_ast_node_t *node)
 {
-  rtl_list_entry_t *entry;
-  rtl_list_entry_t *safe;
+  if (!node) {
+    return;
+  }
 
-  rtl_list_for_each_safe(entry, safe, &node->children)
-  {
-    tea_ast_node_t *child = rtl_list_record(entry, tea_ast_node_t, link);
-    rtl_list_remove(entry);
-    tea_ast_node_free(child);
+  if (node->type == TEA_AST_NODE_BINOP) {
+    if (node->binop.lhs) {
+      tea_ast_node_free(node->binop.lhs);
+    }
+    if (node->binop.rhs) {
+      tea_ast_node_free(node->binop.rhs);
+    }
+  } else {
+    rtl_list_entry_t *entry;
+    rtl_list_entry_t *safe;
+
+    rtl_list_for_each_safe(entry, safe, &node->children)
+    {
+      tea_ast_node_t *child = rtl_list_record(entry, tea_ast_node_t, link);
+      rtl_list_remove(entry);
+      tea_ast_node_free(child);
+    }
   }
 
   rtl_free(node);
@@ -112,10 +132,30 @@ void tea_ast_node_print(tea_ast_node_t *node, const int depth)
 
   printf("\n");
 
-  rtl_list_entry_t *entry;
-  rtl_list_for_each(entry, &node->children)
-  {
-    tea_ast_node_t *child = rtl_list_record(entry, tea_ast_node_t, link);
-    tea_ast_node_print(child, depth + 1);
+  if (node->type == TEA_AST_NODE_BINOP) {
+    if (node->binop.lhs) {
+      tea_ast_node_print(node->binop.lhs, depth + 1);
+    }
+    if (node->binop.rhs) {
+      tea_ast_node_print(node->binop.rhs, depth + 1);
+    }
+  } else {
+    rtl_list_entry_t *entry;
+    rtl_list_for_each(entry, &node->children)
+    {
+      tea_ast_node_t *child = rtl_list_record(entry, tea_ast_node_t, link);
+      tea_ast_node_print(child, depth + 1);
+    }
   }
+}
+
+void tea_ast_node_set_binop_children(
+  tea_ast_node_t *parent, tea_ast_node_t *lhs, tea_ast_node_t *rhs)
+{
+  if (!parent || parent->type != TEA_AST_NODE_BINOP) {
+    return;
+  }
+
+  parent->binop.lhs = lhs;
+  parent->binop.rhs = rhs;
 }

@@ -92,9 +92,10 @@ static void skip_whitespaces(tea_lexer_t *self, const char *input)
 
 static bool scan_single_character(tea_lexer_t *self, const char *input)
 {
-  int token_type;
+  const char c = input[self->position];
 
-  switch (input[self->position]) {
+  int token_type;
+  switch (c) {
     case '@':
       token_type = TEA_TOKEN_AT;
       break;
@@ -135,7 +136,7 @@ static bool scan_single_character(tea_lexer_t *self, const char *input)
       return false;
   }
 
-  create_token(self, token_type, NULL, 0);
+  create_token(self, token_type, &c, 1);
 
   self->column++;
   self->position++;
@@ -148,7 +149,7 @@ static bool scan_number(tea_lexer_t *self, const char *input)
   const char first_char = input[self->position];
 
   if (isdigit(first_char) || (first_char == '.' && isdigit(input[self->position + 1]))) {
-    int start_position = self->position;
+    const int start_position = self->position;
     int current_position = start_position;
     bool is_float = false;
 

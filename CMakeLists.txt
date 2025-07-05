@@ -10,7 +10,7 @@ include(FetchContent)
 FetchContent_Declare(
         rtlib
         GIT_REPOSITORY https://github.com/vladbelousoff/rtlib.git
-        GIT_TAG e8dec97c1507bc40cf782c05d1d4f976e7a05e39
+        GIT_TAG 5e0e2589b0dd6a24f84e8e8ed4ec4a85f47648c2
 )
 
 FetchContent_MakeAvailable(rtlib)
@@ -79,6 +79,7 @@ add_library(tea_lang
         src/tea_token.c
         src/tea_ast.c
         src/tea_parser.c
+        src/tea_interp.c
 )
 
 target_include_directories(tea_lang PUBLIC
@@ -126,4 +127,3 @@ message(STATUS "Features: Functions with empty bodies and attributes only")
 message(STATUS "Lemon parser generator will be built and used to generate TEA parser")
 message(STATUS "Grammar file: ${CMAKE_CURRENT_SOURCE_DIR}/tea.y")
 message(STATUS "Generated parser: ${CMAKE_CURRENT_BINARY_DIR}/tea.c")
-message(STATUS "Example file: ${CMAKE_CURRENT_SOURCE_DIR}/example.tea")
