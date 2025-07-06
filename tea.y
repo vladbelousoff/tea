@@ -13,7 +13,7 @@
 %token FN IDENT LPAREN RPAREN LBRACE RBRACE.
 %token AT COLON COMMA.
 %token LET MUT SEMICOLON ASSIGN.
-%token MINUS PLUS STAR.
+%token MINUS PLUS STAR SLASH.
 %token NUMBER.
 
 program(A) ::= item_list(B). {
@@ -139,6 +139,11 @@ add_expr(A) ::= add_expr(B) MINUS(D) mul_expr(C). {
 add_expr(A) ::= mul_expr(B). { A = B; }
 
 mul_expr(A) ::= mul_expr(B) STAR(D) unary_expr(C). {
+    A = tea_ast_node_create(TEA_AST_NODE_BINOP, D);
+    tea_ast_node_set_binop_children(A, B, C);
+}
+
+mul_expr(A) ::= mul_expr(B) SLASH(D) unary_expr(C). {
     A = tea_ast_node_create(TEA_AST_NODE_BINOP, D);
     tea_ast_node_set_binop_children(A, B, C);
 }

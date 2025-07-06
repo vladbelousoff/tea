@@ -39,8 +39,14 @@ static tea_value_t tea_value_binop(
         return tea_value_create_float(left.float_value - right.float_value);
       case TEA_TOKEN_STAR:
         return tea_value_create_float(left.float_value * right.float_value);
+      case TEA_TOKEN_SLASH:
+        if (right.float_value == 0.0f) {
+          rtl_log_err("Division by zero!");
+          break;
+        }
+        return tea_value_create_float(left.float_value / right.float_value);
       default:
-        return tea_value_create_undefined();
+        break;
     }
   }
 

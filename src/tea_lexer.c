@@ -120,6 +120,9 @@ static bool scan_single_character(tea_lexer_t *self, const char *input)
     case '*':
       token_type = TEA_TOKEN_STAR;
       break;
+    case '/':
+      token_type = TEA_TOKEN_SLASH;
+      break;
     case '(':
       token_type = TEA_TOKEN_LPAREN;
       break;

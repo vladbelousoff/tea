@@ -66,6 +66,8 @@ const char *tea_get_token_name(const int token_type)
       return "PLUS";
     case TEA_TOKEN_STAR:
       return "STAR";
+    case TEA_TOKEN_SLASH:
+      return "SLASH";
     case TEA_TOKEN_NUMBER:
       return "NUMBER";
     default:
