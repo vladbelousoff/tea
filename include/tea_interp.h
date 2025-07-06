@@ -32,4 +32,4 @@ void tea_interp_init(tea_context_t *context);
 void tea_interp_cleanup(tea_context_t *context);
 bool tea_interp_execute(tea_context_t *context, tea_ast_node_t *node);
 tea_value_t tea_interp_evaluate(tea_context_t *context, tea_ast_node_t *node);
-void tea_value_print(const tea_value_t *value); 
+void tea_value_print(const char *name, const tea_value_t *value);

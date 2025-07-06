@@ -1,12 +1,13 @@
 #include "tea_interp.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "rtl_log.h"
 #include "rtl_memory.h"
+#include "tea.h"
 #include "tea_token.h"
 
-// Helper function to create a value
 static tea_value_t tea_value_create_float(const float value)
 {
   tea_value_t result = { 0 };
@@ -22,8 +23,8 @@ static tea_value_t tea_value_create_undefined()
   return result;
 }
 
-// Helper function to perform binary operations
-static tea_value_t tea_value_binop(const tea_value_t left, const tea_value_t right, const char *op)
+static tea_value_t tea_value_binop(
+  const tea_value_t left, const tea_value_t right, const tea_token_t *op)
 {
   if (left.type == TEA_VALUE_UNDEFINED || right.type == TEA_VALUE_UNDEFINED) {
     return tea_value_create_undefined();
@@ -31,14 +32,15 @@ static tea_value_t tea_value_binop(const tea_value_t left, const tea_value_t rig
 
   // Both operands should be floats
   if (left.type == TEA_VALUE_FLOAT && right.type == TEA_VALUE_FLOAT) {
-    if (strcmp(op, "+") == 0) {
-      return tea_value_create_float(left.float_value + right.float_value);
-    }
-    if (strcmp(op, "-") == 0) {
-      return tea_value_create_float(left.float_value - right.float_value);
-    }
-    if (strcmp(op, "*") == 0) {
-      return tea_value_create_float(left.float_value * right.float_value);
+    switch (op->type) {
+      case TEA_TOKEN_PLUS:
+        return tea_value_create_float(left.float_value + right.float_value);
+      case TEA_TOKEN_MINUS:
+        return tea_value_create_float(left.float_value - right.float_value);
+      case TEA_TOKEN_STAR:
+        return tea_value_create_float(left.float_value * right.float_value);
+      default:
+        return tea_value_create_undefined();
     }
   }
 
@@ -185,15 +187,9 @@ static tea_value_t tea_interp_evaluate_expression(tea_context_t *context, tea_as
       const tea_value_t lhs_val = tea_interp_evaluate_expression(context, node->binop.lhs);
       const tea_value_t rhs_val = tea_interp_evaluate_expression(context, node->binop.rhs);
 
-      // Now we can use the operator token stored in the AST node
-      if (node->token && node->token->buffer_size > 0) {
-        char *op = rtl_malloc(node->token->buffer_size + 1);
-        memcpy(op, node->token->buffer, node->token->buffer_size);
-        op[node->token->buffer_size] = '\0';
-
-        const tea_value_t result = tea_value_binop(lhs_val, rhs_val, op);
-        rtl_free(op);
-        return result;
+      const tea_token_t *token = node->token;
+      if (token) {
+        return tea_value_binop(lhs_val, rhs_val, token);
       }
 
       return tea_value_create_undefined();
