@@ -1,15 +1,24 @@
 @export
+@debug
 fn fibonacci(n: i32) {
 }
 
+@server_only
 fn calculate(value: i32, multiplier: i32) {
 }
 
+@client_only
 fn hello() {
 }
 
-@inline
+@test
 fn process(data: string, count: i32, flag: bool) {
+}
+
+@debug
+@tickable
+fn update(dt: float) {
+
 }
 
 let mut x = 100;
