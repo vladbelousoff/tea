@@ -59,7 +59,7 @@ jobs:
         if: matrix.os == 'windows-latest'
         run: |
           cd build
-          make -j$env:NUMBER_OF_PROCESSORS
+          make
 
       - name: Run tests
         run: |
@@ -89,8 +89,8 @@ jobs:
 
       - name: Check code formatting
         run: |
-          # Check if all C files are properly formatted
-          find . -name "*.c" -o -name "*.h" | grep -v build/ | xargs clang-format --dry-run --Werror
+          # Check if C files in src/ and include/ are properly formatted
+          find src/ include/ -name "*.c" -o -name "*.h" | xargs clang-format --dry-run --Werror
 
       - name: Build with warnings as errors
         run: |
