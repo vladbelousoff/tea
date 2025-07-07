@@ -150,5 +150,4 @@ if (CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
                 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         )
     endforeach ()
-
 endif ()
