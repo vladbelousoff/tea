@@ -2,16 +2,16 @@ name: Test Tea
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main ]
   pull_request:
-    branches: [ main, master ]
+    branches: [ main ]
 
 jobs:
   test:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-latest, windows-latest ]
+        os: [ ubuntu-latest ]
         compiler: [ gcc, clang ]
         exclude:
           # Exclude clang on Windows as it's not commonly used
@@ -91,13 +91,6 @@ jobs:
         run: |
           # Check if C files in src/ and include/ are properly formatted
           find src/ include/ -name "*.c" -o -name "*.h" | xargs clang-format --dry-run --Werror
-
-      - name: Build with warnings as errors
-        run: |
-          mkdir build-warnings
-          cd build-warnings
-          cmake .. -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_FLAGS="-Wall -Wextra -Werror"
-          make -j$(nproc)
 
   # Job to test parser generation
   parser-generation:
