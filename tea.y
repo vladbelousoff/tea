@@ -362,14 +362,6 @@ primary_expr(primary_expr_node) ::= NUMBER(number_value). {
     primary_expr_node = tea_ast_node_create(TEA_AST_NODE_NUMBER, number_value);
 }
 
-
-
-
-
-
-
-
-
 %syntax_error {
     if (yyminor) {
         rtl_log_err("Syntax error: Unexpected token <%s> '%.*s' at line %d, column %d",
