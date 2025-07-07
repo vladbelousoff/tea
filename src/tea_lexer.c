@@ -91,6 +91,54 @@ static void skip_whitespaces(tea_lexer_t *self, const char *input)
   }
 }
 
+static bool scan_comments(tea_lexer_t *self, const char *input)
+{
+  if (input[self->position] == '/') {
+    int position = self->position + 2;
+    switch (input[self->position + 1]) {
+      case '*':
+        while (true) {
+          if (input[position] == 0) {
+            self->position = position;
+            return true;
+          }
+          if (input[position] == EOL) {
+            position++;
+            self->line++;
+            self->column = 1;
+          } else if (input[position] == '*' && input[position + 1] == '/') {
+            // The section is correct, just return true
+            self->position = position + 2;
+            self->column += 2;
+            return true;
+          } else {
+            position++;
+            self->column++;
+          }
+        }
+      case '/':
+        while (true) {
+          if (input[position] == 0) {
+            self->position = position;
+            return true;
+          }
+          if (input[position] == EOL) {
+            self->line += 1;
+            self->column = 1;
+            self->position = position + 1;
+            return true;
+          }
+          position++;
+          self->column++;
+        }
+      default:
+        return false;
+    }
+  }
+
+  return false;
+}
+
 static bool scan_operator(tea_lexer_t *self, const char *input)
 {
   int token_length = 1;
@@ -236,8 +284,13 @@ static void unknown_character(const tea_lexer_t *self, const char *input)
 {
   const char c = input[self->position];
   if (c != EOS) {
-    rtl_log_err("Unknown character: %c, line: %d, column: %d, position: %d", c, self->line,
-      self->column, self->position);
+    if (c != EOL) {
+      rtl_log_err("Unknown character: %c, line: %d, column: %d, position: %d", c, self->line,
+        self->column, self->position);
+    } else {
+      rtl_log_err("Unknown character: <EOL>, line: %d, column: %d, position: %d", self->line,
+        self->column, self->position);
+    }
     exit(-1);
   }
 }
@@ -246,6 +299,10 @@ void tea_lexer_tokenize(tea_lexer_t *self, const char *input)
 {
   while (input[self->position] != EOS) {
     skip_whitespaces(self, input);
+
+    if (scan_comments(self, input)) {
+      continue;
+    }
 
     if (scan_operator(self, input)) {
       continue;

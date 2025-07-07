@@ -60,14 +60,13 @@ int main(const int argc, char *argv[])
   tea_lexer_init(&lexer);
   tea_ast_node_t *ast = tea_parse_file(&lexer, filename);
 
+  rtl_log_dbg("Parsing summary:");
+  rtl_log_dbg("File: %s", filename);
+  rtl_log_dbg("Status: successfully parsed");
+
   if (ast) {
     tea_ast_node_print(ast, 0);
-
-    rtl_log_dbg("Parsing summary:");
-    rtl_log_dbg("File: %s", filename);
-    rtl_log_dbg("Status: successfully parsed");
     rtl_log_dbg("Root node type: %s", ast->type == TEA_AST_NODE_PROGRAM ? "PROGRAM" : "OTHER");
-    rtl_log_dbg("Parsing completed successfully!");
 
 #if 0
     // Execute the script
@@ -83,23 +82,15 @@ int main(const int argc, char *argv[])
     }
 
     tea_interp_cleanup(&context);
-#else
-    const bool execution_success = 1;
 #endif
+
     tea_ast_node_free(ast);
-
-    tea_lexer_cleanup(&lexer);
-    rtl_cleanup();
-
-    return execution_success ? 0 : 1;
   }
 
-  rtl_log_inf("File: %s", filename);
-  rtl_log_err("Status: failed to parse");
-  rtl_log_inf("Check the error messages above for details.");
+  rtl_log_dbg("Parsing completed successfully!");
 
   tea_lexer_cleanup(&lexer);
   rtl_cleanup();
 
-  return 1;
+  return 0;
 }

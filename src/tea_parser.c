@@ -56,6 +56,7 @@ tea_ast_node_t *tea_parse_string(tea_lexer_t *lexer, const char *input)
 
   tea_ast_node_t *result = NULL;
   tea_lexer_tokenize(lexer, input);
+  const bool is_lexer_empty = rtl_list_empty(&lexer->tokens);
 
   rtl_list_entry_t *entry;
   rtl_list_for_each(entry, &lexer->tokens)
@@ -64,7 +65,10 @@ tea_ast_node_t *tea_parse_string(tea_lexer_t *lexer, const char *input)
     Parse(parser, token->type, token, &result);
   }
 
-  Parse(parser, 0, NULL, &result);
+  if (!is_lexer_empty) {
+    Parse(parser, 0, NULL, &result);
+  }
+
   ParseFree(parser, parser_free);
 
   return result;
