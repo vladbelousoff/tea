@@ -24,6 +24,7 @@ typedef enum
   TEA_AST_NODE_IF,
   TEA_AST_NODE_THEN,
   TEA_AST_NODE_ELSE,
+  TEA_AST_NODE_WHILE,
 } tea_ast_node_type_t;
 
 typedef struct tea_ast_node

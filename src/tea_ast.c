@@ -114,6 +114,8 @@ static const char *get_node_type_name(const tea_ast_node_type_t type)
       return "THEN";
     case TEA_AST_NODE_ELSE:
       return "ELSE";
+    case TEA_AST_NODE_WHILE:
+      return "WHILE";
     default:
       return "UNKNOWN";
   }

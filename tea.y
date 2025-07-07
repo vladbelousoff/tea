@@ -21,7 +21,7 @@
 %token NUMBER.
 %token NATIVE.
 %token ARROW.
-%token IF ELSE.
+%token IF ELSE WHILE.
 
 program(A) ::= item_list(B). {
     A = tea_ast_node_create(TEA_AST_NODE_PROGRAM, NULL);
@@ -134,6 +134,7 @@ statement(A) ::= let_stmt(B). { A = B; }
 statement(A) ::= assign_stmt(B). { A = B; }
 statement(A) ::= return_stmt(B). { A = B; }
 statement(A) ::= if_stmt(B). { A = B; }
+statement(A) ::= while_stmt(B). { A = B; }
 
 let_stmt(A) ::= LET IDENT(B) type_annotation_opt(C) ASSIGN expression(D) SEMICOLON. {
     A = tea_ast_node_create(TEA_AST_NODE_LET, B);
@@ -178,6 +179,12 @@ if_stmt(A) ::= IF expression(B) LBRACE stmt_list_opt(C) RBRACE ELSE LBRACE stmt_
     tea_ast_node_t *else_node = tea_ast_node_create(TEA_AST_NODE_ELSE, NULL);
     if (D) tea_ast_node_add_child(else_node, D);
     tea_ast_node_add_child(A, else_node);
+}
+
+while_stmt(A) ::= WHILE expression(B) LBRACE stmt_list_opt(C) RBRACE. {
+    A = tea_ast_node_create(TEA_AST_NODE_WHILE, NULL);
+    if (B) tea_ast_node_add_child(A, B);
+    if (C) tea_ast_node_add_child(A, C);
 }
 
 expression(A) ::= comp_expr(B). { A = B; }
