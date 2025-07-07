@@ -63,11 +63,11 @@ int main(const int argc, char *argv[])
   if (ast) {
     tea_ast_node_print(ast, 0);
 
-    rtl_log_inf("Parsing summary:");
-    rtl_log_inf("File: %s", filename);
-    rtl_log_inf("Status: successfully parsed");
-    rtl_log_inf("Root node type: %s", ast->type == TEA_AST_NODE_PROGRAM ? "PROGRAM" : "OTHER");
-    rtl_log_inf("Parsing completed successfully!");
+    rtl_log_dbg("Parsing summary:");
+    rtl_log_dbg("File: %s", filename);
+    rtl_log_dbg("Status: successfully parsed");
+    rtl_log_dbg("Root node type: %s", ast->type == TEA_AST_NODE_PROGRAM ? "PROGRAM" : "OTHER");
+    rtl_log_dbg("Parsing completed successfully!");
 
 #if 0
     // Execute the script
