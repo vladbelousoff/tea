@@ -23,233 +23,233 @@
 %token ARROW.
 %token IF ELSE WHILE.
 
-program(A) ::= item_list(B). {
-    A = tea_ast_node_create(TEA_AST_NODE_PROGRAM, NULL);
-    if (B) {
-        tea_ast_node_add_children(A, &B->children);
-        tea_ast_node_free(B);
+program(program_node) ::= item_list(items). {
+    program_node = tea_ast_node_create(TEA_AST_NODE_PROGRAM, NULL);
+    if (items) {
+        tea_ast_node_add_children(program_node, &items->children);
+        tea_ast_node_free(items);
     }
-    *result = A;
+    *result = program_node;
 }
 
-item_list(A) ::= item_list(B) item(C). {
-    A = B ? B : tea_ast_node_create(TEA_AST_NODE_PROGRAM, NULL);
-    if (C) tea_ast_node_add_child(A, C);
+item_list(item_list_node) ::= item_list(existing_items) item(new_item). {
+    item_list_node = existing_items ? existing_items : tea_ast_node_create(TEA_AST_NODE_PROGRAM, NULL);
+    if (new_item) tea_ast_node_add_child(item_list_node, new_item);
 }
 
-item_list(A) ::= item(B). {
-    A = tea_ast_node_create(TEA_AST_NODE_PROGRAM, NULL);
-    if (B) tea_ast_node_add_child(A, B);
+item_list(item_list_node) ::= item(single_item). {
+    item_list_node = tea_ast_node_create(TEA_AST_NODE_PROGRAM, NULL);
+    if (single_item) tea_ast_node_add_child(item_list_node, single_item);
 }
 
-item(A) ::= attr_list(B) function(C). {
-    A = C;
-    if (B) {
-        tea_ast_node_add_children(A, &B->children);
-        tea_ast_node_free(B);
+item(item_node) ::= attr_list(attrs) function(func). {
+    item_node = func;
+    if (attrs) {
+        tea_ast_node_add_children(item_node, &attrs->children);
+        tea_ast_node_free(attrs);
     }
 }
 
-item(A) ::= function(B). { A = B; }
+item(item_node) ::= function(func). { item_node = func; }
 
-item(A) ::= native_function(B). { A = B; }
+item(item_node) ::= native_function(native_func). { item_node = native_func; }
 
-item(A) ::= statement(B). { A = B; }
+item(item_node) ::= statement(stmt). { item_node = stmt; }
 
-attr_list(A) ::= attr_list(B) attribute(C). {
-    A = B ? B : tea_ast_node_create(TEA_AST_NODE_ATTR, NULL);
-    if (C) tea_ast_node_add_child(A, C);
+attr_list(attr_list_node) ::= attr_list(existing_attrs) attribute(new_attr). {
+    attr_list_node = existing_attrs ? existing_attrs : tea_ast_node_create(TEA_AST_NODE_ATTR, NULL);
+    if (new_attr) tea_ast_node_add_child(attr_list_node, new_attr);
 }
 
-attr_list(A) ::= attribute(B). {
-    A = tea_ast_node_create(TEA_AST_NODE_ATTR, NULL);
-    if (B) tea_ast_node_add_child(A, B);
+attr_list(attr_list_node) ::= attribute(single_attr). {
+    attr_list_node = tea_ast_node_create(TEA_AST_NODE_ATTR, NULL);
+    if (single_attr) tea_ast_node_add_child(attr_list_node, single_attr);
 }
 
-attribute(A) ::= AT IDENT(B). {
-    A = tea_ast_node_create(TEA_AST_NODE_ATTR, B);
+attribute(attr_node) ::= AT IDENT(attr_name). {
+    attr_node = tea_ast_node_create(TEA_AST_NODE_ATTR, attr_name);
 }
 
-function(A) ::= FN IDENT(B) LPAREN param_list_opt(C) RPAREN return_type_opt(D) LBRACE stmt_list_opt(E) RBRACE. {
-    A = tea_ast_node_create(TEA_AST_NODE_FUNCTION, B);
-    if (C) tea_ast_node_add_child(A, C);
-    if (D) tea_ast_node_add_child(A, D);
-    if (E) tea_ast_node_add_child(A, E);
+function(func_node) ::= FN IDENT(func_name) LPAREN param_list_opt(params) RPAREN return_type_opt(return_type) LBRACE stmt_list_opt(body) RBRACE. {
+    func_node = tea_ast_node_create(TEA_AST_NODE_FUNCTION, func_name);
+    if (params) tea_ast_node_add_child(func_node, params);
+    if (return_type) tea_ast_node_add_child(func_node, return_type);
+    if (body) tea_ast_node_add_child(func_node, body);
 }
 
-native_function(A) ::= NATIVE FN IDENT(B) LPAREN param_list_opt(C) RPAREN return_type_opt(D) SEMICOLON. {
-    A = tea_ast_node_create(TEA_AST_NODE_NATIVE_FUNCTION, B);
-    if (C) tea_ast_node_add_child(A, C);
-    if (D) tea_ast_node_add_child(A, D);
+native_function(native_func_node) ::= NATIVE FN IDENT(func_name) LPAREN param_list_opt(params) RPAREN return_type_opt(return_type) SEMICOLON. {
+    native_func_node = tea_ast_node_create(TEA_AST_NODE_NATIVE_FUNCTION, func_name);
+    if (params) tea_ast_node_add_child(native_func_node, params);
+    if (return_type) tea_ast_node_add_child(native_func_node, return_type);
 }
 
-param_list_opt(A) ::= param_list(B). { A = B; }
-param_list_opt(A) ::= . { A = NULL; }
+param_list_opt(param_list_node) ::= param_list(params). { param_list_node = params; }
+param_list_opt(param_list_node) ::= . { param_list_node = NULL; }
 
-return_type_opt(A) ::= ARROW IDENT(B). { A = tea_ast_node_create(TEA_AST_NODE_IDENT, B); }
-return_type_opt(A) ::= . { A = NULL; }
+return_type_opt(return_type_node) ::= ARROW IDENT(type_name). { return_type_node = tea_ast_node_create(TEA_AST_NODE_IDENT, type_name); }
+return_type_opt(return_type_node) ::= . { return_type_node = NULL; }
 
-type_annotation_opt(A) ::= COLON IDENT(B). { A = tea_ast_node_create(TEA_AST_NODE_IDENT, B); }
-type_annotation_opt(A) ::= . { A = NULL; }
+type_annotation_opt(type_annotation_node) ::= COLON IDENT(type_name). { type_annotation_node = tea_ast_node_create(TEA_AST_NODE_IDENT, type_name); }
+type_annotation_opt(type_annotation_node) ::= . { type_annotation_node = NULL; }
 
-stmt_list_opt(A) ::= stmt_list(B). { A = B; }
-stmt_list_opt(A) ::= . { A = NULL; }
+stmt_list_opt(stmt_list_node) ::= stmt_list(stmts). { stmt_list_node = stmts; }
+stmt_list_opt(stmt_list_node) ::= . { stmt_list_node = NULL; }
 
-else_opt(A) ::= ELSE LBRACE stmt_list_opt(B) RBRACE. {
-    A = tea_ast_node_create(TEA_AST_NODE_ELSE, NULL);
-    if (B) tea_ast_node_add_child(A, B);
+else_opt(else_body_node) ::= ELSE LBRACE stmt_list_opt(else_stmts) RBRACE. {
+    else_body_node = tea_ast_node_create(TEA_AST_NODE_ELSE, NULL);
+    if (else_stmts) tea_ast_node_add_child(else_body_node, else_stmts);
 }
 
-else_opt(A) ::= . { A = NULL; }
+else_opt(else_body_node) ::= . { else_body_node = NULL; }
 
-param_list(A) ::= param_list(B) COMMA parameter(C). {
-    A = B ? B : tea_ast_node_create(TEA_AST_NODE_PARAM, NULL);
-    if (C) tea_ast_node_add_child(A, C);
+param_list(param_list_node) ::= param_list(existing_params) COMMA parameter(new_param). {
+    param_list_node = existing_params ? existing_params : tea_ast_node_create(TEA_AST_NODE_PARAM, NULL);
+    if (new_param) tea_ast_node_add_child(param_list_node, new_param);
 }
 
-param_list(A) ::= parameter(B). {
-    A = tea_ast_node_create(TEA_AST_NODE_PARAM, NULL);
-    if (B) tea_ast_node_add_child(A, B);
+param_list(param_list_node) ::= parameter(single_param). {
+    param_list_node = tea_ast_node_create(TEA_AST_NODE_PARAM, NULL);
+    if (single_param) tea_ast_node_add_child(param_list_node, single_param);
 }
 
-parameter(A) ::= IDENT(B) COLON IDENT(C). {
-    A = tea_ast_node_create(TEA_AST_NODE_PARAM, B);
-    tea_ast_node_add_child(A, tea_ast_node_create(TEA_AST_NODE_PARAM, C));
+parameter(param_node) ::= IDENT(param_name) COLON IDENT(param_type). {
+    param_node = tea_ast_node_create(TEA_AST_NODE_PARAM, param_name);
+    tea_ast_node_add_child(param_node, tea_ast_node_create(TEA_AST_NODE_PARAM, param_type));
 }
 
-arg_list(A) ::= arg_list(B) COMMA expression(C). {
-    A = B ? B : tea_ast_node_create(TEA_AST_NODE_STMT, NULL);
-    if (C) tea_ast_node_add_child(A, C);
+arg_list(arg_list_node) ::= arg_list(existing_args) COMMA expression(new_arg). {
+    arg_list_node = existing_args ? existing_args : tea_ast_node_create(TEA_AST_NODE_STMT, NULL);
+    if (new_arg) tea_ast_node_add_child(arg_list_node, new_arg);
 }
 
-arg_list(A) ::= expression(B). {
-    A = tea_ast_node_create(TEA_AST_NODE_STMT, NULL);
-    if (B) tea_ast_node_add_child(A, B);
+arg_list(arg_list_node) ::= expression(single_arg). {
+    arg_list_node = tea_ast_node_create(TEA_AST_NODE_STMT, NULL);
+    if (single_arg) tea_ast_node_add_child(arg_list_node, single_arg);
 }
 
-stmt_list(A) ::= stmt_list(B) statement(C). {
-    A = B ? B : tea_ast_node_create(TEA_AST_NODE_STMT, NULL);
-    if (C) tea_ast_node_add_child(A, C);
+stmt_list(stmt_list_node) ::= stmt_list(existing_stmts) statement(new_stmt). {
+    stmt_list_node = existing_stmts ? existing_stmts : tea_ast_node_create(TEA_AST_NODE_STMT, NULL);
+    if (new_stmt) tea_ast_node_add_child(stmt_list_node, new_stmt);
 }
 
-stmt_list(A) ::= statement(B). {
-    A = tea_ast_node_create(TEA_AST_NODE_STMT, NULL);
-    if (B) tea_ast_node_add_child(A, B);
+stmt_list(stmt_list_node) ::= statement(single_stmt). {
+    stmt_list_node = tea_ast_node_create(TEA_AST_NODE_STMT, NULL);
+    if (single_stmt) tea_ast_node_add_child(stmt_list_node, single_stmt);
 }
 
-statement(A) ::= let_stmt(B). { A = B; }
-statement(A) ::= assign_stmt(B). { A = B; }
-statement(A) ::= return_stmt(B). { A = B; }
-statement(A) ::= if_stmt(B). { A = B; }
-statement(A) ::= while_stmt(B). { A = B; }
+statement(stmt_node) ::= let_stmt(let_stmt_node). { stmt_node = let_stmt_node; }
+statement(stmt_node) ::= assign_stmt(assign_stmt_node). { stmt_node = assign_stmt_node; }
+statement(stmt_node) ::= return_stmt(return_stmt_node). { stmt_node = return_stmt_node; }
+statement(stmt_node) ::= if_stmt(if_stmt_node). { stmt_node = if_stmt_node; }
+statement(stmt_node) ::= while_stmt(while_stmt_node). { stmt_node = while_stmt_node; }
 
-let_stmt(A) ::= LET IDENT(B) type_annotation_opt(C) ASSIGN expression(D) SEMICOLON. {
-    A = tea_ast_node_create(TEA_AST_NODE_LET, B);
-    if (C) tea_ast_node_add_child(A, C);
-    if (D) tea_ast_node_add_child(A, D);
+let_stmt(let_stmt_node) ::= LET IDENT(var_name) type_annotation_opt(type_annot) ASSIGN expression(init_expr) SEMICOLON. {
+    let_stmt_node = tea_ast_node_create(TEA_AST_NODE_LET, var_name);
+    if (type_annot) tea_ast_node_add_child(let_stmt_node, type_annot);
+    if (init_expr) tea_ast_node_add_child(let_stmt_node, init_expr);
 }
 
-let_stmt(A) ::= LET MUT IDENT(B) type_annotation_opt(C) ASSIGN expression(D) SEMICOLON. {
-    A = tea_ast_node_create(TEA_AST_NODE_LET_MUT, B);
-    if (C) tea_ast_node_add_child(A, C);
-    if (D) tea_ast_node_add_child(A, D);
+let_stmt(let_stmt_node) ::= LET MUT IDENT(var_name) type_annotation_opt(type_annot) ASSIGN expression(init_expr) SEMICOLON. {
+    let_stmt_node = tea_ast_node_create(TEA_AST_NODE_LET_MUT, var_name);
+    if (type_annot) tea_ast_node_add_child(let_stmt_node, type_annot);
+    if (init_expr) tea_ast_node_add_child(let_stmt_node, init_expr);
 }
 
-assign_stmt(A) ::= IDENT(B) ASSIGN expression(C) SEMICOLON. {
-    A = tea_ast_node_create(TEA_AST_NODE_ASSIGN, B);
-    if (C) tea_ast_node_add_child(A, C);
+assign_stmt(assign_stmt_node) ::= IDENT(var_name) ASSIGN expression(value_expr) SEMICOLON. {
+    assign_stmt_node = tea_ast_node_create(TEA_AST_NODE_ASSIGN, var_name);
+    if (value_expr) tea_ast_node_add_child(assign_stmt_node, value_expr);
 }
 
-return_stmt(A) ::= RETURN SEMICOLON. {
-    A = tea_ast_node_create(TEA_AST_NODE_RETURN, NULL);
+return_stmt(return_stmt_node) ::= RETURN SEMICOLON. {
+    return_stmt_node = tea_ast_node_create(TEA_AST_NODE_RETURN, NULL);
 }
 
-return_stmt(A) ::= RETURN expression(B) SEMICOLON. {
-    A = tea_ast_node_create(TEA_AST_NODE_RETURN, NULL);
-    if (B) tea_ast_node_add_child(A, B);
+return_stmt(return_stmt_node) ::= RETURN expression(return_expr) SEMICOLON. {
+    return_stmt_node = tea_ast_node_create(TEA_AST_NODE_RETURN, NULL);
+    if (return_expr) tea_ast_node_add_child(return_stmt_node, return_expr);
 }
 
-if_stmt(A) ::= IF expression(B) LBRACE stmt_list_opt(C) RBRACE else_opt(D). {
-    A = tea_ast_node_create(TEA_AST_NODE_IF, NULL);
-    if (B) tea_ast_node_add_child(A, B);
+if_stmt(if_stmt_node) ::= IF expression(condition) LBRACE stmt_list_opt(then_body) RBRACE else_opt(else_body). {
+    if_stmt_node = tea_ast_node_create(TEA_AST_NODE_IF, NULL);
+    if (condition) tea_ast_node_add_child(if_stmt_node, condition);
     
     tea_ast_node_t *then_node = tea_ast_node_create(TEA_AST_NODE_THEN, NULL);
-    if (C) tea_ast_node_add_child(then_node, C);
-    tea_ast_node_add_child(A, then_node);
+    if (then_body) tea_ast_node_add_child(then_node, then_body);
+    tea_ast_node_add_child(if_stmt_node, then_node);
     
-    if (D) tea_ast_node_add_child(A, D);
+    if (else_body) tea_ast_node_add_child(if_stmt_node, else_body);
 }
 
-while_stmt(A) ::= WHILE expression(B) LBRACE stmt_list_opt(C) RBRACE. {
-    A = tea_ast_node_create(TEA_AST_NODE_WHILE, NULL);
-    if (B) tea_ast_node_add_child(A, B);
-    if (C) tea_ast_node_add_child(A, C);
+while_stmt(while_stmt_node) ::= WHILE expression(condition) LBRACE stmt_list_opt(loop_body) RBRACE. {
+    while_stmt_node = tea_ast_node_create(TEA_AST_NODE_WHILE, NULL);
+    if (condition) tea_ast_node_add_child(while_stmt_node, condition);
+    if (loop_body) tea_ast_node_add_child(while_stmt_node, loop_body);
 }
 
-expression(A) ::= comp_expr(B). { A = B; }
+expression(expr_node) ::= comp_expr(comp_expr_node). { expr_node = comp_expr_node; }
 
-comp_expr(A) ::= comp_expr(B) GT(D) add_expr(C). {
-    A = tea_ast_node_create(TEA_AST_NODE_BINOP, D);
-    tea_ast_node_set_binop_children(A, B, C);
+comp_expr(comp_expr_node) ::= comp_expr(left_expr) GT(op) add_expr(right_expr). {
+    comp_expr_node = tea_ast_node_create(TEA_AST_NODE_BINOP, op);
+    tea_ast_node_set_binop_children(comp_expr_node, left_expr, right_expr);
 }
 
-comp_expr(A) ::= comp_expr(B) LT(D) add_expr(C). {
-    A = tea_ast_node_create(TEA_AST_NODE_BINOP, D);
-    tea_ast_node_set_binop_children(A, B, C);
+comp_expr(comp_expr_node) ::= comp_expr(left_expr) LT(op) add_expr(right_expr). {
+    comp_expr_node = tea_ast_node_create(TEA_AST_NODE_BINOP, op);
+    tea_ast_node_set_binop_children(comp_expr_node, left_expr, right_expr);
 }
 
-comp_expr(A) ::= add_expr(B). { A = B; }
+comp_expr(comp_expr_node) ::= add_expr(add_expr_node). { comp_expr_node = add_expr_node; }
 
-add_expr(A) ::= add_expr(B) PLUS(D) mul_expr(C). {
-    A = tea_ast_node_create(TEA_AST_NODE_BINOP, D);
-    tea_ast_node_set_binop_children(A, B, C);
+add_expr(add_expr_node) ::= add_expr(left_expr) PLUS(op) mul_expr(right_expr). {
+    add_expr_node = tea_ast_node_create(TEA_AST_NODE_BINOP, op);
+    tea_ast_node_set_binop_children(add_expr_node, left_expr, right_expr);
 }
 
-add_expr(A) ::= add_expr(B) MINUS(D) mul_expr(C). {
-    A = tea_ast_node_create(TEA_AST_NODE_BINOP, D);
-    tea_ast_node_set_binop_children(A, B, C);
+add_expr(add_expr_node) ::= add_expr(left_expr) MINUS(op) mul_expr(right_expr). {
+    add_expr_node = tea_ast_node_create(TEA_AST_NODE_BINOP, op);
+    tea_ast_node_set_binop_children(add_expr_node, left_expr, right_expr);
 }
 
-add_expr(A) ::= mul_expr(B). { A = B; }
+add_expr(add_expr_node) ::= mul_expr(mul_expr_node). { add_expr_node = mul_expr_node; }
 
-mul_expr(A) ::= mul_expr(B) STAR(D) unary_expr(C). {
-    A = tea_ast_node_create(TEA_AST_NODE_BINOP, D);
-    tea_ast_node_set_binop_children(A, B, C);
+mul_expr(mul_expr_node) ::= mul_expr(left_expr) STAR(op) unary_expr(right_expr). {
+    mul_expr_node = tea_ast_node_create(TEA_AST_NODE_BINOP, op);
+    tea_ast_node_set_binop_children(mul_expr_node, left_expr, right_expr);
 }
 
-mul_expr(A) ::= mul_expr(B) SLASH(D) unary_expr(C). {
-    A = tea_ast_node_create(TEA_AST_NODE_BINOP, D);
-    tea_ast_node_set_binop_children(A, B, C);
+mul_expr(mul_expr_node) ::= mul_expr(left_expr) SLASH(op) unary_expr(right_expr). {
+    mul_expr_node = tea_ast_node_create(TEA_AST_NODE_BINOP, op);
+    tea_ast_node_set_binop_children(mul_expr_node, left_expr, right_expr);
 }
 
-mul_expr(A) ::= unary_expr(B). { A = B; }
+mul_expr(mul_expr_node) ::= unary_expr(unary_expr_node). { mul_expr_node = unary_expr_node; }
 
-unary_expr(A) ::= MINUS(D) unary_expr(B). {
-    A = tea_ast_node_create(TEA_AST_NODE_UNARY, D);
-    if (B) tea_ast_node_add_child(A, B);
+unary_expr(unary_expr_node) ::= MINUS(op) unary_expr(operand). {
+    unary_expr_node = tea_ast_node_create(TEA_AST_NODE_UNARY, op);
+    if (operand) tea_ast_node_add_child(unary_expr_node, operand);
 }
 
-unary_expr(A) ::= primary_expr(B). { A = B; }
+unary_expr(unary_expr_node) ::= primary_expr(primary_expr_node). { unary_expr_node = primary_expr_node; }
 
-primary_expr(A) ::= LPAREN expression(B) RPAREN. {
-    A = B;
+primary_expr(primary_expr_node) ::= LPAREN expression(expr) RPAREN. {
+    primary_expr_node = expr;
 }
 
-primary_expr(A) ::= IDENT(B). {
-    A = tea_ast_node_create(TEA_AST_NODE_IDENT, B);
+primary_expr(primary_expr_node) ::= IDENT(ident_name). {
+    primary_expr_node = tea_ast_node_create(TEA_AST_NODE_IDENT, ident_name);
 }
 
-primary_expr(A) ::= IDENT(B) LPAREN RPAREN. {
-    A = tea_ast_node_create(TEA_AST_NODE_CALL, B);
+primary_expr(primary_expr_node) ::= IDENT(func_name) LPAREN RPAREN. {
+    primary_expr_node = tea_ast_node_create(TEA_AST_NODE_CALL, func_name);
 }
 
-primary_expr(A) ::= IDENT(B) LPAREN arg_list(C) RPAREN. {
-    A = tea_ast_node_create(TEA_AST_NODE_CALL, B);
-    if (C) tea_ast_node_add_child(A, C);
+primary_expr(primary_expr_node) ::= IDENT(func_name) LPAREN arg_list(args) RPAREN. {
+    primary_expr_node = tea_ast_node_create(TEA_AST_NODE_CALL, func_name);
+    if (args) tea_ast_node_add_child(primary_expr_node, args);
 }
 
-primary_expr(A) ::= NUMBER(B). {
-    A = tea_ast_node_create(TEA_AST_NODE_NUMBER, B);
+primary_expr(primary_expr_node) ::= NUMBER(number_value). {
+    primary_expr_node = tea_ast_node_create(TEA_AST_NODE_NUMBER, number_value);
 }
 
 %syntax_error {
