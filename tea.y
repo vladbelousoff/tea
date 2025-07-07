@@ -11,14 +11,17 @@
 %extra_argument {tea_ast_node_t **result}
 
 %token_prefix TEA_TOKEN_
+
 %token FN IDENT LPAREN RPAREN LBRACE RBRACE.
 %token AT COLON COMMA.
 %token LET MUT SEMICOLON ASSIGN.
 %token RETURN.
 %token MINUS PLUS STAR SLASH.
+%token GT LT.
 %token NUMBER.
 %token NATIVE.
 %token ARROW.
+%token IF ELSE.
 
 program(A) ::= item_list(B). {
     A = tea_ast_node_create(TEA_AST_NODE_PROGRAM, NULL);
@@ -130,6 +133,7 @@ stmt_list(A) ::= statement(B). {
 statement(A) ::= let_stmt(B). { A = B; }
 statement(A) ::= assign_stmt(B). { A = B; }
 statement(A) ::= return_stmt(B). { A = B; }
+statement(A) ::= if_stmt(B). { A = B; }
 
 let_stmt(A) ::= LET IDENT(B) type_annotation_opt(C) ASSIGN expression(D) SEMICOLON. {
     A = tea_ast_node_create(TEA_AST_NODE_LET, B);
@@ -157,7 +161,38 @@ return_stmt(A) ::= RETURN expression(B) SEMICOLON. {
     if (B) tea_ast_node_add_child(A, B);
 }
 
-expression(A) ::= add_expr(B). { A = B; }
+if_stmt(A) ::= IF expression(B) LBRACE stmt_list_opt(C) RBRACE. {
+    A = tea_ast_node_create(TEA_AST_NODE_IF, NULL);
+    if (B) tea_ast_node_add_child(A, B);
+    if (C) tea_ast_node_add_child(A, C);
+}
+
+if_stmt(A) ::= IF expression(B) LBRACE stmt_list_opt(C) RBRACE ELSE LBRACE stmt_list_opt(D) RBRACE. {
+    A = tea_ast_node_create(TEA_AST_NODE_IF, NULL);
+    if (B) tea_ast_node_add_child(A, B);
+    
+    tea_ast_node_t *then_node = tea_ast_node_create(TEA_AST_NODE_THEN, NULL);
+    if (C) tea_ast_node_add_child(then_node, C);
+    tea_ast_node_add_child(A, then_node);
+    
+    tea_ast_node_t *else_node = tea_ast_node_create(TEA_AST_NODE_ELSE, NULL);
+    if (D) tea_ast_node_add_child(else_node, D);
+    tea_ast_node_add_child(A, else_node);
+}
+
+expression(A) ::= comp_expr(B). { A = B; }
+
+comp_expr(A) ::= comp_expr(B) GT(D) add_expr(C). {
+    A = tea_ast_node_create(TEA_AST_NODE_BINOP, D);
+    tea_ast_node_set_binop_children(A, B, C);
+}
+
+comp_expr(A) ::= comp_expr(B) LT(D) add_expr(C). {
+    A = tea_ast_node_create(TEA_AST_NODE_BINOP, D);
+    tea_ast_node_set_binop_children(A, B, C);
+}
+
+comp_expr(A) ::= add_expr(B). { A = B; }
 
 add_expr(A) ::= add_expr(B) PLUS(D) mul_expr(C). {
     A = tea_ast_node_create(TEA_AST_NODE_BINOP, D);

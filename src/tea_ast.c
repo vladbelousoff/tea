@@ -104,6 +104,16 @@ static const char *get_node_type_name(const tea_ast_node_type_t type)
       return "IDENT";
     case TEA_AST_NODE_NUMBER:
       return "NUMBER";
+    case TEA_AST_NODE_CALL:
+      return "CALL";
+    case TEA_AST_NODE_RETURN:
+      return "RETURN";
+    case TEA_AST_NODE_IF:
+      return "IF";
+    case TEA_AST_NODE_THEN:
+      return "THEN";
+    case TEA_AST_NODE_ELSE:
+      return "ELSE";
     default:
       return "UNKNOWN";
   }

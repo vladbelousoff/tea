@@ -21,6 +21,9 @@ typedef enum
   TEA_AST_NODE_NUMBER,
   TEA_AST_NODE_CALL,
   TEA_AST_NODE_RETURN,
+  TEA_AST_NODE_IF,
+  TEA_AST_NODE_THEN,
+  TEA_AST_NODE_ELSE,
 } tea_ast_node_type_t;
 
 typedef struct tea_ast_node

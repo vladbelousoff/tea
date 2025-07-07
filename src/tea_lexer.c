@@ -189,6 +189,12 @@ static bool scan_operator(tea_lexer_t *self, const char *input)
     case '}':
       token_type = TEA_TOKEN_RBRACE;
       break;
+    case '>':
+      token_type = TEA_TOKEN_GT;
+      break;
+    case '<':
+      token_type = TEA_TOKEN_LT;
+      break;
     default:
       return false;
   }
