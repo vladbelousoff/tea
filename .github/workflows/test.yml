@@ -47,7 +47,7 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake .. -DCMAKE_BUILD_TYPE=Release
+          cmake .. -DCMAKE_BUILD_TYPE=Debug
 
       - name: Build project (Unix)
         if: matrix.os != 'windows-latest'
