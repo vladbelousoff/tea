@@ -95,6 +95,13 @@ type_annotation_opt(A) ::= . { A = NULL; }
 stmt_list_opt(A) ::= stmt_list(B). { A = B; }
 stmt_list_opt(A) ::= . { A = NULL; }
 
+else_opt(A) ::= ELSE LBRACE stmt_list_opt(B) RBRACE. {
+    A = tea_ast_node_create(TEA_AST_NODE_ELSE, NULL);
+    if (B) tea_ast_node_add_child(A, B);
+}
+
+else_opt(A) ::= . { A = NULL; }
+
 param_list(A) ::= param_list(B) COMMA parameter(C). {
     A = B ? B : tea_ast_node_create(TEA_AST_NODE_PARAM, NULL);
     if (C) tea_ast_node_add_child(A, C);
@@ -162,13 +169,7 @@ return_stmt(A) ::= RETURN expression(B) SEMICOLON. {
     if (B) tea_ast_node_add_child(A, B);
 }
 
-if_stmt(A) ::= IF expression(B) LBRACE stmt_list_opt(C) RBRACE. {
-    A = tea_ast_node_create(TEA_AST_NODE_IF, NULL);
-    if (B) tea_ast_node_add_child(A, B);
-    if (C) tea_ast_node_add_child(A, C);
-}
-
-if_stmt(A) ::= IF expression(B) LBRACE stmt_list_opt(C) RBRACE ELSE LBRACE stmt_list_opt(D) RBRACE. {
+if_stmt(A) ::= IF expression(B) LBRACE stmt_list_opt(C) RBRACE else_opt(D). {
     A = tea_ast_node_create(TEA_AST_NODE_IF, NULL);
     if (B) tea_ast_node_add_child(A, B);
     
@@ -176,9 +177,7 @@ if_stmt(A) ::= IF expression(B) LBRACE stmt_list_opt(C) RBRACE ELSE LBRACE stmt_
     if (C) tea_ast_node_add_child(then_node, C);
     tea_ast_node_add_child(A, then_node);
     
-    tea_ast_node_t *else_node = tea_ast_node_create(TEA_AST_NODE_ELSE, NULL);
-    if (D) tea_ast_node_add_child(else_node, D);
-    tea_ast_node_add_child(A, else_node);
+    if (D) tea_ast_node_add_child(A, D);
 }
 
 while_stmt(A) ::= WHILE expression(B) LBRACE stmt_list_opt(C) RBRACE. {
