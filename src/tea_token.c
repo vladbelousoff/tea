@@ -83,6 +83,14 @@ const char *tea_get_token_name(const int token_type)
       return "GT";
     case TEA_TOKEN_LT:
       return "LT";
+    case TEA_TOKEN_EQ:
+      return "EQ";
+    case TEA_TOKEN_NE:
+      return "NE";
+    case TEA_TOKEN_GE:
+      return "GE";
+    case TEA_TOKEN_LE:
+      return "LE";
     case TEA_TOKEN_NUMBER:
       return "NUMBER";
     default:

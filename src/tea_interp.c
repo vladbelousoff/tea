@@ -45,6 +45,18 @@ static tea_value_t tea_value_binop(
           break;
         }
         return tea_value_create_float(left.float_value / right.float_value);
+      case TEA_TOKEN_EQ:
+        return tea_value_create_float(left.float_value == right.float_value ? 1.0f : 0.0f);
+      case TEA_TOKEN_NE:
+        return tea_value_create_float(left.float_value != right.float_value ? 1.0f : 0.0f);
+      case TEA_TOKEN_GE:
+        return tea_value_create_float(left.float_value >= right.float_value ? 1.0f : 0.0f);
+      case TEA_TOKEN_LE:
+        return tea_value_create_float(left.float_value <= right.float_value ? 1.0f : 0.0f);
+      case TEA_TOKEN_GT:
+        return tea_value_create_float(left.float_value > right.float_value ? 1.0f : 0.0f);
+      case TEA_TOKEN_LT:
+        return tea_value_create_float(left.float_value < right.float_value ? 1.0f : 0.0f);
       default:
         break;
     }

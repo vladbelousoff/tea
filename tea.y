@@ -17,7 +17,7 @@
 %token LET MUT SEMICOLON ASSIGN.
 %token RETURN.
 %token MINUS PLUS STAR SLASH.
-%token GT LT.
+%token GT LT EQ NE GE LE.
 %token NUMBER.
 %token NATIVE.
 %token ARROW.
@@ -248,6 +248,26 @@ comp_expr(comp_expr_node) ::= comp_expr(left_expr) GT(op) add_expr(right_expr). 
 }
 
 comp_expr(comp_expr_node) ::= comp_expr(left_expr) LT(op) add_expr(right_expr). {
+    comp_expr_node = tea_ast_node_create(TEA_AST_NODE_BINOP, op);
+    tea_ast_node_set_binop_children(comp_expr_node, left_expr, right_expr);
+}
+
+comp_expr(comp_expr_node) ::= comp_expr(left_expr) EQ(op) add_expr(right_expr). {
+    comp_expr_node = tea_ast_node_create(TEA_AST_NODE_BINOP, op);
+    tea_ast_node_set_binop_children(comp_expr_node, left_expr, right_expr);
+}
+
+comp_expr(comp_expr_node) ::= comp_expr(left_expr) NE(op) add_expr(right_expr). {
+    comp_expr_node = tea_ast_node_create(TEA_AST_NODE_BINOP, op);
+    tea_ast_node_set_binop_children(comp_expr_node, left_expr, right_expr);
+}
+
+comp_expr(comp_expr_node) ::= comp_expr(left_expr) GE(op) add_expr(right_expr). {
+    comp_expr_node = tea_ast_node_create(TEA_AST_NODE_BINOP, op);
+    tea_ast_node_set_binop_children(comp_expr_node, left_expr, right_expr);
+}
+
+comp_expr(comp_expr_node) ::= comp_expr(left_expr) LE(op) add_expr(right_expr). {
     comp_expr_node = tea_ast_node_create(TEA_AST_NODE_BINOP, op);
     tea_ast_node_set_binop_children(comp_expr_node, left_expr, right_expr);
 }

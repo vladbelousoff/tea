@@ -158,8 +158,20 @@ static bool scan_operator(tea_lexer_t *self, const char *input)
       token_type = TEA_TOKEN_SEMICOLON;
       break;
     case '=':
+      if (input[self->position + 1] == '=') {
+        token_type = TEA_TOKEN_EQ;
+        token_length = 2;
+        break;
+      }
       token_type = TEA_TOKEN_ASSIGN;
       break;
+    case '!':
+      if (input[self->position + 1] == '=') {
+        token_type = TEA_TOKEN_NE;
+        token_length = 2;
+        break;
+      }
+      return false;
     case '-':
       if (input[self->position + 1] == '>') {
         token_type = TEA_TOKEN_ARROW;
@@ -190,9 +202,19 @@ static bool scan_operator(tea_lexer_t *self, const char *input)
       token_type = TEA_TOKEN_RBRACE;
       break;
     case '>':
+      if (input[self->position + 1] == '=') {
+        token_type = TEA_TOKEN_GE;
+        token_length = 2;
+        break;
+      }
       token_type = TEA_TOKEN_GT;
       break;
     case '<':
+      if (input[self->position + 1] == '=') {
+        token_type = TEA_TOKEN_LE;
+        token_length = 2;
+        break;
+      }
       token_type = TEA_TOKEN_LT;
       break;
     default:
