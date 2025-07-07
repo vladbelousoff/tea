@@ -303,11 +303,12 @@ static struct
   scan_operator,
   scan_number,
   scan_ident,
+  { NULL },
 };
 
 static bool try_lexer_scanners(void *self, const char *input)
 {
-  for (int i = 0; i < sizeof(scanners) / sizeof(scanners[0]); ++i) {
+  for (int i = 0; scanners[i].scan; ++i) {
     if (scanners[i].scan(self, input)) {
       return true;
     }
