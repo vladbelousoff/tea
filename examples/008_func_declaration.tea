@@ -1,0 +1,66 @@
+// Simple function with no parameters and no return type
+fn hello() {
+    // Function body
+}
+
+// Function with parameters
+fn add(a: int, b: int) {
+    let result = a + b;
+}
+
+// Function with return type
+fn multiply(x: int, y: int) -> int {
+    let result = x * y;
+    return result;
+}
+
+// Function with single parameter
+fn square(n: int) -> int {
+    return n * n;
+}
+
+// Function with return type and simple return
+fn get_answer() -> int {
+    return 42;
+}
+
+// Function with return type and variable return
+fn get_value() -> int {
+    let x = 10;
+    return x;
+}
+
+// Function with multiple statements
+fn calculate_sum(max: int) -> int {
+    let mut sum = 0;
+    let mut i = 1;
+    
+    while i <= max {
+        sum = sum + i;
+        i = i + 1;
+    }
+    
+    return sum;
+}
+
+// Function with conditional logic
+fn absolute_value(x: int) -> int {
+    if x < 0 {
+        return -x;
+    } else {
+        return x;
+    }
+}
+
+// Function that calls another function
+fn double_square(n: int) -> int {
+    let squared = square(n);
+    return squared * 2;
+}
+
+// Function with complex expression
+fn complex_calculation(a: int, b: int, c: int) -> int {
+    let temp = a + b;
+    let result = temp * c;
+    return result;
+}
