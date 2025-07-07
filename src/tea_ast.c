@@ -116,6 +116,10 @@ static const char *get_node_type_name(const tea_ast_node_type_t type)
       return "ELSE";
     case TEA_AST_NODE_WHILE:
       return "WHILE";
+    case TEA_AST_NODE_STRUCT:
+      return "STRUCT";
+    case TEA_AST_NODE_STRUCT_FIELD:
+      return "STRUCT_FIELD";
     default:
       return "UNKNOWN";
   }

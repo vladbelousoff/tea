@@ -22,6 +22,7 @@
 %token NATIVE.
 %token ARROW.
 %token IF ELSE WHILE.
+%token STRUCT.
 
 program(program_node) ::= item_list(items). {
     program_node = tea_ast_node_create(TEA_AST_NODE_PROGRAM, NULL);
@@ -59,6 +60,8 @@ item(item_node) ::= function(func). { item_node = func; }
 item(item_node) ::= native_function(native_func). { item_node = native_func; }
 
 item(item_node) ::= statement(stmt). { item_node = stmt; }
+
+item(item_node) ::= struct_definition(struct_def). { item_node = struct_def; }
 
 attr_list(attr_list_node) ::= attr_list(existing_attrs) attribute(new_attr). {
     attr_list_node = existing_attrs ? existing_attrs : tea_ast_node_create(TEA_AST_NODE_ATTR, NULL);
@@ -99,6 +102,35 @@ native_function(native_func_node) ::= NATIVE FN IDENT(func_name) LPAREN param_li
     if (return_type) {
         tea_ast_node_add_child(native_func_node, return_type);
     }
+}
+
+struct_definition(struct_def_node) ::= STRUCT IDENT(struct_name) LBRACE struct_field_list_opt(fields) RBRACE. {
+    struct_def_node = tea_ast_node_create(TEA_AST_NODE_STRUCT, struct_name);
+    if (fields) {
+        tea_ast_node_add_child(struct_def_node, fields);
+    }
+}
+
+struct_field_list_opt(field_list_node) ::= struct_field_list(fields). { field_list_node = fields; }
+struct_field_list_opt(field_list_node) ::= . { field_list_node = NULL; }
+
+struct_field_list(field_list_node) ::= struct_field_list(existing_fields) struct_field(new_field). {
+    field_list_node = existing_fields ? existing_fields : tea_ast_node_create(TEA_AST_NODE_STRUCT_FIELD, NULL);
+    if (new_field) {
+        tea_ast_node_add_child(field_list_node, new_field);
+    }
+}
+
+struct_field_list(field_list_node) ::= struct_field(single_field). {
+    field_list_node = tea_ast_node_create(TEA_AST_NODE_STRUCT_FIELD, NULL);
+    if (single_field) {
+        tea_ast_node_add_child(field_list_node, single_field);
+    }
+}
+
+struct_field(field_node) ::= IDENT(field_name) COLON IDENT(field_type) SEMICOLON. {
+    field_node = tea_ast_node_create(TEA_AST_NODE_STRUCT_FIELD, field_name);
+    tea_ast_node_add_child(field_node, tea_ast_node_create(TEA_AST_NODE_IDENT, field_type));
 }
 
 param_list_opt(param_list_node) ::= param_list(params). { param_list_node = params; }
@@ -329,6 +361,14 @@ primary_expr(primary_expr_node) ::= IDENT(func_name) LPAREN arg_list(args) RPARE
 primary_expr(primary_expr_node) ::= NUMBER(number_value). {
     primary_expr_node = tea_ast_node_create(TEA_AST_NODE_NUMBER, number_value);
 }
+
+
+
+
+
+
+
+
 
 %syntax_error {
     if (yyminor) {
