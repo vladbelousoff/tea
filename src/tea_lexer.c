@@ -90,12 +90,12 @@ static void skip_whitespaces(tea_lexer_t *self, const char *input)
   }
 }
 
-static bool scan_single_character(tea_lexer_t *self, const char *input)
+static bool scan_operator(tea_lexer_t *self, const char *input)
 {
-  const char c = input[self->position];
-
+  int token_length = 1;
   int token_type;
-  switch (c) {
+
+  switch (input[self->position]) {
     case '@':
       token_type = TEA_TOKEN_AT;
       break;
@@ -112,6 +112,11 @@ static bool scan_single_character(tea_lexer_t *self, const char *input)
       token_type = TEA_TOKEN_ASSIGN;
       break;
     case '-':
+      if (input[self->position + 1] == '>') {
+        token_type = TEA_TOKEN_ARROW;
+        token_length = 2;
+        break;
+      }
       token_type = TEA_TOKEN_MINUS;
       break;
     case '+':
@@ -139,10 +144,10 @@ static bool scan_single_character(tea_lexer_t *self, const char *input)
       return false;
   }
 
-  create_token(self, token_type, &c, 1);
+  create_token(self, token_type, &input[self->position], token_length);
 
-  self->column++;
-  self->position++;
+  self->column += token_length;
+  self->position += token_length;
 
   return true;
 }
@@ -241,7 +246,7 @@ void tea_lexer_tokenize(tea_lexer_t *self, const char *input)
   while (input[self->position] != EOS) {
     skip_whitespaces(self, input);
 
-    if (scan_single_character(self, input)) {
+    if (scan_operator(self, input)) {
       continue;
     }
 

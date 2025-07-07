@@ -15,6 +15,8 @@
 %token LET MUT SEMICOLON ASSIGN.
 %token MINUS PLUS STAR SLASH.
 %token NUMBER.
+%token NATIVE.
+%token ARROW.
 
 program(A) ::= item_list(B). {
     A = tea_ast_node_create(TEA_AST_NODE_PROGRAM, NULL);
@@ -44,6 +46,8 @@ item(A) ::= attr_list(B) function(C). {
 }
 
 item(A) ::= function(B). { A = B; }
+
+item(A) ::= native_function(B). { A = B; }
 
 item(A) ::= statement(B). { A = B; }
 
@@ -81,6 +85,26 @@ function(A) ::= FN IDENT(B) LPAREN param_list(C) RPAREN LBRACE stmt_list(D) RBRA
     if (D) tea_ast_node_add_child(A, D);
 }
 
+native_function(A) ::= NATIVE FN IDENT(B) LPAREN RPAREN SEMICOLON. {
+    A = tea_ast_node_create(TEA_AST_NODE_NATIVE_FUNCTION, B);
+}
+
+native_function(A) ::= NATIVE FN IDENT(B) LPAREN param_list(C) RPAREN SEMICOLON. {
+    A = tea_ast_node_create(TEA_AST_NODE_NATIVE_FUNCTION, B);
+    if (C) tea_ast_node_add_child(A, C);
+}
+
+native_function(A) ::= NATIVE FN IDENT(B) LPAREN RPAREN ARROW IDENT(D) SEMICOLON. {
+    A = tea_ast_node_create(TEA_AST_NODE_NATIVE_FUNCTION, B);
+    if (D) tea_ast_node_add_child(A, tea_ast_node_create(TEA_AST_NODE_IDENT, D));
+}
+
+native_function(A) ::= NATIVE FN IDENT(B) LPAREN param_list(C) RPAREN ARROW IDENT(D) SEMICOLON. {
+    A = tea_ast_node_create(TEA_AST_NODE_NATIVE_FUNCTION, B);
+    if (C) tea_ast_node_add_child(A, C);
+    if (D) tea_ast_node_add_child(A, tea_ast_node_create(TEA_AST_NODE_IDENT, D));
+}
+
 param_list(A) ::= param_list(B) COMMA parameter(C). {
     A = B ? B : tea_ast_node_create(TEA_AST_NODE_PARAM, NULL);
     if (C) tea_ast_node_add_child(A, C);
@@ -94,6 +118,16 @@ param_list(A) ::= parameter(B). {
 parameter(A) ::= IDENT(B) COLON IDENT(C). {
     A = tea_ast_node_create(TEA_AST_NODE_PARAM, B);
     tea_ast_node_add_child(A, tea_ast_node_create(TEA_AST_NODE_PARAM, C));
+}
+
+arg_list(A) ::= arg_list(B) COMMA expression(C). {
+    A = B ? B : tea_ast_node_create(TEA_AST_NODE_STMT, NULL);
+    if (C) tea_ast_node_add_child(A, C);
+}
+
+arg_list(A) ::= expression(B). {
+    A = tea_ast_node_create(TEA_AST_NODE_STMT, NULL);
+    if (B) tea_ast_node_add_child(A, B);
 }
 
 stmt_list(A) ::= stmt_list(B) statement(C). {
@@ -163,6 +197,15 @@ primary_expr(A) ::= LPAREN expression(B) RPAREN. {
 
 primary_expr(A) ::= IDENT(B). {
     A = tea_ast_node_create(TEA_AST_NODE_IDENT, B);
+}
+
+primary_expr(A) ::= IDENT(B) LPAREN RPAREN. {
+    A = tea_ast_node_create(TEA_AST_NODE_CALL, B);
+}
+
+primary_expr(A) ::= IDENT(B) LPAREN arg_list(C) RPAREN. {
+    A = tea_ast_node_create(TEA_AST_NODE_CALL, B);
+    if (C) tea_ast_node_add_child(A, C);
 }
 
 primary_expr(A) ::= NUMBER(B). {

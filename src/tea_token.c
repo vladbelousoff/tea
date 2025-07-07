@@ -5,7 +5,7 @@
 #include <string.h>
 
 static const tea_keyword_entry_t tea_keywords[] = { { "fn", TEA_TOKEN_FN },
-  { "let", TEA_TOKEN_LET }, { "mut", TEA_TOKEN_MUT }, { NULL, 0 } };
+  { "let", TEA_TOKEN_LET }, { "mut", TEA_TOKEN_MUT }, { "native", TEA_TOKEN_NATIVE }, { NULL, 0 } };
 
 static bool equals(const char *a, const char *b, const int n)
 {
@@ -40,6 +40,8 @@ const char *tea_get_token_name(const int token_type)
       return "LET";
     case TEA_TOKEN_MUT:
       return "MUT";
+    case TEA_TOKEN_NATIVE:
+      return "NATIVE";
     case TEA_TOKEN_IDENT:
       return "IDENT";
     case TEA_TOKEN_LPAREN:
@@ -68,6 +70,8 @@ const char *tea_get_token_name(const int token_type)
       return "STAR";
     case TEA_TOKEN_SLASH:
       return "SLASH";
+    case TEA_TOKEN_ARROW:
+      return "ARROW";
     case TEA_TOKEN_NUMBER:
       return "NUMBER";
     default:

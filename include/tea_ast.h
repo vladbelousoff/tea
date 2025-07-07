@@ -8,6 +8,7 @@ typedef enum
 {
   TEA_AST_NODE_PROGRAM,
   TEA_AST_NODE_FUNCTION,
+  TEA_AST_NODE_NATIVE_FUNCTION,
   TEA_AST_NODE_PARAM,
   TEA_AST_NODE_ATTR,
   TEA_AST_NODE_STMT,
@@ -17,7 +18,8 @@ typedef enum
   TEA_AST_NODE_BINOP,
   TEA_AST_NODE_UNARY,
   TEA_AST_NODE_IDENT,
-  TEA_AST_NODE_NUMBER
+  TEA_AST_NODE_NUMBER,
+  TEA_AST_NODE_CALL
 } tea_ast_node_type_t;
 
 typedef struct tea_ast_node
