@@ -1,4 +1,4 @@
-name: Test Tea Language
+name: Test Tea
 
 on:
   push:
@@ -11,8 +11,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-        compiler: [gcc, clang]
+        os: [ ubuntu-latest, windows-latest ]
+        compiler: [ gcc, clang ]
         exclude:
           # Exclude clang on Windows as it's not commonly used
           - os: windows-latest
@@ -24,92 +24,99 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Install dependencies (Ubuntu)
-      if: matrix.os == 'ubuntu-latest'
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y build-essential cmake git
+      - name: Install dependencies (Ubuntu)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake git
 
-    - name: Install dependencies (Windows)
-      if: matrix.os == 'windows-latest'
-      run: |
-        # Windows dependencies are handled by the runner
+      - name: Install dependencies (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          # Windows dependencies are handled by the runner
 
-    - name: Install dependencies (macOS)
-      if: matrix.os == 'macos-latest'
-      run: |
-        # macOS dependencies are handled by the runner
+      - name: Install dependencies (macOS)
+        if: matrix.os == 'macos-latest'
+        run: |
+          # macOS dependencies are handled by the runner
 
-    - name: Configure CMake
-      run: |
-        mkdir build
-        cd build
-        cmake .. -DCMAKE_BUILD_TYPE=Release
+      - name: Configure CMake
+        run: |
+          mkdir build
+          cd build
+          cmake .. -DCMAKE_BUILD_TYPE=Release
 
-    - name: Build project
-      run: |
-        cd build
-        make -j$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 2)
+      - name: Build project (Unix)
+        if: matrix.os != 'windows-latest'
+        run: |
+          cd build
+          make -j$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 2)
 
-    - name: Run tests
-      run: |
-        cd build
-        ctest --output-on-failure --verbose
+      - name: Build project (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          cd build
+          make -j$env:NUMBER_OF_PROCESSORS
 
-    - name: Upload build artifacts (on failure)
-      if: failure()
-      uses: actions/upload-artifact@v4
-      with:
-        name: build-${{ matrix.os }}-${{ matrix.compiler }}
-        path: build/
-        retention-days: 7
+      - name: Run tests
+        run: |
+          cd build
+          ctest --output-on-failure --verbose
+
+      - name: Upload build artifacts (on failure)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-${{ matrix.os }}-${{ matrix.compiler }}
+          path: build/
+          retention-days: 7
 
   # Additional job for code quality checks
   code-quality:
     runs-on: ubuntu-latest
     
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Install dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y build-essential cmake git clang-format
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake git clang-format
 
-    - name: Check code formatting
-      run: |
-        # Check if all C files are properly formatted
-        find . -name "*.c" -o -name "*.h" | grep -v build/ | xargs clang-format --dry-run --Werror
+      - name: Check code formatting
+        run: |
+          # Check if all C files are properly formatted
+          find . -name "*.c" -o -name "*.h" | grep -v build/ | xargs clang-format --dry-run --Werror
 
-    - name: Build with warnings as errors
-      run: |
-        mkdir build-warnings
-        cd build-warnings
-        cmake .. -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_FLAGS="-Wall -Wextra -Werror"
-        make -j$(nproc)
+      - name: Build with warnings as errors
+        run: |
+          mkdir build-warnings
+          cd build-warnings
+          cmake .. -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_FLAGS="-Wall -Wextra -Werror"
+          make -j$(nproc)
 
   # Job to test parser generation
   parser-generation:
     runs-on: ubuntu-latest
     
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Install dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y build-essential cmake git
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake git
 
-    - name: Test parser regeneration
-      run: |
-        mkdir build-parser
-        cd build-parser
-        cmake ..
-        make regenerate_parser
-        # Verify that the parser was generated
-        ls -la tea.c tea.h
+      - name: Test parser regeneration
+        run: |
+          mkdir build-parser
+          cd build-parser
+          cmake ..
+          make regenerate_parser
+          # Verify that the parser was generated
+          ls -la tea.c tea.h

@@ -120,7 +120,8 @@ static void print_tree_prefix(const int depth, const bool *is_last_stack)
   }
 }
 
-static void tea_ast_node_print_tree_recursive(tea_ast_node_t *node, const int depth, bool *is_last_stack)
+static void tea_ast_node_print_tree_recursive(
+  tea_ast_node_t *node, const int depth, bool *is_last_stack)
 {
   if (!node) {
     return;
@@ -152,12 +153,13 @@ static void tea_ast_node_print_tree_recursive(tea_ast_node_t *node, const int de
   } else {
     rtl_list_entry_t *entry;
     int child_count = 0;
-    
+
     // Count children first
-    rtl_list_for_each(entry, &node->children) {
+    rtl_list_for_each(entry, &node->children)
+    {
       child_count++;
     }
-    
+
     int current_child = 0;
     rtl_list_for_each(entry, &node->children)
     {
@@ -172,7 +174,7 @@ static void tea_ast_node_print_tree_recursive(tea_ast_node_t *node, const int de
 void tea_ast_node_print(tea_ast_node_t *node, const int depth)
 {
   // Allocate a stack to track which nodes are last children at each depth
-  bool is_last_stack[100]; // Assuming max depth of 100
+  bool is_last_stack[100];  // Assuming max depth of 100
   for (int i = 0; i < 100; i++) {
     is_last_stack[i] = true;
   }
