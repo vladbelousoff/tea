@@ -14,6 +14,7 @@
 %token FN IDENT LPAREN RPAREN LBRACE RBRACE.
 %token AT COLON COMMA.
 %token LET MUT SEMICOLON ASSIGN.
+%token RETURN.
 %token MINUS PLUS STAR SLASH.
 %token NUMBER.
 %token NATIVE.
@@ -66,45 +67,27 @@ attribute(A) ::= AT IDENT(B). {
     A = tea_ast_node_create(TEA_AST_NODE_ATTR, B);
 }
 
-function(A) ::= FN IDENT(B) LPAREN RPAREN LBRACE RBRACE. {
-    A = tea_ast_node_create(TEA_AST_NODE_FUNCTION, B);
-}
-
-function(A) ::= FN IDENT(B) LPAREN param_list(C) RPAREN LBRACE RBRACE. {
+function(A) ::= FN IDENT(B) LPAREN param_list_opt(C) RPAREN return_type_opt(D) LBRACE stmt_list_opt(E) RBRACE. {
     A = tea_ast_node_create(TEA_AST_NODE_FUNCTION, B);
     if (C) tea_ast_node_add_child(A, C);
+    if (D) tea_ast_node_add_child(A, D);
+    if (E) tea_ast_node_add_child(A, E);
 }
 
-function(A) ::= FN IDENT(B) LPAREN RPAREN LBRACE stmt_list(C) RBRACE. {
-    A = tea_ast_node_create(TEA_AST_NODE_FUNCTION, B);
-    if (C) tea_ast_node_add_child(A, C);
-}
-
-function(A) ::= FN IDENT(B) LPAREN param_list(C) RPAREN LBRACE stmt_list(D) RBRACE. {
-    A = tea_ast_node_create(TEA_AST_NODE_FUNCTION, B);
+native_function(A) ::= NATIVE FN IDENT(B) LPAREN param_list_opt(C) RPAREN return_type_opt(D) SEMICOLON. {
+    A = tea_ast_node_create(TEA_AST_NODE_NATIVE_FUNCTION, B);
     if (C) tea_ast_node_add_child(A, C);
     if (D) tea_ast_node_add_child(A, D);
 }
 
-native_function(A) ::= NATIVE FN IDENT(B) LPAREN RPAREN SEMICOLON. {
-    A = tea_ast_node_create(TEA_AST_NODE_NATIVE_FUNCTION, B);
-}
+param_list_opt(A) ::= param_list(B). { A = B; }
+param_list_opt(A) ::= . { A = NULL; }
 
-native_function(A) ::= NATIVE FN IDENT(B) LPAREN param_list(C) RPAREN SEMICOLON. {
-    A = tea_ast_node_create(TEA_AST_NODE_NATIVE_FUNCTION, B);
-    if (C) tea_ast_node_add_child(A, C);
-}
+return_type_opt(A) ::= ARROW IDENT(B). { A = tea_ast_node_create(TEA_AST_NODE_IDENT, B); }
+return_type_opt(A) ::= . { A = NULL; }
 
-native_function(A) ::= NATIVE FN IDENT(B) LPAREN RPAREN ARROW IDENT(D) SEMICOLON. {
-    A = tea_ast_node_create(TEA_AST_NODE_NATIVE_FUNCTION, B);
-    if (D) tea_ast_node_add_child(A, tea_ast_node_create(TEA_AST_NODE_IDENT, D));
-}
-
-native_function(A) ::= NATIVE FN IDENT(B) LPAREN param_list(C) RPAREN ARROW IDENT(D) SEMICOLON. {
-    A = tea_ast_node_create(TEA_AST_NODE_NATIVE_FUNCTION, B);
-    if (C) tea_ast_node_add_child(A, C);
-    if (D) tea_ast_node_add_child(A, tea_ast_node_create(TEA_AST_NODE_IDENT, D));
-}
+stmt_list_opt(A) ::= stmt_list(B). { A = B; }
+stmt_list_opt(A) ::= . { A = NULL; }
 
 param_list(A) ::= param_list(B) COMMA parameter(C). {
     A = B ? B : tea_ast_node_create(TEA_AST_NODE_PARAM, NULL);
@@ -143,6 +126,7 @@ stmt_list(A) ::= statement(B). {
 
 statement(A) ::= let_stmt(B). { A = B; }
 statement(A) ::= assign_stmt(B). { A = B; }
+statement(A) ::= return_stmt(B). { A = B; }
 
 let_stmt(A) ::= LET IDENT(B) ASSIGN expression(C) SEMICOLON. {
     A = tea_ast_node_create(TEA_AST_NODE_LET, B);
@@ -157,6 +141,15 @@ let_stmt(A) ::= LET MUT IDENT(B) ASSIGN expression(C) SEMICOLON. {
 assign_stmt(A) ::= IDENT(B) ASSIGN expression(C) SEMICOLON. {
     A = tea_ast_node_create(TEA_AST_NODE_ASSIGN, B);
     if (C) tea_ast_node_add_child(A, C);
+}
+
+return_stmt(A) ::= RETURN SEMICOLON. {
+    A = tea_ast_node_create(TEA_AST_NODE_RETURN, NULL);
+}
+
+return_stmt(A) ::= RETURN expression(B) SEMICOLON. {
+    A = tea_ast_node_create(TEA_AST_NODE_RETURN, NULL);
+    if (B) tea_ast_node_add_child(A, B);
 }
 
 expression(A) ::= add_expr(B). { A = B; }

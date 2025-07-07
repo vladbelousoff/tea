@@ -19,7 +19,8 @@ typedef enum
   TEA_AST_NODE_UNARY,
   TEA_AST_NODE_IDENT,
   TEA_AST_NODE_NUMBER,
-  TEA_AST_NODE_CALL
+  TEA_AST_NODE_CALL,
+  TEA_AST_NODE_RETURN,
 } tea_ast_node_type_t;
 
 typedef struct tea_ast_node
