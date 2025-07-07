@@ -210,7 +210,7 @@ static bool scan_ident(tea_lexer_t *self, const char *input)
     }
 
     const char *token_name = &input[self->position];
-    const int token_type = tea_get_ident_token_type(token_name, token_length + 1);
+    const int token_type = tea_get_ident_token_type(token_name, token_length);
     if (token_type != TEA_TOKEN_IDENT) {
       create_token(self, token_type, NULL, 0);
     } else {

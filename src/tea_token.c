@@ -4,12 +4,8 @@
 
 #include <string.h>
 
-static const tea_keyword_entry_t tea_keywords[] = { 
-  { "fn", TEA_TOKEN_FN }, 
-  { "let", TEA_TOKEN_LET }, 
-  { "mut", TEA_TOKEN_MUT }, 
-  { NULL, 0 } 
-};
+static const tea_keyword_entry_t tea_keywords[] = { { "fn", TEA_TOKEN_FN },
+  { "let", TEA_TOKEN_LET }, { "mut", TEA_TOKEN_MUT }, { NULL, 0 } };
 
 static bool equals(const char *a, const char *b, const int n)
 {
@@ -23,6 +19,10 @@ static bool equals(const char *a, const char *b, const int n)
 int tea_get_ident_token_type(const char *ident, const int length)
 {
   for (int i = 0; tea_keywords[i].keyword; ++i) {
+    const size_t keyword_len = strlen(tea_keywords[i].keyword);
+    if (keyword_len != length) {
+      continue;
+    }
     if (equals(ident, tea_keywords[i].keyword, length)) {
       return tea_keywords[i].token_type;
     }
