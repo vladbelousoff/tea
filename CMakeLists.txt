@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 
-project(tea-lang)
+project(tea_lang)
 
 set(CMAKE_C_STANDARD 99)
 
@@ -10,7 +10,7 @@ include(FetchContent)
 FetchContent_Declare(
         rtlib
         GIT_REPOSITORY https://github.com/vladbelousoff/rtlib.git
-        GIT_TAG 45705ffa62a4c3cf96568edd679341e9c8b3f208
+        GIT_TAG 433c78f93e14cd1def7975df16bf74c37896fefd
 )
 
 FetchContent_MakeAvailable(rtlib)
@@ -41,7 +41,6 @@ set(LEMON_EXECUTABLE "${CMAKE_BINARY_DIR}/bin/lemon")
 # Path to the lemon template file (lempar.c)
 set(LEMON_TEMPLATE "${lemon_SOURCE_DIR}/lempar.c")
 
-# Custom command to generate parser from simplified grammar
 add_custom_command(
         OUTPUT
         "${CMAKE_CURRENT_BINARY_DIR}/tea.c"
@@ -55,7 +54,7 @@ add_custom_command(
         lemon_exe
         ${CMAKE_CURRENT_SOURCE_DIR}/tea.y
         ${LEMON_TEMPLATE}
-        COMMENT "Generating Tea parser with Lemon"
+        COMMENT "Generating TEA parser with Lemon"
         VERBATIM
 )
 
@@ -114,16 +113,42 @@ add_custom_target(regenerate_parser
         DEPENDS
         lemon_exe
         ${CMAKE_CURRENT_SOURCE_DIR}/tea.y
-        COMMENT "Regenerating simplified TEA parser"
+        COMMENT "Regenerating TEA parser"
         VERBATIM
 )
 
 # Make sure parser is generated before building tea_parser
 add_dependencies(tea_parser lemon_exe)
 
-# Print status
-message(STATUS "Simplified TEA Language Parser")
-message(STATUS "Features: Functions with empty bodies and attributes only")
-message(STATUS "Lemon parser generator will be built and used to generate TEA parser")
+message(STATUS "TEA Language")
 message(STATUS "Grammar file: ${CMAKE_CURRENT_SOURCE_DIR}/tea.y")
 message(STATUS "Generated parser: ${CMAKE_CURRENT_BINARY_DIR}/tea.c")
+
+# Testing executable (only built if this is the main project)
+if (CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
+    # Enable testing
+    enable_testing()
+
+    # Find all .tea files in the examples directory
+    file(GLOB TEA_EXAMPLE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/examples/*.tea")
+
+    # Create tests for each .tea file
+    foreach (TEA_FILE ${TEA_EXAMPLE_FILES})
+        # Get just the filename without path
+        get_filename_component(TEA_FILENAME ${TEA_FILE} NAME)
+        # Create a test name by removing the .tea extension
+        string(REPLACE ".tea" "" TEST_NAME ${TEA_FILENAME})
+
+        # Add a test that runs the tea executable with this file
+        add_test(
+                NAME "test_${TEST_NAME}"
+                COMMAND tea ${TEA_FILE}
+        )
+
+        # Set the working directory to the build directory
+        set_tests_properties("test_${TEST_NAME}" PROPERTIES
+                WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        )
+    endforeach ()
+
+endif ()

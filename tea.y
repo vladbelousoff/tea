@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include "tea_ast.h"
+#include <rtl_log.h>
 }
 
 %token_type {tea_token_t*}
@@ -214,10 +215,14 @@ primary_expr(A) ::= NUMBER(B). {
 
 %syntax_error {
     if (yyminor) {
-        fprintf(stderr, "Syntax error: Unexpected token '%.*s' at line %d, column %d\n",
-                yyminor->buffer_size, yyminor->buffer, yyminor->line, yyminor->column);
-        fprintf(stderr, "Token type: %s\n", tea_get_token_name(yymajor));
+        rtl_log_err("Syntax error: Unexpected token <%s> '%.*s' at line %d, column %d",
+                tea_get_token_name(yymajor),
+                yyminor->buffer_size,
+                yyminor->buffer,
+                yyminor->line,
+                yyminor->column);
     } else {
-        fprintf(stderr, "Syntax error: Unexpected end of input\n");
+        rtl_log_err("Syntax error: Unexpected end of input");
     }
+    exit(1);
 }
