@@ -295,27 +295,34 @@ static void unknown_character(const tea_lexer_t *self, const char *input)
   }
 }
 
+static struct
+{
+  bool (*scan)(tea_lexer_t *self, const char *input);
+} scanners[] = {
+  scan_comments,
+  scan_operator,
+  scan_number,
+  scan_ident,
+};
+
+static bool try_lexer_scanners(void *self, const char *input)
+{
+  for (int i = 0; i < sizeof(scanners) / sizeof(scanners[0]); ++i) {
+    if (scanners[i].scan(self, input)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 void tea_lexer_tokenize(tea_lexer_t *self, const char *input)
 {
   while (input[self->position] != EOS) {
     skip_whitespaces(self, input);
 
-    if (scan_comments(self, input)) {
-      continue;
+    const bool success = try_lexer_scanners(self, input);
+    if (!success) {
+      unknown_character(self, input);
     }
-
-    if (scan_operator(self, input)) {
-      continue;
-    }
-
-    if (scan_number(self, input)) {
-      continue;
-    }
-
-    if (scan_ident(self, input)) {
-      continue;
-    }
-
-    unknown_character(self, input);
   }
 }
