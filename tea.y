@@ -86,6 +86,9 @@ param_list_opt(A) ::= . { A = NULL; }
 return_type_opt(A) ::= ARROW IDENT(B). { A = tea_ast_node_create(TEA_AST_NODE_IDENT, B); }
 return_type_opt(A) ::= . { A = NULL; }
 
+type_annotation_opt(A) ::= COLON IDENT(B). { A = tea_ast_node_create(TEA_AST_NODE_IDENT, B); }
+type_annotation_opt(A) ::= . { A = NULL; }
+
 stmt_list_opt(A) ::= stmt_list(B). { A = B; }
 stmt_list_opt(A) ::= . { A = NULL; }
 
@@ -128,14 +131,16 @@ statement(A) ::= let_stmt(B). { A = B; }
 statement(A) ::= assign_stmt(B). { A = B; }
 statement(A) ::= return_stmt(B). { A = B; }
 
-let_stmt(A) ::= LET IDENT(B) ASSIGN expression(C) SEMICOLON. {
+let_stmt(A) ::= LET IDENT(B) type_annotation_opt(C) ASSIGN expression(D) SEMICOLON. {
     A = tea_ast_node_create(TEA_AST_NODE_LET, B);
     if (C) tea_ast_node_add_child(A, C);
+    if (D) tea_ast_node_add_child(A, D);
 }
 
-let_stmt(A) ::= LET MUT IDENT(B) ASSIGN expression(C) SEMICOLON. {
+let_stmt(A) ::= LET MUT IDENT(B) type_annotation_opt(C) ASSIGN expression(D) SEMICOLON. {
     A = tea_ast_node_create(TEA_AST_NODE_LET_MUT, B);
     if (C) tea_ast_node_add_child(A, C);
+    if (D) tea_ast_node_add_child(A, D);
 }
 
 assign_stmt(A) ::= IDENT(B) ASSIGN expression(C) SEMICOLON. {
