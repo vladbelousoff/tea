@@ -59,8 +59,6 @@ item(item_node) ::= attr_list(attrs) function(func). {
 
 item(item_node) ::= function(func). { item_node = func; }
 
-item(item_node) ::= native_function(native_func). { item_node = native_func; }
-
 item(item_node) ::= statement(stmt). { item_node = stmt; }
 
 item(item_node) ::= struct_definition(struct_def). { item_node = struct_def; }
@@ -83,41 +81,55 @@ attribute(attr_node) ::= AT IDENT(attr_name). {
     attr_node = tea_ast_node_create(TEA_AST_NODE_ATTR, attr_name);
 }
 
-function(func_node) ::= FN IDENT(func_name) LPAREN param_list_opt(params) RPAREN return_type_opt(return_type) LBRACE stmt_list_opt(body) RBRACE. {
-    func_node = tea_ast_node_create(TEA_AST_NODE_FUNCTION, func_name);
-    if (params) {
-        tea_ast_node_add_child(func_node, params);
-    }
-    if (return_type) {
-        tea_ast_node_add_child(func_node, return_type);
-    }
+function(func_node) ::= function_header(header) function_body(body). {
+    func_node = header;
     if (body) {
         tea_ast_node_add_child(func_node, body);
     }
 }
 
-function(func_node) ::= FN MUT IDENT(func_name) LPAREN param_list_opt(params) RPAREN return_type_opt(return_type) LBRACE stmt_list_opt(body) RBRACE. {
-    func_node = tea_ast_node_create(TEA_AST_NODE_FUNCTION_MUT, func_name);
+function_header(header_node) ::= NATIVE FN MUT IDENT(func_name) LPAREN param_list_opt(params) RPAREN return_type_opt(return_type). {
+    header_node = tea_ast_node_create(TEA_AST_NODE_NATIVE_FUNCTION, func_name);
     if (params) {
-        tea_ast_node_add_child(func_node, params);
+        tea_ast_node_add_child(header_node, params);
     }
     if (return_type) {
-        tea_ast_node_add_child(func_node, return_type);
-    }
-    if (body) {
-        tea_ast_node_add_child(func_node, body);
+        tea_ast_node_add_child(header_node, return_type);
     }
 }
 
-native_function(native_func_node) ::= NATIVE FN IDENT(func_name) LPAREN param_list_opt(params) RPAREN return_type_opt(return_type) SEMICOLON. {
-    native_func_node = tea_ast_node_create(TEA_AST_NODE_NATIVE_FUNCTION, func_name);
+function_header(header_node) ::= NATIVE FN IDENT(func_name) LPAREN param_list_opt(params) RPAREN return_type_opt(return_type). {
+    header_node = tea_ast_node_create(TEA_AST_NODE_NATIVE_FUNCTION, func_name);
     if (params) {
-        tea_ast_node_add_child(native_func_node, params);
+        tea_ast_node_add_child(header_node, params);
     }
     if (return_type) {
-        tea_ast_node_add_child(native_func_node, return_type);
+        tea_ast_node_add_child(header_node, return_type);
     }
 }
+
+function_header(header_node) ::= FN MUT IDENT(func_name) LPAREN param_list_opt(params) RPAREN return_type_opt(return_type). {
+    header_node = tea_ast_node_create(TEA_AST_NODE_FUNCTION, func_name);
+    if (params) {
+        tea_ast_node_add_child(header_node, params);
+    }
+    if (return_type) {
+        tea_ast_node_add_child(header_node, return_type);
+    }
+}
+
+function_header(header_node) ::= FN IDENT(func_name) LPAREN param_list_opt(params) RPAREN return_type_opt(return_type). {
+    header_node = tea_ast_node_create(TEA_AST_NODE_FUNCTION, func_name);
+    if (params) {
+        tea_ast_node_add_child(header_node, params);
+    }
+    if (return_type) {
+        tea_ast_node_add_child(header_node, return_type);
+    }
+}
+
+function_body(body_node) ::= LBRACE stmt_list_opt(stmts) RBRACE. { body_node = stmts; }
+function_body(body_node) ::= SEMICOLON. { body_node = NULL; }
 
 struct_definition(struct_def_node) ::= STRUCT IDENT(struct_name) LBRACE struct_field_list_opt(fields) RBRACE. {
     struct_def_node = tea_ast_node_create(TEA_AST_NODE_STRUCT, struct_name);
