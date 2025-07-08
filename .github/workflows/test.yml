@@ -14,17 +14,14 @@ jobs:
         os: [ ubuntu-latest, windows-latest ]
         compiler: [ gcc, clang, msvc ]
         exclude:
-          # Exclude clang on Windows as it's not commonly used
+          # Exclude gcc and clang on Windows, use only msvc
           - os: windows-latest
-            compiler: clang
+            compiler: [ clang, gcc ]
           # Exclude gcc on macOS as clang is the default
           - os: macos-latest
             compiler: gcc
-          # Exclude gcc and clang on Windows, use only msvc
-          - os: windows-latest
-            compiler: gcc
-          - os: windows-latest
-            compiler: clang
+          - os: ubuntu-latest
+            compiler: [ clang, msvc ]
 
     runs-on: ${{ matrix.os }}
 
