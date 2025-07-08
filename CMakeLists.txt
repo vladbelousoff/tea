@@ -4,6 +4,15 @@ project(tea_lang)
 
 set(CMAKE_C_STANDARD 99)
 
+# Enable warnings as errors
+if (MSVC)
+    # Microsoft Visual C++ compiler
+    add_compile_options(/WX)
+else ()
+    # GCC, Clang, and other compilers
+    add_compile_options(-Werror)
+endif ()
+
 # Include FetchContent for downloading external dependencies
 include(FetchContent)
 
@@ -35,12 +44,7 @@ set_target_properties(lemon_exe PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
 )
 
-# Path to the lemon executable
-if(WIN32)
-    set(LEMON_EXECUTABLE "${CMAKE_BINARY_DIR}/bin/lemon.exe")
-else()
-    set(LEMON_EXECUTABLE "${CMAKE_BINARY_DIR}/bin/lemon")
-endif()
+set(LEMON_EXECUTABLE "$<TARGET_FILE:lemon_exe>")
 
 # Path to the lemon template file (lempar.c)
 set(LEMON_TEMPLATE "${lemon_SOURCE_DIR}/lempar.c")
