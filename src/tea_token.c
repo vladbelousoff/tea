@@ -105,6 +105,8 @@ const char *tea_get_token_name(const int token_type)
       return "OR";
     case TEA_TOKEN_NUMBER:
       return "NUMBER";
+    case TEA_TOKEN_STRING:
+      return "STRING";
     default:
       return NULL;
   }

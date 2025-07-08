@@ -20,6 +20,7 @@
 %token GT LT EQ NE GE LE.
 %token AND OR.
 %token NUMBER.
+%token STRING.
 %token NATIVE.
 %token ARROW.
 %token IF ELSE WHILE.
@@ -437,6 +438,10 @@ primary_expr(primary_expr_node) ::= NEW IDENT(struct_type) LBRACE struct_field_i
     if (field_inits) {
         tea_ast_node_add_child(primary_expr_node, field_inits);
     }
+}
+
+primary_expr(primary_expr_node) ::= STRING(string_value). {
+    primary_expr_node = tea_ast_node_create(TEA_AST_NODE_STRING, string_value);
 }
 
 %syntax_error {

@@ -59,7 +59,10 @@ static void create_token(
     token->buffer[buffer_size] = EOS;
   }
 
-  if (token_type == TEA_TOKEN_IDENT || token_type == TEA_TOKEN_NUMBER) {
+  if (token_type == TEA_TOKEN_STRING) {
+    rtl_log_dbg(
+      "Token: '%.*s' (line: %d, col: %d)", buffer_size, buffer, token->line, token->column);
+  } else if (token_type == TEA_TOKEN_IDENT || token_type == TEA_TOKEN_NUMBER) {
     rtl_log_dbg("Token: %.*s (line: %d, col: %d)", buffer_size, buffer, token->line, token->column);
   } else {
     rtl_log_dbg("Token: <%s> (line: %d, col: %d)", tea_get_token_name(token_type), token->line,
@@ -290,6 +293,47 @@ static bool scan_number(tea_lexer_t *self, const char *input)
   return false;
 }
 
+static bool scan_string(tea_lexer_t *self, const char *input)
+{
+  if (input[self->position] == '\'') {
+    const int start_position = self->position + 1;  // Skip the opening quote
+    int current_position = start_position;
+    int string_length = 0;
+
+    // Scan until we find the closing quote
+    while (true) {
+      const char c = input[current_position];
+
+      if (c == EOS) {
+        rtl_log_err("Unterminated string literal at line %d, column %d", self->line, self->column);
+        exit(-1);
+      }
+
+      if (c == '\'') {
+        break;
+      }
+
+      if (c == EOL) {
+        return false;
+      }
+
+      self->column++;
+      current_position++;
+      string_length++;
+    }
+
+    const char *string_content = &input[start_position];
+    create_token(self, TEA_TOKEN_STRING, string_content, string_length);
+
+    self->position = current_position + 1;  // Skip the closing quote
+    self->column++;
+
+    return true;
+  }
+
+  return false;
+}
+
 static bool scan_ident(tea_lexer_t *self, const char *input)
 {
   char c = input[self->position];
@@ -343,6 +387,7 @@ static struct
 } scanners[] = {
   scan_comments,
   scan_operator,
+  scan_string,
   scan_number,
   scan_ident,
   { NULL },
