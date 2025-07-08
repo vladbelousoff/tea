@@ -36,7 +36,11 @@ set_target_properties(lemon_exe PROPERTIES
 )
 
 # Path to the lemon executable
-set(LEMON_EXECUTABLE "${CMAKE_BINARY_DIR}/bin/lemon")
+if(WIN32)
+    set(LEMON_EXECUTABLE "${CMAKE_BINARY_DIR}/bin/lemon.exe")
+else()
+    set(LEMON_EXECUTABLE "${CMAKE_BINARY_DIR}/bin/lemon")
+endif()
 
 # Path to the lemon template file (lempar.c)
 set(LEMON_TEMPLATE "${lemon_SOURCE_DIR}/lempar.c")
