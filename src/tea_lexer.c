@@ -201,6 +201,20 @@ static bool scan_operator(tea_lexer_t *self, const char *input)
     case '}':
       token_type = TEA_TOKEN_RBRACE;
       break;
+    case '&':
+      if (input[self->position + 1] == '&') {
+        token_type = TEA_TOKEN_AND;
+        token_length = 2;
+        break;
+      }
+      return false;
+    case '|':
+      if (input[self->position + 1] == '|') {
+        token_type = TEA_TOKEN_OR;
+        token_length = 2;
+        break;
+      }
+      return false;
     case '>':
       if (input[self->position + 1] == '=') {
         token_type = TEA_TOKEN_GE;

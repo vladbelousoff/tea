@@ -18,6 +18,7 @@
 %token RETURN.
 %token MINUS PLUS STAR SLASH.
 %token GT LT EQ NE GE LE.
+%token AND OR.
 %token NUMBER.
 %token NATIVE.
 %token ARROW.
@@ -272,7 +273,19 @@ while_stmt(while_stmt_node) ::= WHILE expression(condition) LBRACE stmt_list_opt
     }
 }
 
-expression(expr_node) ::= comp_expr(comp_expr_node). { expr_node = comp_expr_node; }
+expression(expr_node) ::= logical_expr(logical_expr_node). { expr_node = logical_expr_node; }
+
+logical_expr(logical_expr_node) ::= logical_expr(left_expr) AND(op) comp_expr(right_expr). {
+    logical_expr_node = tea_ast_node_create(TEA_AST_NODE_BINOP, op);
+    tea_ast_node_set_binop_children(logical_expr_node, left_expr, right_expr);
+}
+
+logical_expr(logical_expr_node) ::= logical_expr(left_expr) OR(op) comp_expr(right_expr). {
+    logical_expr_node = tea_ast_node_create(TEA_AST_NODE_BINOP, op);
+    tea_ast_node_set_binop_children(logical_expr_node, left_expr, right_expr);
+}
+
+logical_expr(logical_expr_node) ::= comp_expr(comp_expr_node). { logical_expr_node = comp_expr_node; }
 
 comp_expr(comp_expr_node) ::= comp_expr(left_expr) GT(op) add_expr(right_expr). {
     comp_expr_node = tea_ast_node_create(TEA_AST_NODE_BINOP, op);

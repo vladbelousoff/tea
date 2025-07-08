@@ -96,6 +96,10 @@ const char *tea_get_token_name(const int token_type)
       return "GE";
     case TEA_TOKEN_LE:
       return "LE";
+    case TEA_TOKEN_AND:
+      return "AND";
+    case TEA_TOKEN_OR:
+      return "OR";
     case TEA_TOKEN_NUMBER:
       return "NUMBER";
     default:
