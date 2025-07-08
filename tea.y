@@ -95,6 +95,19 @@ function(func_node) ::= FN IDENT(func_name) LPAREN param_list_opt(params) RPAREN
     }
 }
 
+function(func_node) ::= FN MUT IDENT(func_name) LPAREN param_list_opt(params) RPAREN return_type_opt(return_type) LBRACE stmt_list_opt(body) RBRACE. {
+    func_node = tea_ast_node_create(TEA_AST_NODE_FUNCTION_MUT, func_name);
+    if (params) {
+        tea_ast_node_add_child(func_node, params);
+    }
+    if (return_type) {
+        tea_ast_node_add_child(func_node, return_type);
+    }
+    if (body) {
+        tea_ast_node_add_child(func_node, body);
+    }
+}
+
 native_function(native_func_node) ::= NATIVE FN IDENT(func_name) LPAREN param_list_opt(params) RPAREN return_type_opt(return_type) SEMICOLON. {
     native_func_node = tea_ast_node_create(TEA_AST_NODE_NATIVE_FUNCTION, func_name);
     if (params) {

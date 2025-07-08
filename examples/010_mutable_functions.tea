@@ -1,0 +1,13 @@
+// Example demonstrating mutable functions
+// This shows the new "fn mut" syntax for functions that can modify variables
+
+let x = 5;
+
+fn mut increment() {
+    x = x + 1;
+}
+
+fn regular_function() {
+    // This function cannot modify x
+    let y = x + 10;
+}

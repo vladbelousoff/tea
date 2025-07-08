@@ -324,6 +324,7 @@ bool tea_interp_execute(tea_context_t *context, tea_ast_node_t *node)
       return success;
     }
     case TEA_AST_NODE_FUNCTION:
+    case TEA_AST_NODE_FUNCTION_MUT:
       // Skip functions for now
       return true;
     default:
