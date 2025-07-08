@@ -94,8 +94,6 @@ static const char *get_node_type_name(const tea_ast_node_type_t type)
       return "STMT";
     case TEA_AST_NODE_LET:
       return "LET";
-    case TEA_AST_NODE_LET_MUT:
-      return "LET_MUT";
     case TEA_AST_NODE_MUT:
       return "MUT";
     case TEA_AST_NODE_ASSIGN:

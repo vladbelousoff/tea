@@ -295,18 +295,11 @@ statement(stmt_node) ::= return_stmt(return_stmt_node). { stmt_node = return_stm
 statement(stmt_node) ::= if_stmt(if_stmt_node). { stmt_node = if_stmt_node; }
 statement(stmt_node) ::= while_stmt(while_stmt_node). { stmt_node = while_stmt_node; }
 
-let_stmt(let_stmt_node) ::= LET IDENT(var_name) type_annotation_opt(type_annot) ASSIGN expression(init_expr) SEMICOLON. {
+let_stmt(let_stmt_node) ::= LET mut_opt(mut) IDENT(var_name) type_annotation_opt(type_annot) ASSIGN expression(init_expr) SEMICOLON. {
     let_stmt_node = tea_ast_node_create(TEA_AST_NODE_LET, var_name);
-    if (type_annot) {
-        tea_ast_node_add_child(let_stmt_node, type_annot);
+    if (mut) {
+        tea_ast_node_add_child(let_stmt_node, mut);
     }
-    if (init_expr) {
-        tea_ast_node_add_child(let_stmt_node, init_expr);
-    }
-}
-
-let_stmt(let_stmt_node) ::= LET MUT IDENT(var_name) type_annotation_opt(type_annot) ASSIGN expression(init_expr) SEMICOLON. {
-    let_stmt_node = tea_ast_node_create(TEA_AST_NODE_LET_MUT, var_name);
     if (type_annot) {
         tea_ast_node_add_child(let_stmt_node, type_annot);
     }
