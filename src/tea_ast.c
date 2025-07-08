@@ -126,6 +126,8 @@ static const char *get_node_type_name(const tea_ast_node_type_t type)
       return "STRUCT_INSTANCE";
     case TEA_AST_NODE_STRUCT_FIELD_INIT:
       return "STRUCT_FIELD_INIT";
+    case TEA_AST_NODE_STRING:
+      return "STRING";
     default:
       return "UNKNOWN";
   }
@@ -154,7 +156,11 @@ static void tea_ast_node_print_tree_recursive(
 
   const tea_token_t *token = node->token;
   if (token) {
-    printf(": %.*s", token->buffer_size, token->buffer);
+    if (node->type == TEA_AST_NODE_STRING) {
+      printf(": '%.*s'", token->buffer_size, token->buffer);
+    } else {
+      printf(": %.*s", token->buffer_size, token->buffer);
+    }
   }
 
   if (token && token->line > 0 && token->column > 0) {
