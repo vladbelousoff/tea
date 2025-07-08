@@ -149,12 +149,13 @@ if (CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)
         # Add a test that runs the tea executable with this file
         add_test(
                 NAME "test_${TEST_NAME}"
-                COMMAND $<TARGET_FILE:tea> ${TEA_FILE}
+                COMMAND tea ${TEA_FILE}
         )
 
-        # Set the working directory to the build directory
+        # Set the working directory to the build directory and ensure tea target is built
         set_tests_properties("test_${TEST_NAME}" PROPERTIES
                 WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+                REQUIRED_FILES $<TARGET_FILE:tea>
         )
     endforeach ()
 endif ()
