@@ -1,4 +1,4 @@
-name: Test Tea
+name: test
 
 on:
   push:
@@ -11,8 +11,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-latest ]
-        compiler: [ gcc, clang ]
+        os: [ ubuntu-latest, windows-latest ]
+        compiler: [ gcc, clang, msvc ]
         exclude:
           # Exclude clang on Windows as it's not commonly used
           - os: windows-latest
@@ -20,6 +20,11 @@ jobs:
           # Exclude gcc on macOS as clang is the default
           - os: macos-latest
             compiler: gcc
+          # Exclude gcc and clang on Windows, use only msvc
+          - os: windows-latest
+            compiler: gcc
+          - os: windows-latest
+            compiler: clang
 
     runs-on: ${{ matrix.os }}
 
@@ -55,11 +60,11 @@ jobs:
           cd build
           make -j$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 2)
 
-      - name: Build project (Windows)
-        if: matrix.os == 'windows-latest'
+      - name: Build project (Windows MSVC)
+        if: matrix.os == 'windows-latest' && matrix.compiler == 'msvc'
         run: |
           cd build
-          make
+          cmake --build . --config Debug
 
       - name: Run tests
         run: |
