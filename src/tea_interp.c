@@ -58,9 +58,11 @@ static tea_value_t tea_value_binop(
       case TEA_TOKEN_LT:
         return tea_value_create_float(left.float_value < right.float_value ? 1.0f : 0.0f);
       case TEA_TOKEN_AND:
-        return tea_value_create_float((left.float_value != 0.0f && right.float_value != 0.0f) ? 1.0f : 0.0f);
+        return tea_value_create_float(
+          (left.float_value != 0.0f && right.float_value != 0.0f) ? 1.0f : 0.0f);
       case TEA_TOKEN_OR:
-        return tea_value_create_float((left.float_value != 0.0f || right.float_value != 0.0f) ? 1.0f : 0.0f);
+        return tea_value_create_float(
+          (left.float_value != 0.0f || right.float_value != 0.0f) ? 1.0f : 0.0f);
       default:
         break;
     }
