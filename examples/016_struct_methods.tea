@@ -1,0 +1,61 @@
+// Struct with methods
+struct Point {
+    x: float;
+    y: float;
+    
+    fn distance_to(other: Point) -> float {
+        let dx = x - other.x;
+        let dy = y - other.y;
+        return dx * dx + dy * dy;
+    }
+    
+    fn move(dx: float, dy: float) {
+        x = x + dx;
+        y = y + dy;
+    }
+    
+    fn get_x() -> float {
+        return x;
+    }
+    
+    fn get_y() -> float {
+        return y;
+    }
+}
+
+// Struct with only methods (no fields)
+struct Calculator {
+    fn add(a: int, b: int) -> int {
+        return a + b;
+    }
+    
+    fn multiply(a: int, b: int) -> int {
+        return a * b;
+    }
+    
+    fn factorial(n: int) -> int {
+        if n <= 1 {
+            return 1;
+        } else {
+            return n * factorial(n - 1);
+        }
+    }
+}
+
+// Struct with both fields and methods
+struct Person {
+    name: string;
+    age: int;
+    
+    fn is_adult() -> bool {
+        return age >= 18;
+    }
+    
+    fn birthday() {
+        age = age + 1;
+    }
+    
+    fn get_info() -> string {
+        return name;
+    }
+} 

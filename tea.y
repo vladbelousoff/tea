@@ -133,33 +133,46 @@ function_header(header_node) ::= FN IDENT(func_name) LPAREN param_list_opt(param
 function_body(body_node) ::= LBRACE stmt_list_opt(stmts) RBRACE. { body_node = stmts; }
 function_body(body_node) ::= SEMICOLON. { body_node = NULL; }
 
-struct_definition(struct_def_node) ::= STRUCT IDENT(struct_name) LBRACE struct_field_list_opt(fields) RBRACE. {
+struct_definition(struct_def_node) ::= STRUCT IDENT(struct_name) LBRACE struct_member_list_opt(members) RBRACE. {
     struct_def_node = tea_ast_node_create(TEA_AST_NODE_STRUCT, struct_name);
-    if (fields) {
-        tea_ast_node_add_child(struct_def_node, fields);
+    if (members) {
+        tea_ast_node_add_child(struct_def_node, members);
     }
 }
 
-struct_field_list_opt(field_list_node) ::= struct_field_list(fields). { field_list_node = fields; }
-struct_field_list_opt(field_list_node) ::= . { field_list_node = NULL; }
+struct_member_list_opt(member_list_node) ::= struct_member_list(members). { member_list_node = members; }
+struct_member_list_opt(member_list_node) ::= . { member_list_node = NULL; }
 
-struct_field_list(field_list_node) ::= struct_field_list(existing_fields) struct_field(new_field). {
-    field_list_node = existing_fields ? existing_fields : tea_ast_node_create(TEA_AST_NODE_STRUCT_FIELD, NULL);
-    if (new_field) {
-        tea_ast_node_add_child(field_list_node, new_field);
+struct_member_list(member_list_node) ::= struct_member_list(existing_members) struct_member(new_member). {
+    member_list_node = existing_members ? existing_members : tea_ast_node_create(TEA_AST_NODE_STRUCT_MEMBER_LIST, NULL);
+    if (new_member) {
+        tea_ast_node_add_child(member_list_node, new_member);
     }
 }
 
-struct_field_list(field_list_node) ::= struct_field(single_field). {
-    field_list_node = tea_ast_node_create(TEA_AST_NODE_STRUCT_FIELD, NULL);
-    if (single_field) {
-        tea_ast_node_add_child(field_list_node, single_field);
+struct_member_list(member_list_node) ::= struct_member(single_member). {
+    member_list_node = tea_ast_node_create(TEA_AST_NODE_STRUCT_MEMBER_LIST, NULL);
+    if (single_member) {
+        tea_ast_node_add_child(member_list_node, single_member);
     }
 }
+
+struct_member(member_node) ::= struct_field(field_node). { member_node = field_node; }
+struct_member(member_node) ::= struct_method(method_node). { member_node = method_node; }
 
 struct_field(field_node) ::= IDENT(field_name) COLON IDENT(field_type) SEMICOLON. {
     field_node = tea_ast_node_create(TEA_AST_NODE_STRUCT_FIELD, field_name);
     tea_ast_node_add_child(field_node, tea_ast_node_create(TEA_AST_NODE_IDENT, field_type));
+}
+
+struct_method(method_node) ::= function_header(header) function_body(body). {
+    method_node = tea_ast_node_create(TEA_AST_NODE_STRUCT_METHOD, NULL);
+    if (header) {
+        tea_ast_node_add_child(method_node, header);
+    }
+    if (body) {
+        tea_ast_node_add_child(method_node, body);
+    }
 }
 
 struct_field_init_list_opt(field_init_list_node) ::= struct_field_init_list(field_inits). { field_init_list_node = field_inits; }

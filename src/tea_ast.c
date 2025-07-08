@@ -130,6 +130,10 @@ static const char *get_node_type_name(const tea_ast_node_type_t type)
       return "STRING";
     case TEA_AST_NODE_FIELD_ACCESS:
       return "FIELD_ACCESS";
+    case TEA_AST_NODE_STRUCT_METHOD:
+      return "STRUCT_METHOD";
+    case TEA_AST_NODE_STRUCT_MEMBER_LIST:
+      return "STRUCT_MEMBER_LIST";
     default:
       return "UNKNOWN";
   }
