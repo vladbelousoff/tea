@@ -17,7 +17,6 @@ tea_ast_node_t *_tea_ast_node_create(
   node->type = type;
   node->token = token;
 
-  // Initialize union based on node type
   if (type == TEA_AST_NODE_BINOP) {
     node->binop.lhs = NULL;
     node->binop.rhs = NULL;
@@ -65,7 +64,6 @@ void tea_ast_node_free(tea_ast_node_t *node)
   } else {
     rtl_list_entry_t *entry;
     rtl_list_entry_t *safe;
-
     rtl_list_for_each_safe(entry, safe, &node->children)
     {
       tea_ast_node_t *child = rtl_list_record(entry, tea_ast_node_t, link);
@@ -188,7 +186,6 @@ static void tea_ast_node_print_tree_recursive(
     rtl_list_entry_t *entry;
     int child_count = 0;
 
-    // Count children first
     rtl_list_for_each(entry, &node->children)
     {
       child_count++;
@@ -199,7 +196,7 @@ static void tea_ast_node_print_tree_recursive(
     {
       current_child++;
       tea_ast_node_t *child = rtl_list_record(entry, tea_ast_node_t, link);
-      is_last_stack[depth] = (current_child == child_count);
+      is_last_stack[depth] = current_child == child_count;
       tea_ast_node_print_tree_recursive(child, depth + 1, is_last_stack);
     }
   }
@@ -207,8 +204,7 @@ static void tea_ast_node_print_tree_recursive(
 
 void tea_ast_node_print(tea_ast_node_t *node, const int depth)
 {
-  // Allocate a stack to track which nodes are last children at each depth
-  bool is_last_stack[100];  // Assuming max depth of 100
+  bool is_last_stack[100];
   for (int i = 0; i < 100; i++) {
     is_last_stack[i] = true;
   }
