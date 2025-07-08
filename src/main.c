@@ -10,11 +10,9 @@ void print_usage(const char *program_name)
   rtl_log_inf("Usage: %s [options] <tea_file>", program_name);
   rtl_log_inf("Options:");
   rtl_log_inf("  -h, --help     Show this help message");
-  rtl_log_inf("  -t, --test     Run with test input");
   rtl_log_inf("");
   rtl_log_inf("Examples:");
   rtl_log_inf("  %s example.tea", program_name);
-  rtl_log_inf("  %s --test", program_name);
 }
 
 int main(const int argc, char *argv[])
