@@ -128,6 +128,8 @@ static const char *get_node_type_name(const tea_ast_node_type_t type)
       return "STRUCT_FIELD_INIT";
     case TEA_AST_NODE_STRING:
       return "STRING";
+    case TEA_AST_NODE_FIELD_ACCESS:
+      return "FIELD_ACCESS";
     default:
       return "UNKNOWN";
   }

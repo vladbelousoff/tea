@@ -26,6 +26,7 @@
 %token IF ELSE WHILE.
 %token STRUCT.
 %token NEW.
+%token DOT.
 
 program(program_node) ::= item_list(items). {
     program_node = tea_ast_node_create(TEA_AST_NODE_PROGRAM, NULL);
@@ -442,6 +443,13 @@ primary_expr(primary_expr_node) ::= NEW IDENT(struct_type) LBRACE struct_field_i
 
 primary_expr(primary_expr_node) ::= STRING(string_value). {
     primary_expr_node = tea_ast_node_create(TEA_AST_NODE_STRING, string_value);
+}
+
+primary_expr(primary_expr_node) ::= primary_expr(object_expr) DOT IDENT(field_name). {
+    primary_expr_node = tea_ast_node_create(TEA_AST_NODE_FIELD_ACCESS, field_name);
+    if (object_expr) {
+        tea_ast_node_add_child(primary_expr_node, object_expr);
+    }
 }
 
 %syntax_error {

@@ -1,0 +1,19 @@
+// Example demonstrating struct field access using dot operator
+
+struct Person {
+    name: string;
+    age: number;
+}
+
+fn main() {
+    let person = new Person {
+        name: 'Alice',
+        age: 30
+    };
+    
+    // Access struct fields using dot operator
+    let person_name = person.name;
+    let person_age = person.age;
+    
+    return person_name;
+} 

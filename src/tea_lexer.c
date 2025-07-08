@@ -234,6 +234,9 @@ static bool scan_operator(tea_lexer_t *self, const char *input)
       }
       token_type = TEA_TOKEN_LT;
       break;
+    case '.':
+      token_type = TEA_TOKEN_DOT;
+      break;
     default:
       return false;
   }

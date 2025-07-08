@@ -30,6 +30,7 @@ typedef enum
   TEA_AST_NODE_STRUCT_INSTANCE,
   TEA_AST_NODE_STRUCT_FIELD_INIT,
   TEA_AST_NODE_STRING,
+  TEA_AST_NODE_FIELD_ACCESS,
 } tea_ast_node_type_t;
 
 typedef struct tea_ast_node
