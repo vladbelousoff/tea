@@ -1,30 +1,37 @@
-// Struct with methods
+// Struct definition with fields only
 struct Point {
     x: float;
     y: float;
-    
+}
+
+// Impl block for Point struct
+impl Point {
     fn distance_to(other: Point) -> float {
-        let dx = x - other.x;
-        let dy = y - other.y;
+        let dx = self.x - other.x;
+        let dy = self.y - other.y;
         return dx * dx + dy * dy;
     }
     
     fn move(dx: float, dy: float) {
-        x = x + dx;
-        y = y + dy;
+        self.x = self.x + dx;
+        self.y = self.y + dy;
     }
     
     fn get_x() -> float {
-        return x;
+        return self.x;
     }
     
     fn get_y() -> float {
-        return y;
+        return self.y;
     }
 }
 
-// Struct with only methods (no fields)
+// Struct with only fields (no methods in struct definition)
 struct Calculator {
+}
+
+// Impl block for Calculator struct
+impl Calculator {
     fn add(a: int, b: int) -> int {
         return a + b;
     }
@@ -42,20 +49,23 @@ struct Calculator {
     }
 }
 
-// Struct with both fields and methods
+// Struct with fields
 struct Person {
     name: string;
     age: int;
-    
+}
+
+// Impl block for Person struct
+impl Person {
     fn is_adult() -> bool {
-        return age >= 18;
+        return self.age >= 18;
     }
     
     fn birthday() {
-        age = age + 1;
+        self.age = self.age + 1;
     }
     
     fn get_info() -> string {
-        return name;
+        return self.name;
     }
 } 

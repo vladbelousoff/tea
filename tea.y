@@ -25,6 +25,8 @@
 %token ARROW.
 %token IF ELSE WHILE.
 %token STRUCT.
+%token IMPL.
+%token SELF.
 %token NEW.
 %token DOT.
 
@@ -64,6 +66,7 @@ item(item_node) ::= function(func). { item_node = func; }
 item(item_node) ::= statement(stmt). { item_node = stmt; }
 
 item(item_node) ::= struct_definition(struct_def). { item_node = struct_def; }
+item(item_node) ::= impl_block(impl_block_node). { item_node = impl_block_node; }
 
 attr_list(attr_list_node) ::= attr_list(existing_attrs) attribute(new_attr). {
     attr_list_node = existing_attrs ? existing_attrs : tea_ast_node_create(TEA_AST_NODE_ATTR, NULL);
@@ -133,40 +136,61 @@ function_header(header_node) ::= FN IDENT(func_name) LPAREN param_list_opt(param
 function_body(body_node) ::= LBRACE stmt_list_opt(stmts) RBRACE. { body_node = stmts; }
 function_body(body_node) ::= SEMICOLON. { body_node = NULL; }
 
-struct_definition(struct_def_node) ::= STRUCT IDENT(struct_name) LBRACE struct_member_list_opt(members) RBRACE. {
+struct_definition(struct_def_node) ::= STRUCT IDENT(struct_name) LBRACE struct_field_list_opt(fields) RBRACE. {
     struct_def_node = tea_ast_node_create(TEA_AST_NODE_STRUCT, struct_name);
-    if (members) {
-        tea_ast_node_add_child(struct_def_node, members);
+    if (fields) {
+        tea_ast_node_add_child(struct_def_node, fields);
     }
 }
 
-struct_member_list_opt(member_list_node) ::= struct_member_list(members). { member_list_node = members; }
-struct_member_list_opt(member_list_node) ::= . { member_list_node = NULL; }
+struct_field_list_opt(field_list_node) ::= struct_field_list(fields). { field_list_node = fields; }
+struct_field_list_opt(field_list_node) ::= . { field_list_node = NULL; }
 
-struct_member_list(member_list_node) ::= struct_member_list(existing_members) struct_member(new_member). {
-    member_list_node = existing_members ? existing_members : tea_ast_node_create(TEA_AST_NODE_STRUCT_MEMBER_LIST, NULL);
-    if (new_member) {
-        tea_ast_node_add_child(member_list_node, new_member);
+struct_field_list(field_list_node) ::= struct_field_list(existing_fields) struct_field(new_field). {
+    field_list_node = existing_fields ? existing_fields : tea_ast_node_create(TEA_AST_NODE_STRUCT_FIELD, NULL);
+    if (new_field) {
+        tea_ast_node_add_child(field_list_node, new_field);
     }
 }
 
-struct_member_list(member_list_node) ::= struct_member(single_member). {
-    member_list_node = tea_ast_node_create(TEA_AST_NODE_STRUCT_MEMBER_LIST, NULL);
-    if (single_member) {
-        tea_ast_node_add_child(member_list_node, single_member);
+struct_field_list(field_list_node) ::= struct_field(single_field). {
+    field_list_node = tea_ast_node_create(TEA_AST_NODE_STRUCT_FIELD, NULL);
+    if (single_field) {
+        tea_ast_node_add_child(field_list_node, single_field);
     }
 }
-
-struct_member(member_node) ::= struct_field(field_node). { member_node = field_node; }
-struct_member(member_node) ::= struct_method(method_node). { member_node = method_node; }
 
 struct_field(field_node) ::= IDENT(field_name) COLON IDENT(field_type) SEMICOLON. {
     field_node = tea_ast_node_create(TEA_AST_NODE_STRUCT_FIELD, field_name);
     tea_ast_node_add_child(field_node, tea_ast_node_create(TEA_AST_NODE_IDENT, field_type));
 }
 
-struct_method(method_node) ::= function_header(header) function_body(body). {
-    method_node = tea_ast_node_create(TEA_AST_NODE_STRUCT_METHOD, NULL);
+impl_block(impl_block_node) ::= IMPL IDENT(struct_name) LBRACE impl_method_list_opt(methods) RBRACE. {
+    impl_block_node = tea_ast_node_create(TEA_AST_NODE_IMPL_BLOCK, struct_name);
+    if (methods) {
+        tea_ast_node_add_child(impl_block_node, methods);
+    }
+}
+
+impl_method_list_opt(method_list_node) ::= impl_method_list(methods). { method_list_node = methods; }
+impl_method_list_opt(method_list_node) ::= . { method_list_node = NULL; }
+
+impl_method_list(method_list_node) ::= impl_method_list(existing_methods) impl_method(new_method). {
+    method_list_node = existing_methods ? existing_methods : tea_ast_node_create(TEA_AST_NODE_IMPL_ITEM, NULL);
+    if (new_method) {
+        tea_ast_node_add_child(method_list_node, new_method);
+    }
+}
+
+impl_method_list(method_list_node) ::= impl_method(single_method). {
+    method_list_node = tea_ast_node_create(TEA_AST_NODE_IMPL_ITEM, NULL);
+    if (single_method) {
+        tea_ast_node_add_child(method_list_node, single_method);
+    }
+}
+
+impl_method(method_node) ::= function_header(header) function_body(body). {
+    method_node = tea_ast_node_create(TEA_AST_NODE_IMPL_ITEM, NULL);
     if (header) {
         tea_ast_node_add_child(method_node, header);
     }
@@ -307,6 +331,16 @@ assign_stmt(assign_stmt_node) ::= IDENT(var_name) ASSIGN expression(value_expr) 
     }
 }
 
+assign_stmt(assign_stmt_node) ::= field_access(field_expr) ASSIGN expression(value_expr) SEMICOLON. {
+    assign_stmt_node = tea_ast_node_create(TEA_AST_NODE_ASSIGN, NULL);
+    if (field_expr) {
+        tea_ast_node_add_child(assign_stmt_node, field_expr);
+    }
+    if (value_expr) {
+        tea_ast_node_add_child(assign_stmt_node, value_expr);
+    }
+}
+
 return_stmt(return_stmt_node) ::= RETURN SEMICOLON. {
     return_stmt_node = tea_ast_node_create(TEA_AST_NODE_RETURN, NULL);
 }
@@ -428,6 +462,10 @@ primary_expr(primary_expr_node) ::= LPAREN expression(expr) RPAREN. {
     primary_expr_node = expr;
 }
 
+primary_expr(primary_expr_node) ::= SELF(self_token). {
+    primary_expr_node = tea_ast_node_create(TEA_AST_NODE_IDENT, self_token);
+}
+
 primary_expr(primary_expr_node) ::= IDENT(ident_name). {
     primary_expr_node = tea_ast_node_create(TEA_AST_NODE_IDENT, ident_name);
 }
@@ -458,11 +496,15 @@ primary_expr(primary_expr_node) ::= STRING(string_value). {
     primary_expr_node = tea_ast_node_create(TEA_AST_NODE_STRING, string_value);
 }
 
-primary_expr(primary_expr_node) ::= primary_expr(object_expr) DOT IDENT(field_name). {
-    primary_expr_node = tea_ast_node_create(TEA_AST_NODE_FIELD_ACCESS, field_name);
+field_access(field_access_node) ::= primary_expr(object_expr) DOT IDENT(field_name). {
+    field_access_node = tea_ast_node_create(TEA_AST_NODE_FIELD_ACCESS, field_name);
     if (object_expr) {
-        tea_ast_node_add_child(primary_expr_node, object_expr);
+        tea_ast_node_add_child(field_access_node, object_expr);
     }
+}
+
+primary_expr(primary_expr_node) ::= field_access(field_access_node). {
+    primary_expr_node = field_access_node;
 }
 
 %syntax_error {
