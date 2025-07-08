@@ -3,7 +3,6 @@
 
 #include "rtl.h"
 #include "tea_ast.h"
-#include "tea_interp.h"
 #include "tea_parser.h"
 
 void print_usage(const char *program_name)
@@ -67,22 +66,6 @@ int main(const int argc, char *argv[])
   if (ast) {
     tea_ast_node_print(ast, 0);
     rtl_log_dbg("Root node type: %s", ast->type == TEA_AST_NODE_PROGRAM ? "PROGRAM" : "OTHER");
-
-#if 0
-    // Execute the script
-    rtl_log_inf("Executing script...");
-    tea_context_t context;
-    tea_interp_init(&context);
-
-    const bool execution_success = tea_interp_execute(&context, ast);
-    if (execution_success) {
-      rtl_log_inf("Script executed successfully!");
-    } else {
-      rtl_log_err("Script execution failed!");
-    }
-
-    tea_interp_cleanup(&context);
-#endif
 
     tea_ast_node_free(ast);
   }
