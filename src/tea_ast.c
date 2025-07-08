@@ -137,25 +137,24 @@ static const char *get_node_type_name(const tea_ast_node_type_t type)
   }
 }
 
-static void print_tree_prefix(const int depth, const bool *is_last_stack)
+static void print_tree_prefix(const int depth)
 {
   for (int i = 0; i < depth; i++) {
     if (i == depth - 1) {
-      printf(is_last_stack[i] ? "`- " : "|- ");
+      printf("`- ");
     } else {
-      printf(is_last_stack[i] ? "   " : "|  ");
+      printf("|  ");
     }
   }
 }
 
-static void tea_ast_node_print_tree_recursive(
-  tea_ast_node_t *node, const int depth, bool *is_last_stack)
+static void tea_ast_node_print_tree_recursive(tea_ast_node_t *node, const int depth)
 {
   if (!node) {
     return;
   }
 
-  print_tree_prefix(depth, is_last_stack);
+  print_tree_prefix(depth);
   printf("%s", get_node_type_name(node->type));
 
   const tea_token_t *token = node->token;
@@ -175,40 +174,24 @@ static void tea_ast_node_print_tree_recursive(
 
   if (node->type == TEA_AST_NODE_BINOP) {
     if (node->binop.lhs) {
-      is_last_stack[depth] = !node->binop.rhs;
-      tea_ast_node_print_tree_recursive(node->binop.lhs, depth + 1, is_last_stack);
+      tea_ast_node_print_tree_recursive(node->binop.lhs, depth + 1);
     }
     if (node->binop.rhs) {
-      is_last_stack[depth] = true;
-      tea_ast_node_print_tree_recursive(node->binop.rhs, depth + 1, is_last_stack);
+      tea_ast_node_print_tree_recursive(node->binop.rhs, depth + 1);
     }
   } else {
     rtl_list_entry_t *entry;
-    int child_count = 0;
-
     rtl_list_for_each(entry, &node->children)
     {
-      child_count++;
-    }
-
-    int current_child = 0;
-    rtl_list_for_each(entry, &node->children)
-    {
-      current_child++;
       tea_ast_node_t *child = rtl_list_record(entry, tea_ast_node_t, link);
-      is_last_stack[depth] = current_child == child_count;
-      tea_ast_node_print_tree_recursive(child, depth + 1, is_last_stack);
+      tea_ast_node_print_tree_recursive(child, depth + 1);
     }
   }
 }
 
 void tea_ast_node_print(tea_ast_node_t *node, const int depth)
 {
-  bool is_last_stack[100];
-  for (int i = 0; i < 100; i++) {
-    is_last_stack[i] = true;
-  }
-  tea_ast_node_print_tree_recursive(node, depth, is_last_stack);
+  tea_ast_node_print_tree_recursive(node, depth);
 }
 
 void tea_ast_node_set_binop_children(
