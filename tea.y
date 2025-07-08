@@ -86,14 +86,18 @@ attribute(attr_node) ::= AT IDENT(attr_name). {
     attr_node = tea_ast_node_create(TEA_AST_NODE_ATTR, attr_name);
 }
 
-function(func_node) ::= function_header(header) function_body(body). {
+function(func_node) ::= native_function_header(header) SEMICOLON. {
+    func_node = header;
+}
+
+function(func_node) ::= regular_function_header(header) function_body(body). {
     func_node = header;
     if (body) {
         tea_ast_node_add_child(func_node, body);
     }
 }
 
-function_header(header_node) ::= NATIVE FN MUT IDENT(func_name) LPAREN param_list_opt(params) RPAREN return_type_opt(return_type). {
+native_function_header(header_node) ::= NATIVE FN MUT IDENT(func_name) LPAREN param_list_opt(params) RPAREN return_type_opt(return_type). {
     header_node = tea_ast_node_create(TEA_AST_NODE_NATIVE_FUNCTION, func_name);
     if (params) {
         tea_ast_node_add_child(header_node, params);
@@ -103,7 +107,7 @@ function_header(header_node) ::= NATIVE FN MUT IDENT(func_name) LPAREN param_lis
     }
 }
 
-function_header(header_node) ::= NATIVE FN IDENT(func_name) LPAREN param_list_opt(params) RPAREN return_type_opt(return_type). {
+native_function_header(header_node) ::= NATIVE FN IDENT(func_name) LPAREN param_list_opt(params) RPAREN return_type_opt(return_type). {
     header_node = tea_ast_node_create(TEA_AST_NODE_NATIVE_FUNCTION, func_name);
     if (params) {
         tea_ast_node_add_child(header_node, params);
@@ -113,7 +117,7 @@ function_header(header_node) ::= NATIVE FN IDENT(func_name) LPAREN param_list_op
     }
 }
 
-function_header(header_node) ::= FN MUT IDENT(func_name) LPAREN param_list_opt(params) RPAREN return_type_opt(return_type). {
+regular_function_header(header_node) ::= FN MUT IDENT(func_name) LPAREN param_list_opt(params) RPAREN return_type_opt(return_type). {
     header_node = tea_ast_node_create(TEA_AST_NODE_FUNCTION, func_name);
     if (params) {
         tea_ast_node_add_child(header_node, params);
@@ -123,7 +127,7 @@ function_header(header_node) ::= FN MUT IDENT(func_name) LPAREN param_list_opt(p
     }
 }
 
-function_header(header_node) ::= FN IDENT(func_name) LPAREN param_list_opt(params) RPAREN return_type_opt(return_type). {
+regular_function_header(header_node) ::= FN IDENT(func_name) LPAREN param_list_opt(params) RPAREN return_type_opt(return_type). {
     header_node = tea_ast_node_create(TEA_AST_NODE_FUNCTION, func_name);
     if (params) {
         tea_ast_node_add_child(header_node, params);
@@ -189,7 +193,7 @@ impl_method_list(method_list_node) ::= impl_method(single_method). {
     }
 }
 
-impl_method(method_node) ::= function_header(header) function_body(body). {
+impl_method(method_node) ::= regular_function_header(header) function_body(body). {
     method_node = tea_ast_node_create(TEA_AST_NODE_IMPL_ITEM, NULL);
     if (header) {
         tea_ast_node_add_child(method_node, header);
