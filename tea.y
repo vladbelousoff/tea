@@ -24,6 +24,7 @@
 %token ARROW.
 %token IF ELSE WHILE.
 %token STRUCT.
+%token NEW.
 
 program(program_node) ::= item_list(items). {
     program_node = tea_ast_node_create(TEA_AST_NODE_PROGRAM, NULL);
@@ -145,6 +146,37 @@ struct_field_list(field_list_node) ::= struct_field(single_field). {
 struct_field(field_node) ::= IDENT(field_name) COLON IDENT(field_type) SEMICOLON. {
     field_node = tea_ast_node_create(TEA_AST_NODE_STRUCT_FIELD, field_name);
     tea_ast_node_add_child(field_node, tea_ast_node_create(TEA_AST_NODE_IDENT, field_type));
+}
+
+struct_field_init_list_opt(field_init_list_node) ::= struct_field_init_list(field_inits). { field_init_list_node = field_inits; }
+struct_field_init_list_opt(field_init_list_node) ::= . { field_init_list_node = NULL; }
+
+struct_field_init_list(field_init_list_node) ::= struct_field_init_list(existing_inits) struct_field_init(new_init). {
+    field_init_list_node = existing_inits ? existing_inits : tea_ast_node_create(TEA_AST_NODE_STRUCT_FIELD_INIT, NULL);
+    if (new_init) {
+        tea_ast_node_add_child(field_init_list_node, new_init);
+    }
+}
+
+struct_field_init_list(field_init_list_node) ::= struct_field_init(single_init). {
+    field_init_list_node = tea_ast_node_create(TEA_AST_NODE_STRUCT_FIELD_INIT, NULL);
+    if (single_init) {
+        tea_ast_node_add_child(field_init_list_node, single_init);
+    }
+}
+
+struct_field_init(field_init_node) ::= IDENT(field_name) COLON expression(value_expr). {
+    field_init_node = tea_ast_node_create(TEA_AST_NODE_STRUCT_FIELD_INIT, field_name);
+    if (value_expr) {
+        tea_ast_node_add_child(field_init_node, value_expr);
+    }
+}
+
+struct_field_init(field_init_node) ::= IDENT(field_name) COLON expression(value_expr) COMMA. {
+    field_init_node = tea_ast_node_create(TEA_AST_NODE_STRUCT_FIELD_INIT, field_name);
+    if (value_expr) {
+        tea_ast_node_add_child(field_init_node, value_expr);
+    }
 }
 
 param_list_opt(param_list_node) ::= param_list(params). { param_list_node = params; }
@@ -386,6 +418,13 @@ primary_expr(primary_expr_node) ::= IDENT(func_name) LPAREN arg_list(args) RPARE
 
 primary_expr(primary_expr_node) ::= NUMBER(number_value). {
     primary_expr_node = tea_ast_node_create(TEA_AST_NODE_NUMBER, number_value);
+}
+
+primary_expr(primary_expr_node) ::= NEW IDENT(struct_type) LBRACE struct_field_init_list_opt(field_inits) RBRACE. {
+    primary_expr_node = tea_ast_node_create(TEA_AST_NODE_STRUCT_INSTANCE, struct_type);
+    if (field_inits) {
+        tea_ast_node_add_child(primary_expr_node, field_inits);
+    }
 }
 
 %syntax_error {

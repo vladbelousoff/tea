@@ -86,6 +86,8 @@ static const char *get_node_type_name(const tea_ast_node_type_t type)
       return "FUNCTION";
     case TEA_AST_NODE_FUNCTION_MUT:
       return "FUNCTION_MUT";
+    case TEA_AST_NODE_NATIVE_FUNCTION:
+      return "NATIVE_FUNCTION";
     case TEA_AST_NODE_PARAM:
       return "PARAM";
     case TEA_AST_NODE_ATTR:
@@ -122,6 +124,10 @@ static const char *get_node_type_name(const tea_ast_node_type_t type)
       return "STRUCT";
     case TEA_AST_NODE_STRUCT_FIELD:
       return "STRUCT_FIELD";
+    case TEA_AST_NODE_STRUCT_INSTANCE:
+      return "STRUCT_INSTANCE";
+    case TEA_AST_NODE_STRUCT_FIELD_INIT:
+      return "STRUCT_FIELD_INIT";
     default:
       return "UNKNOWN";
   }
