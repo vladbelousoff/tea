@@ -365,12 +365,7 @@ while_stmt(while_stmt_node) ::= WHILE expression(condition) LBRACE stmt_list_opt
 
 expression(expr_node) ::= logical_expr(logical_expr_node). { expr_node = logical_expr_node; }
 
-logical_expr(logical_expr_node) ::= logical_expr(left_expr) AND(op) comp_expr(right_expr). {
-    logical_expr_node = tea_ast_node_create(TEA_AST_NODE_BINOP, op);
-    tea_ast_node_set_binop_children(logical_expr_node, left_expr, right_expr);
-}
-
-logical_expr(logical_expr_node) ::= logical_expr(left_expr) OR(op) comp_expr(right_expr). {
+logical_expr(logical_expr_node) ::= logical_expr(left_expr) AND|OR(op) comp_expr(right_expr). {
     logical_expr_node = tea_ast_node_create(TEA_AST_NODE_BINOP, op);
     tea_ast_node_set_binop_children(logical_expr_node, left_expr, right_expr);
 }
@@ -384,24 +379,14 @@ comp_expr(comp_expr_node) ::= comp_expr(left_expr) GT|LT|EQ|NE|GE|LE(op) add_exp
 
 comp_expr(comp_expr_node) ::= add_expr(add_expr_node). { comp_expr_node = add_expr_node; }
 
-add_expr(add_expr_node) ::= add_expr(left_expr) PLUS(op) mul_expr(right_expr). {
-    add_expr_node = tea_ast_node_create(TEA_AST_NODE_BINOP, op);
-    tea_ast_node_set_binop_children(add_expr_node, left_expr, right_expr);
-}
-
-add_expr(add_expr_node) ::= add_expr(left_expr) MINUS(op) mul_expr(right_expr). {
+add_expr(add_expr_node) ::= add_expr(left_expr) PLUS|MINUS(op) mul_expr(right_expr). {
     add_expr_node = tea_ast_node_create(TEA_AST_NODE_BINOP, op);
     tea_ast_node_set_binop_children(add_expr_node, left_expr, right_expr);
 }
 
 add_expr(add_expr_node) ::= mul_expr(mul_expr_node). { add_expr_node = mul_expr_node; }
 
-mul_expr(mul_expr_node) ::= mul_expr(left_expr) STAR(op) unary_expr(right_expr). {
-    mul_expr_node = tea_ast_node_create(TEA_AST_NODE_BINOP, op);
-    tea_ast_node_set_binop_children(mul_expr_node, left_expr, right_expr);
-}
-
-mul_expr(mul_expr_node) ::= mul_expr(left_expr) SLASH(op) unary_expr(right_expr). {
+mul_expr(mul_expr_node) ::= mul_expr(left_expr) STAR|SLASH(op) unary_expr(right_expr). {
     mul_expr_node = tea_ast_node_create(TEA_AST_NODE_BINOP, op);
     tea_ast_node_set_binop_children(mul_expr_node, left_expr, right_expr);
 }
