@@ -26,7 +26,6 @@
 %token IF ELSE WHILE.
 %token STRUCT.
 %token IMPL.
-%token SELF.
 %token NEW.
 %token DOT.
 
@@ -404,10 +403,6 @@ unary_expr(unary_expr_node) ::= primary_expr(primary_expr_node). { unary_expr_no
 
 primary_expr(primary_expr_node) ::= LPAREN expression(expr) RPAREN. {
     primary_expr_node = expr;
-}
-
-primary_expr(primary_expr_node) ::= SELF(self_token). {
-    primary_expr_node = tea_ast_node_create(TEA_AST_NODE_IDENT, self_token);
 }
 
 primary_expr(primary_expr_node) ::= IDENT(ident_name). {
