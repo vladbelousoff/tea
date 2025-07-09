@@ -113,7 +113,6 @@ target_link_libraries(tea PRIVATE
 # Make sure parser is generated before building tea_parser
 add_dependencies(tea_parser lemon_exe)
 
-message(STATUS "TEA Language")
 message(STATUS "Grammar file: ${CMAKE_CURRENT_SOURCE_DIR}/tea.y")
 message(STATUS "Generated parser: ${CMAKE_CURRENT_BINARY_DIR}/tea.c")
 
