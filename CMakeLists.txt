@@ -110,20 +110,6 @@ target_link_libraries(tea PRIVATE
         tea_parser
 )
 
-# Optional: Add custom target for easier grammar regeneration
-add_custom_target(regenerate_parser
-        COMMAND
-        ${LEMON_EXECUTABLE}
-        -T${LEMON_TEMPLATE}
-        -d${CMAKE_CURRENT_BINARY_DIR}
-        ${CMAKE_CURRENT_SOURCE_DIR}/tea.y
-        DEPENDS
-        lemon_exe
-        ${CMAKE_CURRENT_SOURCE_DIR}/tea.y
-        COMMENT "Regenerating TEA parser"
-        VERBATIM
-)
-
 # Make sure parser is generated before building tea_parser
 add_dependencies(tea_parser lemon_exe)
 
