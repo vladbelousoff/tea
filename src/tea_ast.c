@@ -75,7 +75,7 @@ void tea_ast_node_free(tea_ast_node_t *node)
   rtl_free(node);
 }
 
-static const char *get_node_type_name(const tea_ast_node_type_t type)
+const char *tea_ast_node_get_type_name(const tea_ast_node_type_t type)
 {
   switch (type) {
     case TEA_AST_NODE_PROGRAM:
@@ -102,6 +102,8 @@ static const char *get_node_type_name(const tea_ast_node_type_t type)
       return "UNARY";
     case TEA_AST_NODE_IDENT:
       return "IDENT";
+    case TEA_AST_NODE_TYPE_ANNOT:
+      return "TYPE_ANNOT";
     case TEA_AST_NODE_NUMBER:
       return "NUMBER";
     case TEA_AST_NODE_CALL:
@@ -155,7 +157,7 @@ static void tea_ast_node_print_tree_recursive(tea_ast_node_t *node, const int de
   }
 
   print_tree_prefix(depth);
-  printf("%s", get_node_type_name(node->type));
+  printf("%s", tea_ast_node_get_type_name(node->type));
 
   const tea_token_t *token = node->token;
   if (token) {

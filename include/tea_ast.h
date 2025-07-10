@@ -18,6 +18,7 @@ typedef enum
   TEA_AST_NODE_BINOP,
   TEA_AST_NODE_UNARY,
   TEA_AST_NODE_IDENT,
+  TEA_AST_NODE_TYPE_ANNOT,
   TEA_AST_NODE_NUMBER,
   TEA_AST_NODE_CALL,
   TEA_AST_NODE_RETURN,
@@ -63,3 +64,5 @@ void tea_ast_node_set_binop_children(
   tea_ast_node_t* parent, tea_ast_node_t* lhs, tea_ast_node_t* rhs);
 void tea_ast_node_free(tea_ast_node_t* node);
 void tea_ast_node_print(tea_ast_node_t* node, int depth);
+
+const char* tea_ast_node_get_type_name(tea_ast_node_type_t type);

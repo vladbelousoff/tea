@@ -86,6 +86,7 @@ add_library(tea_lang
         src/tea_token.c
         src/tea_ast.c
         src/tea_parser.c
+        src/tea_interpret.c
 )
 
 target_include_directories(tea_lang PUBLIC

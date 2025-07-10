@@ -226,7 +226,7 @@ param_list_opt(param_list_node) ::= . { param_list_node = NULL; }
 return_type_opt(return_type_node) ::= ARROW IDENT(type_name). { return_type_node = tea_ast_node_create(TEA_AST_NODE_IDENT, type_name); }
 return_type_opt(return_type_node) ::= . { return_type_node = NULL; }
 
-type_annotation_opt(type_annotation_node) ::= COLON IDENT(type_name). { type_annotation_node = tea_ast_node_create(TEA_AST_NODE_IDENT, type_name); }
+type_annotation_opt(type_annotation_node) ::= COLON IDENT(type_name). { type_annotation_node = tea_ast_node_create(TEA_AST_NODE_TYPE_ANNOT, type_name); }
 type_annotation_opt(type_annotation_node) ::= . { type_annotation_node = NULL; }
 
 stmt_list_opt(stmt_list_node) ::= stmt_list(stmts). { stmt_list_node = stmts; }

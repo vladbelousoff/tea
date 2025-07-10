@@ -3,6 +3,7 @@
 
 #include "rtl.h"
 #include "tea_ast.h"
+#include "tea_interpret.h"
 #include "tea_parser.h"
 
 void print_usage(const char *program_name)
@@ -64,11 +65,16 @@ int main(const int argc, char *argv[])
   if (ast) {
     tea_ast_node_print(ast, 0);
     rtl_log_dbg("Root node type: %s", ast->type == TEA_AST_NODE_PROGRAM ? "PROGRAM" : "OTHER");
-
-    tea_ast_node_free(ast);
   }
 
   rtl_log_dbg("Parsing completed successfully!");
+
+  if (ast) {
+    tea_context_t context;
+    tea_interpret_init(&context);
+    tea_interpret_execute(&context, ast);
+    tea_ast_node_free(ast);
+  }
 
   tea_lexer_cleanup(&lexer);
   rtl_cleanup();
