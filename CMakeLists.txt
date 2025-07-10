@@ -103,7 +103,7 @@ target_link_libraries(tea_lang PUBLIC
 )
 
 # Main executable for testing the simplified parser
-add_executable(tea src/main.c)
+add_executable(tea main.c)
 
 target_link_libraries(tea PRIVATE
         tea_lang
