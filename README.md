@@ -230,12 +230,30 @@ fn main() {
 
 ## Building
 
-Tea uses CMake for building:
+Tea uses CMake for building. Here are several approaches:
 
+### Modern CMake (Recommended)
+```bash
+# Configure and build in one go
+cmake -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build --parallel
+
+# Or for development builds
+cmake -B build -DCMAKE_BUILD_TYPE=Debug
+cmake --build build --parallel
+```
+
+### With Ninja (Faster builds)
+```bash
+cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+cmake --build build
+```
+
+### Traditional approach
 ```bash
 mkdir build && cd build
-cmake ..
-make
+cmake .. -DCMAKE_BUILD_TYPE=Release
+make -j$(nproc)
 ```
 
 ## Language Status
