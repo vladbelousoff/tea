@@ -191,21 +191,53 @@ static tea_value_t tea_interpret_evaluate_number(tea_token_t* token)
         }                                                                                          \
         result = a / b;                                                                            \
         break;                                                                                     \
+      case TEA_TOKEN_EQ:                                                                           \
+        result = a == b;                                                                           \
+        break;                                                                                     \
+      case TEA_TOKEN_NE:                                                                           \
+        result = a != b;                                                                           \
+        break;                                                                                     \
+      case TEA_TOKEN_GT:                                                                           \
+        result = a > b;                                                                            \
+        break;                                                                                     \
+      case TEA_TOKEN_GE:                                                                           \
+        result = a >= b;                                                                           \
+        break;                                                                                     \
+      case TEA_TOKEN_LT:                                                                           \
+        result = a < b;                                                                            \
+        break;                                                                                     \
+      case TEA_TOKEN_LE:                                                                           \
+        result = a <= b;                                                                           \
+        break;                                                                                     \
     }                                                                                              \
   } while (0)
 
 static tea_value_t tea_value_binop(
   const tea_value_t lhs_val, const tea_value_t rhs_val, const tea_token_t* op)
 {
+  tea_value_t result;
+
+  // By-default it's i32 for boolean ops
+  result.type = TEA_VALUE_I32;
+
+  switch (op->type) {
+    case TEA_TOKEN_OR:
+      result.i32_value = lhs_val.i32_value || rhs_val.i32_value;
+      return result;
+    case TEA_TOKEN_AND:
+      result.i32_value = lhs_val.i32_value && rhs_val.i32_value;
+      return result;
+    default:
+      break;
+  }
+
   if (lhs_val.type == TEA_VALUE_I32) {
     if (rhs_val.type == TEA_VALUE_I32) {
-      tea_value_t result = { 0 };
       result.type = TEA_VALUE_I32;
       TEA_APPLY_BINOP(lhs_val.i32_value, rhs_val.i32_value, op->type, result.i32_value);
       return result;
     }
     if (rhs_val.type == TEA_VALUE_F32) {
-      tea_value_t result = { 0 };
       result.type = TEA_VALUE_F32;
       TEA_APPLY_BINOP(lhs_val.i32_value, rhs_val.f32_value, op->type, result.f32_value);
       return result;
@@ -214,13 +246,11 @@ static tea_value_t tea_value_binop(
 
   if (lhs_val.type == TEA_VALUE_F32) {
     if (rhs_val.type == TEA_VALUE_I32) {
-      tea_value_t result = { 0 };
       result.type = TEA_VALUE_F32;
       TEA_APPLY_BINOP(lhs_val.f32_value, rhs_val.i32_value, op->type, result.f32_value);
       return result;
     }
     if (rhs_val.type == TEA_VALUE_F32) {
-      tea_value_t result = { 0 };
       result.type = TEA_VALUE_F32;
       TEA_APPLY_BINOP(lhs_val.f32_value, rhs_val.f32_value, op->type, result.f32_value);
       return result;
