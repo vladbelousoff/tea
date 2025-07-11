@@ -35,6 +35,9 @@ void tea_interpret_cleanup(const tea_context_t* context)
   {
     tea_variable_t* variable = rtl_list_record(entry, tea_variable_t, link);
     rtl_list_remove(entry);
+    if (variable->value.type == TEA_VALUE_STRING) {
+      free((void*)variable->value.string_value);
+    }
     rtl_free(variable);
   }
 }
@@ -297,6 +300,22 @@ static tea_value_t tea_interpret_evaluate_ident(
   return variable->value;
 }
 
+static tea_value_t tea_interpret_evaluate_string(
+  const tea_context_t* context, const tea_ast_node_t* node)
+{
+  const tea_token_t* token = node->token;
+  if (!token) {
+    rtl_log_err("Impossible to evaluate string token");
+    exit(1);
+  }
+
+  tea_value_t result;
+  result.type = TEA_VALUE_STRING;
+  result.string_value = _strdup(&token->buffer[0]);
+
+  return result;
+}
+
 tea_value_t tea_interpret_evaluate_expression(tea_context_t* context, const tea_ast_node_t* node)
 {
   if (!node) {
@@ -313,6 +332,8 @@ tea_value_t tea_interpret_evaluate_expression(tea_context_t* context, const tea_
       return tea_interpret_evaluate_unary(context, node);
     case TEA_AST_NODE_IDENT:
       return tea_interpret_evaluate_ident(context, node);
+    case TEA_AST_NODE_STRING:
+      return tea_interpret_evaluate_string(context, node);
     default: {
       rtl_log_err("Failed to evaluate node <%s>", tea_ast_node_get_type_name(node->type));
       tea_token_t* token = node->token;
