@@ -122,9 +122,14 @@ bool tea_interpret_execute(tea_context_t* context, const tea_ast_node_t* node)
       return tea_interpret_execute_program(context, node);
     case TEA_AST_NODE_LET:
       return tea_interpret_execute_let(context, node);
-    default:
+    default: {
       rtl_log_err("Not implemented: %s", tea_ast_node_get_type_name(node->type));
-      break;
+      const tea_token_t* token = node->token;
+      if (token) {
+        rtl_log_err("Token: <%s> %.*s (line: %d, column: %d)", tea_get_token_name(token->type),
+          token->buffer_size, token->buffer, token->line, token->column);
+      }
+    } break;
   }
 
   return false;
@@ -270,9 +275,14 @@ tea_value_t tea_interpret_evaluate_expression(tea_context_t* context, const tea_
       return tea_interpret_evaluate_binop(context, node);
     case TEA_AST_NODE_UNARY:
       return tea_interpret_evaluate_unary(context, node);
-    default:
-      rtl_log_err("Impossible to evaluate node %s!", tea_ast_node_get_type_name(node->type));
-      break;
+    default: {
+      rtl_log_err("Failed to evaluate node <%s>", tea_ast_node_get_type_name(node->type));
+      tea_token_t* token = node->token;
+      if (token) {
+        rtl_log_err("Token: <%s> %.*s (line: %d, column: %d)", tea_get_token_name(token->type),
+          token->buffer_size, token->buffer, token->line, token->column);
+      }
+    } break;
   }
 
   exit(1);
