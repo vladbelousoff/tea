@@ -11,7 +11,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-latest, windows-latest ]
+        os: [ ubuntu-latest, windows-latest, macos-latest ]
         compiler: [ gcc, clang, msvc ]
         exclude:
           # Exclude gcc and clang on Windows, use only msvc
@@ -19,9 +19,13 @@ jobs:
             compiler: clang
           - os: windows-latest
             compiler: gcc
-          # Exclude msvc on Ubuntu as it's not commonly used
+          # Exclude msvc on Ubuntu and macOS as it's not available
           - os: ubuntu-latest
             compiler: msvc
+          - os: macos-latest
+            compiler: msvc
+          - os: macos-latest
+            compiler: gcc
 
     runs-on: ${{ matrix.os }}
 
