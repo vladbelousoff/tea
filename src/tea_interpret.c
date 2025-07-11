@@ -311,7 +311,7 @@ static tea_value_t tea_interpret_evaluate_string(
 
   tea_value_t result;
   result.type = TEA_VALUE_STRING;
-  result.string_value = _strdup(&token->buffer[0]);
+  result.string_value = strdup(&token->buffer[0]);
 
   return result;
 }
