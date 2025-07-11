@@ -105,7 +105,7 @@ let point = new Point {
 };
 
 let person = new Person {
-    name: "Alice",
+    name: 'Alice',
     age: 30,
 };
 ```
@@ -233,6 +233,7 @@ fn main() {
 Tea uses CMake for building. Here are several approaches:
 
 ### Modern CMake (Recommended)
+
 ```bash
 # Configure and build in one go
 cmake -B build -DCMAKE_BUILD_TYPE=Release
@@ -244,12 +245,14 @@ cmake --build build --parallel
 ```
 
 ### With Ninja (Faster builds)
+
 ```bash
 cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
 cmake --build build
 ```
 
 ### Traditional approach
+
 ```bash
 mkdir build && cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release
