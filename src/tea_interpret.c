@@ -261,6 +261,42 @@ static tea_value_t tea_interpret_evaluate_unary(tea_context_t* context, const te
   return operand_val;
 }
 
+static tea_variable_t* tea_context_find_variable(const tea_context_t* context, const char* name)
+{
+  rtl_list_entry_t* entry;
+  rtl_list_for_each(entry, &context->variables)
+  {
+    tea_variable_t* variable = rtl_list_record(entry, tea_variable_t, link);
+    const tea_token_t* variable_name = variable->name;
+    if (!variable_name) {
+      continue;
+    }
+    if (!strcmp(variable_name->buffer, name)) {
+      return variable;
+    }
+  }
+
+  return NULL;
+}
+
+static tea_value_t tea_interpret_evaluate_ident(
+  const tea_context_t* context, const tea_ast_node_t* node)
+{
+  const tea_token_t* token = node->token;
+  if (!token) {
+    rtl_log_err("Impossible to evaluate ident token");
+    exit(1);
+  }
+
+  const tea_variable_t* variable = tea_context_find_variable(context, token->buffer);
+  if (!variable) {
+    rtl_log_err("Can't find variable %s", token->buffer);
+    exit(1);
+  }
+
+  return variable->value;
+}
+
 tea_value_t tea_interpret_evaluate_expression(tea_context_t* context, const tea_ast_node_t* node)
 {
   if (!node) {
@@ -275,6 +311,8 @@ tea_value_t tea_interpret_evaluate_expression(tea_context_t* context, const tea_
       return tea_interpret_evaluate_binop(context, node);
     case TEA_AST_NODE_UNARY:
       return tea_interpret_evaluate_unary(context, node);
+    case TEA_AST_NODE_IDENT:
+      return tea_interpret_evaluate_ident(context, node);
     default: {
       rtl_log_err("Failed to evaluate node <%s>", tea_ast_node_get_type_name(node->type));
       tea_token_t* token = node->token;
