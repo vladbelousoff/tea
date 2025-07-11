@@ -81,12 +81,25 @@ target_include_directories(tea_parser PUBLIC
 
 target_link_libraries(tea_parser PUBLIC rtlib::rtlib)
 
-add_library(tea_lang
+set(TEA_HEADER_FILES
+        include/tea_lexer.h
+        include/tea_token.h
+        include/tea_ast.h
+        include/tea_parser.h
+        include/tea_interpret.h
+)
+
+set(TEA_SOURCE_FILES
         src/tea_lexer.c
         src/tea_token.c
         src/tea_ast.c
         src/tea_parser.c
         src/tea_interpret.c
+)
+
+add_library(tea_lang
+        ${TEA_HEADER_FILES}
+        ${TEA_SOURCE_FILES}
 )
 
 target_include_directories(tea_lang PUBLIC
