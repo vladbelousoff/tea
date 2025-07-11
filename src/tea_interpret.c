@@ -58,8 +58,8 @@ static bool tea_interpret_execute_program(tea_context_t* context, const tea_ast_
 
 static tea_variable_t* tea_context_find_variable(const tea_context_t* context, const char* name);
 
-static bool declare_variable(tea_context_t* context, const tea_token_t* name, const bool is_mutable,
-  const tea_ast_node_t* type, const tea_ast_node_t* initial_value)
+static bool tea_declare_variable(tea_context_t* context, const tea_token_t* name,
+  const bool is_mutable, const tea_ast_node_t* type, const tea_ast_node_t* initial_value)
 {
   if (!name) {
     return false;
@@ -84,13 +84,16 @@ static bool declare_variable(tea_context_t* context, const tea_token_t* name, co
 
   switch (variable->value.type) {
     case TEA_VALUE_I32:
-      rtl_log_dbg("Declare variable '%s' : %s = %d", name->buffer,
+      rtl_log_dbg("Declare variable %s : %s = %d", name->buffer,
         tea_value_get_type_string(variable->value.type), variable->value.i32_value);
       break;
     case TEA_VALUE_F32:
-      rtl_log_dbg("Declare variable '%s' : %s = %f", name->buffer,
+      rtl_log_dbg("Declare variable %s : %s = %f", name->buffer,
         tea_value_get_type_string(variable->value.type), variable->value.f32_value);
       break;
+    case TEA_VALUE_STRING:
+      rtl_log_dbg("Declare variable %s : %s = '%s'", name->buffer,
+        tea_value_get_type_string(variable->value.type), variable->value.string_value);
     default:
       break;
   }
@@ -124,7 +127,60 @@ static bool tea_interpret_execute_let(tea_context_t* context, const tea_ast_node
     }
   }
 
-  return declare_variable(context, name, is_mutable, type, expr);
+  return tea_declare_variable(context, name, is_mutable, type, expr);
+}
+
+static bool tea_interpret_execute_assign(tea_context_t* context, const tea_ast_node_t* node)
+{
+  const tea_token_t* name = node->token;
+  if (!name) {
+    exit(1);
+  }
+
+  tea_variable_t* variable = tea_context_find_variable(context, name->buffer);
+  if (!variable) {
+    rtl_log_err("Cannot find variable '%s'", name->buffer);
+    exit(1);
+  }
+
+  if (!variable->is_mutable) {
+    rtl_log_err("Variable '%s' is not mutable, so cannot be modified", name->buffer);
+    exit(1);
+  }
+
+  // First child is the value on the right
+  const tea_ast_node_t* rhs =
+    rtl_list_record(rtl_list_first(&node->children), tea_ast_node_t, link);
+  const tea_value_t new_value = tea_interpret_evaluate_expression(context, rhs);
+
+  if (new_value.type == variable->value.type) {
+    variable->value = new_value;
+  } else {
+    rtl_log_err(
+      "Cannot assign variable '%s', because the original type is %s, but the new type is %s",
+      name->buffer, tea_value_get_type_string(variable->value.type),
+      tea_value_get_type_string(new_value.type));
+    exit(1);
+  }
+
+  switch (variable->value.type) {
+    case TEA_VALUE_I32:
+      rtl_log_dbg("New value for variable %s : %s = %d", name->buffer,
+        tea_value_get_type_string(variable->value.type), variable->value.i32_value);
+      break;
+    case TEA_VALUE_F32:
+      rtl_log_dbg("New value for variable %s : %s = %f", name->buffer,
+        tea_value_get_type_string(variable->value.type), variable->value.f32_value);
+      break;
+    case TEA_VALUE_STRING:
+      rtl_log_dbg("New value for variable %s : %s = '%s'", name->buffer,
+        tea_value_get_type_string(variable->value.type), variable->value.string_value);
+      break;
+    case TEA_VALUE_OBJECT:
+      break;
+  }
+
+  return true;
 }
 
 bool tea_interpret_execute(tea_context_t* context, const tea_ast_node_t* node)
@@ -134,6 +190,8 @@ bool tea_interpret_execute(tea_context_t* context, const tea_ast_node_t* node)
       return tea_interpret_execute_program(context, node);
     case TEA_AST_NODE_LET:
       return tea_interpret_execute_let(context, node);
+    case TEA_AST_NODE_ASSIGN:
+      return tea_interpret_execute_assign(context, node);
     default: {
       rtl_log_err("Not implemented: %s", tea_ast_node_get_type_name(node->type));
       const tea_token_t* token = node->token;
