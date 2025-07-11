@@ -46,7 +46,7 @@ jobs:
       - name: Run tests
         run: |
           cd build
-          ctest --output-on-failure --verbose
+          ctest -C Debug --output-on-failure --verbose
 
       - name: Upload build artifacts (on failure)
         if: failure()
