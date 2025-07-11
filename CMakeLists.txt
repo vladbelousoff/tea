@@ -28,7 +28,7 @@ FetchContent_MakeAvailable(rtlib)
 FetchContent_Declare(
         lemon
         GIT_REPOSITORY https://github.com/vladbelousoff/lemon
-        GIT_TAG 76e06e6a449723c7a1fafa6a3bb13b4c8c3c0b6a
+        GIT_TAG c9aae223bb9ad4ffc991dd90717fa6a9393c732b
 )
 
 FetchContent_MakeAvailable(lemon)
