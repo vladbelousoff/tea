@@ -25,7 +25,7 @@ typedef struct
   {
     int i32_value;
     float f32_value;
-    const char* string_value;
+    char* string_value;
     void* object_value;
   };
 } tea_value_t;

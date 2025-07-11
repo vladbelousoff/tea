@@ -36,7 +36,7 @@ void tea_interpret_cleanup(const tea_context_t* context)
     tea_variable_t* variable = rtl_list_record(entry, tea_variable_t, link);
     rtl_list_remove(entry);
     if (variable->value.type == TEA_VALUE_STRING) {
-      free((void*)variable->value.string_value);
+      rtl_free(variable->value.string_value);
     }
     rtl_free(variable);
   }
@@ -350,7 +350,7 @@ static tea_value_t tea_interpret_evaluate_string(
 
   tea_value_t result;
   result.type = TEA_VALUE_STRING;
-  result.string_value = strdup(&token->buffer[0]);
+  result.string_value = rtl_strdup(&token->buffer[0]);
 
   return result;
 }
