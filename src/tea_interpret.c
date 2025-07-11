@@ -56,6 +56,8 @@ static bool tea_interpret_execute_program(tea_context_t* context, const tea_ast_
   return true;
 }
 
+static tea_variable_t* tea_context_find_variable(const tea_context_t* context, const char* name);
+
 static bool declare_variable(tea_context_t* context, const tea_token_t* name, const bool is_mutable,
   const tea_ast_node_t* type, const tea_ast_node_t* initial_value)
 {
@@ -63,7 +65,14 @@ static bool declare_variable(tea_context_t* context, const tea_token_t* name, co
     return false;
   }
 
-  tea_variable_t* variable = rtl_malloc(sizeof(*variable));
+  tea_variable_t* variable = tea_context_find_variable(context, name->buffer);
+  if (variable) {
+    rtl_log_err("Variable %s is already declared (line: %d, col: %d)", name->buffer, name->line,
+      name->column);
+    return false;
+  }
+
+  variable = rtl_malloc(sizeof(*variable));
   if (!variable) {
     rtl_log_err("Failed to allocate memory for variable %.*s", name->buffer_size, name->buffer);
     return false;
