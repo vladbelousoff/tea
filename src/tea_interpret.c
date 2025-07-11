@@ -42,18 +42,11 @@ void tea_interpret_cleanup(const tea_context_t* context)
   }
 }
 
+static bool tea_interpret_execute_stmt(tea_context_t* context, const tea_ast_node_t* node);
+
 static bool tea_interpret_execute_program(tea_context_t* context, const tea_ast_node_t* node)
 {
-  rtl_list_entry_t* entry;
-  rtl_list_for_each(entry, &node->children)
-  {
-    const tea_ast_node_t* child = rtl_list_record(entry, tea_ast_node_t, link);
-    if (!tea_interpret_execute(context, child)) {
-      return false;
-    }
-  }
-
-  return true;
+  return tea_interpret_execute_stmt(context, node);
 }
 
 static tea_variable_t* tea_context_find_variable(const tea_context_t* context, const char* name);
@@ -183,6 +176,55 @@ static bool tea_interpret_execute_assign(tea_context_t* context, const tea_ast_n
   return true;
 }
 
+static bool tea_interpret_execute_if(tea_context_t* context, const tea_ast_node_t* node)
+{
+  const tea_ast_node_t* condition = NULL;
+  const tea_ast_node_t* then_node = NULL;
+  const tea_ast_node_t* else_node = NULL;
+
+  rtl_list_entry_t* entry;
+  rtl_list_for_each(entry, &node->children)
+  {
+    const tea_ast_node_t* child = rtl_list_record(entry, tea_ast_node_t, link);
+    switch (child->type) {
+      case TEA_AST_NODE_THEN:
+        then_node = child;
+        break;
+      case TEA_AST_NODE_ELSE:
+        else_node = child;
+        break;
+      default:
+        condition = child;
+        break;
+    }
+  }
+
+  const tea_value_t if_expr = tea_interpret_evaluate_expression(context, condition);
+  if (if_expr.i32_value != 0) {
+    return tea_interpret_execute(context, then_node);
+  }
+
+  if (else_node) {
+    return tea_interpret_execute(context, else_node);
+  }
+
+  return true;
+}
+
+static bool tea_interpret_execute_stmt(tea_context_t* context, const tea_ast_node_t* node)
+{
+  rtl_list_entry_t* entry;
+  rtl_list_for_each(entry, &node->children)
+  {
+    const tea_ast_node_t* child = rtl_list_record(entry, tea_ast_node_t, link);
+    if (!tea_interpret_execute(context, child)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 bool tea_interpret_execute(tea_context_t* context, const tea_ast_node_t* node)
 {
   switch (node->type) {
@@ -192,6 +234,12 @@ bool tea_interpret_execute(tea_context_t* context, const tea_ast_node_t* node)
       return tea_interpret_execute_let(context, node);
     case TEA_AST_NODE_ASSIGN:
       return tea_interpret_execute_assign(context, node);
+    case TEA_AST_NODE_IF:
+      return tea_interpret_execute_if(context, node);
+    case TEA_AST_NODE_STMT:
+    case TEA_AST_NODE_THEN:
+    case TEA_AST_NODE_ELSE:
+      return tea_interpret_execute_stmt(context, node);
     default: {
       rtl_log_err("Not implemented: %s", tea_ast_node_get_type_name(node->type));
       const tea_token_t* token = node->token;
