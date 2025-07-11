@@ -39,5 +39,6 @@ typedef struct
 } tea_variable_t;
 
 void tea_interpret_init(tea_context_t* context);
+void tea_interpret_cleanup(const tea_context_t* context);
 bool tea_interpret_execute(tea_context_t* context, const tea_ast_node_t* node);
 tea_value_t tea_interpret_evaluate_expression(tea_context_t* context, const tea_ast_node_t* node);

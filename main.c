@@ -73,6 +73,7 @@ int main(const int argc, char *argv[])
     tea_context_t context;
     tea_interpret_init(&context);
     tea_interpret_execute(&context, ast);
+    tea_interpret_cleanup(&context);
     tea_ast_node_free(ast);
   }
 

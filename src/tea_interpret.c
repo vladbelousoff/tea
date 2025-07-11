@@ -27,6 +27,18 @@ void tea_interpret_init(tea_context_t* context)
   rtl_list_init(&context->variables);
 }
 
+void tea_interpret_cleanup(const tea_context_t* context)
+{
+  rtl_list_entry_t* entry;
+  rtl_list_entry_t* safe;
+  rtl_list_for_each_safe(entry, safe, &context->variables)
+  {
+    tea_variable_t* variable = rtl_list_record(entry, tea_variable_t, link);
+    rtl_list_remove(entry);
+    rtl_free(variable);
+  }
+}
+
 static bool tea_interpret_execute_program(tea_context_t* context, const tea_ast_node_t* node)
 {
   rtl_list_entry_t* entry;
