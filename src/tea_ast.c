@@ -118,6 +118,10 @@ const char *tea_ast_node_get_type_name(const tea_ast_node_type_t type)
       return "ELSE";
     case TEA_AST_NODE_WHILE:
       return "WHILE";
+    case TEA_AST_NODE_WHILE_COND:
+      return "WHILE_COND";
+    case TEA_AST_NODE_WHILE_BODY:
+      return "WHILE_BODY";
     case TEA_AST_NODE_STRUCT:
       return "STRUCT";
     case TEA_AST_NODE_STRUCT_FIELD:

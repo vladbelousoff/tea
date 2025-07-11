@@ -42,7 +42,19 @@ void tea_interpret_cleanup(const tea_context_t* context)
   }
 }
 
-static bool tea_interpret_execute_stmt(tea_context_t* context, const tea_ast_node_t* node);
+static bool tea_interpret_execute_stmt(tea_context_t* context, const tea_ast_node_t* node)
+{
+  rtl_list_entry_t* entry;
+  rtl_list_for_each(entry, &node->children)
+  {
+    const tea_ast_node_t* child = rtl_list_record(entry, tea_ast_node_t, link);
+    if (!tea_interpret_execute(context, child)) {
+      return false;
+    }
+  }
+
+  return true;
+}
 
 static bool tea_interpret_execute_program(tea_context_t* context, const tea_ast_node_t* node)
 {
@@ -199,8 +211,8 @@ static bool tea_interpret_execute_if(tea_context_t* context, const tea_ast_node_
     }
   }
 
-  const tea_value_t if_expr = tea_interpret_evaluate_expression(context, condition);
-  if (if_expr.i32_value != 0) {
+  const tea_value_t cond_val = tea_interpret_evaluate_expression(context, condition);
+  if (cond_val.i32_value != 0) {
     return tea_interpret_execute(context, then_node);
   }
 
@@ -211,14 +223,38 @@ static bool tea_interpret_execute_if(tea_context_t* context, const tea_ast_node_
   return true;
 }
 
-static bool tea_interpret_execute_stmt(tea_context_t* context, const tea_ast_node_t* node)
+static bool tea_interpret_execute_while(tea_context_t* context, const tea_ast_node_t* node)
 {
+  const tea_ast_node_t* while_cond = NULL;
+  const tea_ast_node_t* while_body = NULL;
+
   rtl_list_entry_t* entry;
   rtl_list_for_each(entry, &node->children)
   {
     const tea_ast_node_t* child = rtl_list_record(entry, tea_ast_node_t, link);
-    if (!tea_interpret_execute(context, child)) {
-      return false;
+    switch (child->type) {
+      case TEA_AST_NODE_WHILE_COND:
+        while_cond = rtl_list_record(rtl_list_first(&child->children), tea_ast_node_t, link);
+        break;
+      case TEA_AST_NODE_WHILE_BODY:
+        while_body = child;
+        break;
+      default:
+        break;
+    }
+  }
+
+  if (!while_cond) {
+    return false;
+  }
+
+  while (true) {
+    const tea_value_t cond_val = tea_interpret_evaluate_expression(context, while_cond);
+    if (cond_val.i32_value == 0) {
+      break;
+    }
+    if (!tea_interpret_execute(context, while_body)) {
+      break;
     }
   }
 
@@ -236,9 +272,13 @@ bool tea_interpret_execute(tea_context_t* context, const tea_ast_node_t* node)
       return tea_interpret_execute_assign(context, node);
     case TEA_AST_NODE_IF:
       return tea_interpret_execute_if(context, node);
+    case TEA_AST_NODE_WHILE:
+      return tea_interpret_execute_while(context, node);
     case TEA_AST_NODE_STMT:
     case TEA_AST_NODE_THEN:
     case TEA_AST_NODE_ELSE:
+    case TEA_AST_NODE_WHILE_COND:
+    case TEA_AST_NODE_WHILE_BODY:
       return tea_interpret_execute_stmt(context, node);
     default: {
       rtl_log_err("Not implemented: %s", tea_ast_node_get_type_name(node->type));

@@ -354,12 +354,20 @@ if_stmt(if_stmt_node) ::= IF expression(condition) LBRACE stmt_list_opt(then_bod
 
 while_stmt(while_stmt_node) ::= WHILE expression(condition) LBRACE stmt_list_opt(loop_body) RBRACE. {
     while_stmt_node = tea_ast_node_create(TEA_AST_NODE_WHILE, NULL);
+
+    tea_ast_node_t *cond_node = tea_ast_node_create(TEA_AST_NODE_WHILE_COND, NULL);
     if (condition) {
-        tea_ast_node_add_child(while_stmt_node, condition);
+        tea_ast_node_add_child(cond_node, condition);
     }
+
+    tea_ast_node_add_child(while_stmt_node, cond_node);
+    
+    tea_ast_node_t *body_node = tea_ast_node_create(TEA_AST_NODE_WHILE_BODY, NULL);
     if (loop_body) {
-        tea_ast_node_add_child(while_stmt_node, loop_body);
+        tea_ast_node_add_child(body_node, loop_body);
     }
+
+    tea_ast_node_add_child(while_stmt_node, body_node);
 }
 
 expression(expr_node) ::= logical_expr(logical_expr_node). { expr_node = logical_expr_node; }
