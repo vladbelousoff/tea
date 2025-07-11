@@ -1,0 +1,98 @@
+// Unicode string literal examples
+// This example demonstrates Tea's support for unicode characters
+
+fn test_unicode_strings() {
+    // Basic accented characters
+    let french_greeting = 'Bonjour! Café, naïve, résumé';
+    let german_greeting = 'Guten Tag! Größe, Weiß, Müller';
+    let spanish_greeting = '¡Hola! Niño, señor, corazón';
+    
+    // Different language scripts
+    let chinese_text = '你好世界！Tea编程语言';
+    let japanese_text = 'こんにちは世界！プログラミング';
+    let arabic_text = 'مرحبا بالعالم! لغة البرمجة';
+    let greek_text = 'Γεια σας κόσμε! Γλώσσα προγραμματισμού';
+    let russian_text = 'Привет мир! Язык программирования';
+    
+    // Mathematical and scientific symbols
+    let math_symbols = '∑ ∞ π α β γ δ λ μ σ φ ψ ω';
+    let equations = 'E = mc² × √(1 − v²/c²)';
+    let chemistry = 'H₂O + CO₂ → C₆H₁₂O₆';
+    
+    // Emoji and pictographs
+    let emoji_greeting = '👋 Hello! 😊 🌟 🎉';
+    let programming_emoji = '💻 🖥️ ⌨️ 🖱️ 📱 🚀';
+    let nature_emoji = '🌸 🌺 🌻 🌷 🌹 🌿 🍀';
+    
+    // Currency and special symbols
+    let currencies = '$ € £ ¥ ₹ ₿ ¢ ₽ ₩ ₪';
+    let symbols = '© ® ™ ℠ ℡ ℻ ⚡ ☀️ ⭐ ❤️';
+    
+    // Box drawing and geometric shapes
+    let box_drawing = '┌─┬─┐ │ │ │ ├─┼─┤ │ │ │ └─┴─┘';
+    let shapes = '■ □ ● ○ ▲ △ ▼ ▽ ◆ ◇ ★ ☆';
+    
+    // Arrows and directional symbols
+    let arrows = '← → ↑ ↓ ↖ ↗ ↘ ↙ ↔ ↕ ⇐ ⇒ ⇑ ⇓';
+    
+    // Fractions and superscripts
+    let fractions = '½ ⅓ ¼ ¾ ⅛ ⅜ ⅝ ⅞';
+    let superscripts = 'x² y³ z⁴ a⁵ b⁶ c⁷ d⁸ e⁹ f¹⁰';
+    
+    // Musical notation
+    let music = '♪ ♫ ♬ ♭ ♮ ♯ 𝄞 𝄢 𝄡 𝄟';
+    
+    // Chess pieces
+    let chess = '♔ ♕ ♖ ♗ ♘ ♙ ♚ ♛ ♜ ♝ ♞ ♟';
+    
+    // Zodiac signs
+    let zodiac = '♈ ♉ ♊ ♋ ♌ ♍ ♎ ♏ ♐ ♑ ♒ ♓';
+}
+
+fn string_operations_unicode() {
+    let text1 = 'Hello 世界 🌍';
+    let text2 = 'Merhaba Dünya 🇹🇷';
+    let combined = text1; // String concatenation would go here
+    
+    // Demonstrate that unicode strings work in all contexts
+    let message = 'Tea支持Unicode！🎉 Поддержка Unicode в Tea! 🚀';
+}
+
+struct UnicodeMessage {
+    content: string;
+    language: string;
+    emoji: string;
+}
+
+fn create_unicode_messages() {
+    let english_msg = new UnicodeMessage {
+        content: 'Hello, World!',
+        language: 'English',
+        emoji: '🇺🇸'
+    };
+    
+    let chinese_msg = new UnicodeMessage {
+        content: '你好，世界！',
+        language: '中文',
+        emoji: '🇨🇳'
+    };
+    
+    let arabic_msg = new UnicodeMessage {
+        content: 'مرحبا بالعالم!',
+        language: 'العربية',
+        emoji: '🇸🇦'
+    };
+    
+    let emoji_msg = new UnicodeMessage {
+        content: '🎉✨💫🌟⭐🎊🎈',
+        language: 'Emoji',
+        emoji: '😊'
+    };
+}
+
+// Main function demonstrating unicode support
+fn main() {
+    test_unicode_strings();
+    string_operations_unicode();
+    create_unicode_messages();
+} 
