@@ -82,8 +82,8 @@ const char *tea_ast_node_get_type_name(const tea_ast_node_type_t type)
       return "PROGRAM";
     case TEA_AST_NODE_FUNCTION:
       return "FUNCTION";
-    case TEA_AST_NODE_NATIVE_FUNCTION:
-      return "NATIVE_FUNCTION";
+    case TEA_AST_NODE_RETURN_TYPE:
+      return "RETURN_TYPE";
     case TEA_AST_NODE_PARAM:
       return "PARAM";
     case TEA_AST_NODE_ATTR:

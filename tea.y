@@ -98,7 +98,11 @@ function_header(header_node) ::= FN mut_opt(mut) IDENT(func_name) LPAREN param_l
         tea_ast_node_add_child(header_node, params);
     }
     if (return_type) {
-        tea_ast_node_add_child(header_node, return_type);
+        tea_ast_node_t *return_type_node = tea_ast_node_create(TEA_AST_NODE_RETURN_TYPE, NULL);
+        if (return_type_node) {
+            tea_ast_node_add_child(return_type_node, return_type);
+        }
+        tea_ast_node_add_child(header_node, return_type_node);
     }
 }
 
