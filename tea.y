@@ -21,7 +21,6 @@
 %token AND OR.
 %token NUMBER.
 %token STRING.
-%token NATIVE.
 %token ARROW.
 %token IF ELSE WHILE.
 %token STRUCT.
@@ -83,31 +82,14 @@ attribute(attr_node) ::= AT IDENT(attr_name). {
     attr_node = tea_ast_node_create(TEA_AST_NODE_ATTR, attr_name);
 }
 
-function(func_node) ::= native_function_header(header) SEMICOLON. {
-    func_node = header;
-}
-
-function(func_node) ::= regular_function_header(header) function_body(body). {
+function(func_node) ::= function_header(header) function_body(body). {
     func_node = header;
     if (body) {
         tea_ast_node_add_child(func_node, body);
     }
 }
 
-native_function_header(header_node) ::= NATIVE FN mut_opt(mut) IDENT(func_name) LPAREN param_list_opt(params) RPAREN return_type_opt(return_type). {
-    header_node = tea_ast_node_create(TEA_AST_NODE_NATIVE_FUNCTION, func_name);
-    if (mut) {
-        tea_ast_node_add_child(header_node, mut);
-    }
-    if (params) {
-        tea_ast_node_add_child(header_node, params);
-    }
-    if (return_type) {
-        tea_ast_node_add_child(header_node, return_type);
-    }
-}
-
-regular_function_header(header_node) ::= FN mut_opt(mut) IDENT(func_name) LPAREN param_list_opt(params) RPAREN return_type_opt(return_type). {
+function_header(header_node) ::= FN mut_opt(mut) IDENT(func_name) LPAREN param_list_opt(params) RPAREN return_type_opt(return_type). {
     header_node = tea_ast_node_create(TEA_AST_NODE_FUNCTION, func_name);
     if (mut) {
         tea_ast_node_add_child(header_node, mut);
@@ -179,7 +161,7 @@ impl_method_list(method_list_node) ::= impl_method(single_method). {
     }
 }
 
-impl_method(method_node) ::= regular_function_header(header) function_body(body). {
+impl_method(method_node) ::= function_header(header) function_body(body). {
     method_node = tea_ast_node_create(TEA_AST_NODE_IMPL_ITEM, NULL);
     if (header) {
         tea_ast_node_add_child(method_node, header);

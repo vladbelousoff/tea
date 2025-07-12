@@ -10,7 +10,6 @@ the expressiveness and ease-of-use of scripting languages with Rust's key design
 - **Memory Safety**: Explicit mutability control with `let` and `mut` keywords
 - **Static Typing**: Type annotations with inference capabilities for safer scripts
 - **Structs and Methods**: Data structures with associated methods via `impl` blocks
-- **Native Functions**: FFI support for calling external functions and libraries
 - **Control Flow**: Standard control structures (`if`/`else`, `while` loops)
 - **Traits (Planned)**: Define shared behavior across types with trait definitions
 
@@ -139,16 +138,6 @@ let comparison = x > y && z <= w;
 let negation = -value;
 ```
 
-### Native Functions
-
-Declare external functions for FFI:
-
-```tea
-native fn print(message: string);
-native fn add_numbers(a: i32, b: i32) -> i32;
-native fn mut update_state() -> bool;
-```
-
 ### Traits (Planned)
 
 Define shared behavior across types with traits:
@@ -269,7 +258,6 @@ Tea is currently in development. The core language features are implemented incl
 - ✅ Method definitions with impl blocks
 - ✅ Control flow statements
 - ✅ Expression evaluation
-- ✅ Native function declarations
 - ✅ Type system foundations
 
 **Planned Features:**
