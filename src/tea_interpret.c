@@ -139,6 +139,8 @@ static bool tea_interpret_execute_assign(tea_context_t* context, const tea_ast_n
 {
   const tea_token_t* name = node->token;
   if (!name) {
+    rtl_log_err(
+      "Can't process node %s, because it's name is null", tea_ast_node_get_type_name(node->type));
     exit(1);
   }
 
