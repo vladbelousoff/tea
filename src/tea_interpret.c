@@ -24,7 +24,9 @@ const char* tea_value_get_type_string(const tea_value_type_t type)
 
 void tea_interpret_init(tea_context_t* context)
 {
-  rtl_list_init(&context->variables);
+  tea_scope_t* global_scope = &context->global_scope;
+  global_scope->parent_scope = NULL;
+  rtl_list_init(&global_scope->variables);
   rtl_list_init(&context->functions);
 }
 
@@ -33,7 +35,8 @@ void tea_interpret_cleanup(const tea_context_t* context)
   rtl_list_entry_t* entry;
   rtl_list_entry_t* safe;
 
-  rtl_list_for_each_safe(entry, safe, &context->variables)
+  const tea_scope_t* global_scope = &context->global_scope;
+  rtl_list_for_each_safe(entry, safe, &global_scope->variables)
   {
     tea_variable_t* variable = rtl_list_record(entry, tea_variable_t, link);
     rtl_list_remove(entry);
@@ -110,7 +113,9 @@ static bool tea_declare_variable(tea_context_t* context, const tea_token_t* name
       break;
   }
 
-  rtl_list_add_tail(&context->variables, &variable->link);
+  tea_scope_t* global_scope = &context->global_scope;
+  rtl_list_add_tail(&global_scope->variables, &variable->link);
+
   return true;
 }
 
@@ -599,7 +604,9 @@ static tea_value_t tea_interpret_evaluate_unary(tea_context_t* context, const te
 static tea_variable_t* tea_context_find_variable(const tea_context_t* context, const char* name)
 {
   rtl_list_entry_t* entry;
-  rtl_list_for_each(entry, &context->variables)
+
+  const tea_scope_t* global_scope = &context->global_scope;
+  rtl_list_for_each(entry, &global_scope->variables)
   {
     tea_variable_t* variable = rtl_list_record(entry, tea_variable_t, link);
     const tea_token_t* variable_name = variable->name;

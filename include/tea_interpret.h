@@ -25,9 +25,15 @@ typedef struct
   };
 } tea_value_t;
 
+typedef struct tea_scope
+{
+  struct tea_scope* parent_scope;
+  rtl_list_entry_t variables;
+} tea_scope_t;
+
 typedef struct
 {
-  rtl_list_entry_t variables;
+  tea_scope_t global_scope;
   rtl_list_entry_t functions;
   tea_value_t returned_value;
 } tea_context_t;
