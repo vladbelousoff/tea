@@ -69,10 +69,13 @@ int main(const int argc, char *argv[])
 
   rtl_log_dbg("Parsing completed successfully!");
 
+  int ret_code = 0;
   if (ast) {
     tea_context_t context;
     tea_interpret_init(&context);
-    tea_interpret_execute(&context, ast);
+    if (!tea_interpret_execute(&context, ast)) {
+      ret_code = 1;
+    }
     tea_interpret_cleanup(&context);
     tea_ast_node_free(ast);
   }
@@ -80,5 +83,5 @@ int main(const int argc, char *argv[])
   tea_lexer_cleanup(&lexer);
   rtl_cleanup();
 
-  return 0;
+  return ret_code;
 }

@@ -289,7 +289,6 @@ bool tea_interpret_execute(tea_context_t* context, const tea_ast_node_t* node)
       } else {
         rtl_log_err("Not implemented node: %s", tea_ast_node_get_type_name(node->type));
       }
-      exit(1);
     } break;
   }
 
