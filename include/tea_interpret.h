@@ -2,12 +2,6 @@
 
 #include "tea_ast.h"
 
-typedef struct
-{
-  rtl_list_entry_t variables;
-  rtl_list_entry_t functions;
-} tea_context_t;
-
 typedef enum
 {
   TEA_VALUE_I32,
@@ -33,6 +27,13 @@ typedef struct
 
 typedef struct
 {
+  rtl_list_entry_t variables;
+  rtl_list_entry_t functions;
+  tea_value_t returned_value;
+} tea_context_t;
+
+typedef struct
+{
   rtl_list_entry_t link;
   const tea_token_t* name;
   tea_value_t value;
@@ -41,11 +42,18 @@ typedef struct
 
 typedef struct
 {
+  const tea_token_t* name;
+  const tea_token_t* type;
+} tea_function_param_t;
+
+typedef struct
+{
   rtl_list_entry_t link;
   const tea_token_t* name;
   const tea_token_t* return_type;
-  const tea_ast_node_t* params;
   const tea_ast_node_t* body;
+  tea_function_param_t* params;
+  int param_count;
   unsigned char is_mutable : 1;
 } tea_function_t;
 

@@ -47,6 +47,9 @@ void tea_interpret_cleanup(const tea_context_t* context)
   {
     tea_function_t* function = rtl_list_record(entry, tea_function_t, link);
     rtl_list_remove(entry);
+    if (function->params && function->param_count > 0) {
+      rtl_free(function->params);
+    }
     rtl_free(function);
   }
 }
@@ -267,7 +270,67 @@ static bool tea_interpret_execute_while(tea_context_t* context, const tea_ast_no
   return true;
 }
 
-static bool tea_interpret_execute_fn(tea_context_t* context, const tea_ast_node_t* node)
+static tea_function_param_t* tea_construct_function_params(
+  const tea_ast_node_t* fn_params, int* param_count)
+{
+  int index = 0;
+  rtl_list_entry_t* entry;
+
+  if (fn_params) {
+    rtl_list_for_each(entry, &fn_params->children)
+    {
+      index++;
+    }
+  }
+
+  if (index == 0) {
+    *param_count = 0;
+    return NULL;
+  }
+
+  tea_function_param_t* params = rtl_malloc(sizeof(*params) * index);
+  if (!params) {
+    return NULL;
+  }
+
+  index = 0;
+  rtl_list_for_each(entry, &fn_params->children)
+  {
+    const tea_ast_node_t* param_name_node = rtl_list_record(entry, tea_ast_node_t, link);
+    if (!param_name_node) {
+      continue;
+    }
+
+    const tea_ast_node_t* param_type_node =
+      rtl_list_record(rtl_list_first(&param_name_node->children), tea_ast_node_t, link);
+    if (!param_type_node) {
+      continue;
+    }
+
+    const tea_token_t* param_name = param_name_node->token;
+    if (!param_name) {
+      continue;
+    }
+
+    const tea_token_t* param_type = param_type_node->token;
+    if (!param_type) {
+      continue;
+    }
+
+    params[index].name = param_name;
+    params[index].type = param_type;
+
+    rtl_log_dbg("Register param '%s' with type '%s'", param_name->buffer, param_type->buffer);
+
+    index++;
+  }
+
+  *param_count = index;
+  return params;
+}
+
+static bool tea_interpret_execute_function_declaration(
+  tea_context_t* context, const tea_ast_node_t* node)
 {
   const tea_token_t* fn_name = node->token;
   if (!fn_name) {
@@ -307,13 +370,13 @@ static bool tea_interpret_execute_fn(tea_context_t* context, const tea_ast_node_
 
   fn->name = fn_name;
   fn->body = fn_body;
-  fn->params = fn_params;
+  fn->is_mutable = is_mutable;
+  fn->params = tea_construct_function_params(fn_params, &fn->param_count);
   if (fn_return_type) {
     fn->return_type = fn_return_type->token;
   } else {
     fn->return_type = NULL;
   }
-  fn->is_mutable = is_mutable;
 
   rtl_list_add_tail(&context->functions, &fn->link);
 
@@ -322,6 +385,19 @@ static bool tea_interpret_execute_fn(tea_context_t* context, const tea_ast_node_
       fn->return_type->buffer_size, fn->return_type->buffer);
   } else {
     rtl_log_dbg("Declare function: '%.*s'", fn_name->buffer_size, fn_name->buffer);
+  }
+
+  return true;
+}
+
+static bool tea_interpret_execute_return(tea_context_t* context, const tea_ast_node_t* node)
+{
+  rtl_list_entry_t* entry = rtl_list_first(&node->children);
+  if (entry) {
+    const tea_ast_node_t* expr = rtl_list_record(entry, tea_ast_node_t, link);
+    if (expr) {
+      context->returned_value = tea_interpret_evaluate_expression(context, expr);
+    }
   }
 
   return true;
@@ -339,7 +415,9 @@ bool tea_interpret_execute(tea_context_t* context, const tea_ast_node_t* node)
     case TEA_AST_NODE_WHILE:
       return tea_interpret_execute_while(context, node);
     case TEA_AST_NODE_FUNCTION:
-      return tea_interpret_execute_fn(context, node);
+      return tea_interpret_execute_function_declaration(context, node);
+    case TEA_AST_NODE_RETURN:
+      return tea_interpret_execute_return(context, node);
     case TEA_AST_NODE_PROGRAM:
     case TEA_AST_NODE_STMT:
     case TEA_AST_NODE_THEN:
@@ -570,6 +648,52 @@ static tea_value_t tea_interpret_evaluate_string(
   return result;
 }
 
+static const tea_function_t* tea_context_find_function(
+  const tea_context_t* context, const char* name)
+{
+  rtl_list_entry_t* entry;
+  rtl_list_for_each(entry, &context->functions)
+  {
+    const tea_function_t* function = rtl_list_record(entry, tea_function_t, link);
+    const tea_token_t* function_name = function->name;
+    if (!function_name) {
+      continue;
+    }
+    if (!strcmp(function_name->buffer, name)) {
+      return function;
+    }
+  }
+
+  return NULL;
+}
+
+static tea_value_t tea_interpret_evaluate_function_call(
+  tea_context_t* context, const tea_ast_node_t* node)
+{
+  const tea_token_t* token = node->token;
+  if (!token) {
+    rtl_log_err("Impossible to evaluate ident token");
+    exit(1);
+  }
+
+  const tea_function_t* function = tea_context_find_function(context, token->buffer);
+  if (!function) {
+    rtl_log_err("Can't find function %s", token->buffer);
+    exit(1);
+  }
+
+  tea_value_t result = { 0 };
+  if (function->param_count > 0) {
+    rtl_log_err("Functions with params are not supported yet, just returning 0");
+  } else {
+    if (tea_interpret_execute(context, function->body)) {
+      result = context->returned_value;
+    }
+  }
+
+  return result;
+}
+
 tea_value_t tea_interpret_evaluate_expression(tea_context_t* context, const tea_ast_node_t* node)
 {
   if (!node) {
@@ -588,6 +712,8 @@ tea_value_t tea_interpret_evaluate_expression(tea_context_t* context, const tea_
       return tea_interpret_evaluate_ident(context, node);
     case TEA_AST_NODE_STRING:
       return tea_interpret_evaluate_string(context, node);
+    case TEA_AST_NODE_CALL:
+      return tea_interpret_evaluate_function_call(context, node);
     default: {
       rtl_log_err("Failed to evaluate node <%s>", tea_ast_node_get_type_name(node->type));
       tea_token_t* token = node->token;
