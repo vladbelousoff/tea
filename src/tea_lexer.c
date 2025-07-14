@@ -65,7 +65,7 @@ static void create_token(
   } else if (token_type == TEA_TOKEN_IDENT || token_type == TEA_TOKEN_NUMBER) {
     rtl_log_dbg("Token: %.*s (line: %d, col: %d)", buffer_size, buffer, token->line, token->column);
   } else {
-    rtl_log_dbg("Token: <%s> (line: %d, col: %d)", tea_get_token_name(token_type), token->line,
+    rtl_log_dbg("Token: <%s> (line: %d, col: %d)", tea_token_get_name(token_type), token->line,
       token->column);
   }
 
@@ -309,7 +309,7 @@ static bool scan_string(tea_lexer_t *self, const char *input)
 
       if (c == EOS) {
         rtl_log_err("Unterminated string literal at line %d, column %d", self->line, self->column);
-        exit(-1);
+        exit(1);
       }
 
       if (c == '\'') {
@@ -380,7 +380,7 @@ static void unknown_character(const tea_lexer_t *self, const char *input)
       rtl_log_err("Unknown character: <EOL>, line: %d, column: %d, position: %d", self->line,
         self->column, self->position);
     }
-    exit(-1);
+    exit(1);
   }
 }
 

@@ -269,6 +269,10 @@ bool tea_interpret_execute(tea_context_t* context, const tea_ast_node_t* node)
       return tea_interpret_execute_if(context, node);
     case TEA_AST_NODE_WHILE:
       return tea_interpret_execute_while(context, node);
+#if 0
+    case TEA_AST_NODE_FUNCTION:
+      return tea_interpret_execute_fn(context, node);
+#endif
     case TEA_AST_NODE_PROGRAM:
     case TEA_AST_NODE_STMT:
     case TEA_AST_NODE_THEN:
@@ -277,12 +281,15 @@ bool tea_interpret_execute(tea_context_t* context, const tea_ast_node_t* node)
     case TEA_AST_NODE_WHILE_BODY:
       return tea_interpret_execute_stmt(context, node);
     default: {
-      rtl_log_err("Not implemented: %s", tea_ast_node_get_type_name(node->type));
       const tea_token_t* token = node->token;
       if (token) {
-        rtl_log_err("Token: <%s> %.*s (line: %d, column: %d)", tea_get_token_name(token->type),
+        rtl_log_err("Not implemented node: %s, token: <%s> '%.*s' (line %d, col %d)",
+          tea_ast_node_get_type_name(node->type), tea_token_get_name(token->type),
           token->buffer_size, token->buffer, token->line, token->column);
+      } else {
+        rtl_log_err("Not implemented node: %s", tea_ast_node_get_type_name(node->type));
       }
+      exit(1);
     } break;
   }
 
@@ -519,7 +526,7 @@ tea_value_t tea_interpret_evaluate_expression(tea_context_t* context, const tea_
       rtl_log_err("Failed to evaluate node <%s>", tea_ast_node_get_type_name(node->type));
       tea_token_t* token = node->token;
       if (token) {
-        rtl_log_err("Token: <%s> %.*s (line: %d, column: %d)", tea_get_token_name(token->type),
+        rtl_log_err("Token: <%s> %.*s (line: %d, column: %d)", tea_token_get_name(token->type),
           token->buffer_size, token->buffer, token->line, token->column);
       }
     } break;

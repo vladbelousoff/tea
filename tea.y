@@ -460,7 +460,7 @@ primary_expr(primary_expr_node) ::= field_access(field_access_node). {
 %syntax_error {
     if (yyminor) {
         rtl_log_err("Syntax error: Unexpected token <%s> '%.*s' at line %d, column %d",
-                tea_get_token_name(yymajor),
+                tea_token_get_name(yymajor),
                 yyminor->buffer_size,
                 yyminor->buffer,
                 yyminor->line,

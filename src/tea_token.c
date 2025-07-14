@@ -34,7 +34,7 @@ int tea_get_ident_token_type(const char *ident, const int length)
   return TEA_TOKEN_IDENT;
 }
 
-const char *tea_get_token_name(const int token_type)
+const char *tea_token_get_name(const int token_type)
 {
   switch (token_type) {
     case TEA_TOKEN_FN:
