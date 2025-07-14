@@ -25,12 +25,14 @@ const char* tea_value_get_type_string(const tea_value_type_t type)
 void tea_interpret_init(tea_context_t* context)
 {
   rtl_list_init(&context->variables);
+  rtl_list_init(&context->functions);
 }
 
 void tea_interpret_cleanup(const tea_context_t* context)
 {
   rtl_list_entry_t* entry;
   rtl_list_entry_t* safe;
+
   rtl_list_for_each_safe(entry, safe, &context->variables)
   {
     tea_variable_t* variable = rtl_list_record(entry, tea_variable_t, link);
@@ -39,6 +41,13 @@ void tea_interpret_cleanup(const tea_context_t* context)
       rtl_free(variable->value.string_value);
     }
     rtl_free(variable);
+  }
+
+  rtl_list_for_each_safe(entry, safe, &context->functions)
+  {
+    tea_function_t* function = rtl_list_record(entry, tea_function_t, link);
+    rtl_list_remove(entry);
+    rtl_free(function);
   }
 }
 
@@ -258,6 +267,66 @@ static bool tea_interpret_execute_while(tea_context_t* context, const tea_ast_no
   return true;
 }
 
+static bool tea_interpret_execute_fn(tea_context_t* context, const tea_ast_node_t* node)
+{
+  const tea_token_t* fn_name = node->token;
+  if (!fn_name) {
+    return false;
+  }
+
+  const tea_ast_node_t* fn_return_type = NULL;
+  const tea_ast_node_t* fn_body = NULL;
+  const tea_ast_node_t* fn_params = NULL;
+
+  bool is_mutable = false;
+
+  rtl_list_entry_t* entry;
+  rtl_list_for_each(entry, &node->children)
+  {
+    const tea_ast_node_t* child = rtl_list_record(entry, tea_ast_node_t, link);
+    switch (child->type) {
+      case TEA_AST_NODE_PARAM:
+        fn_params = child;
+        break;
+      case TEA_AST_NODE_RETURN_TYPE:
+        fn_return_type = child;
+        break;
+      case TEA_TOKEN_MUT:
+        is_mutable = true;
+        break;
+      default:
+        fn_body = child;
+        break;
+    }
+  }
+
+  tea_function_t* fn = rtl_malloc(sizeof(*fn));
+  if (!fn) {
+    return false;
+  }
+
+  fn->name = fn_name;
+  fn->body = fn_body;
+  fn->params = fn_params;
+  if (fn_return_type) {
+    fn->return_type = fn_return_type->token;
+  } else {
+    fn->return_type = NULL;
+  }
+  fn->is_mutable = is_mutable;
+
+  rtl_list_add_tail(&context->functions, &fn->link);
+
+  if (fn->return_type) {
+    rtl_log_dbg("Declare function: '%.*s' -> %.*s", fn_name->buffer_size, fn_name->buffer,
+      fn->return_type->buffer_size, fn->return_type->buffer);
+  } else {
+    rtl_log_dbg("Declare function: '%.*s'", fn_name->buffer_size, fn_name->buffer);
+  }
+
+  return true;
+}
+
 bool tea_interpret_execute(tea_context_t* context, const tea_ast_node_t* node)
 {
   switch (node->type) {
@@ -269,10 +338,8 @@ bool tea_interpret_execute(tea_context_t* context, const tea_ast_node_t* node)
       return tea_interpret_execute_if(context, node);
     case TEA_AST_NODE_WHILE:
       return tea_interpret_execute_while(context, node);
-#if 0
     case TEA_AST_NODE_FUNCTION:
       return tea_interpret_execute_fn(context, node);
-#endif
     case TEA_AST_NODE_PROGRAM:
     case TEA_AST_NODE_STMT:
     case TEA_AST_NODE_THEN:

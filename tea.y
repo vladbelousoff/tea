@@ -99,11 +99,7 @@ function_header(header_node) ::= FN mut_opt(mut) IDENT(func_name) LPAREN param_l
         tea_ast_node_add_child(header_node, params);
     }
     if (return_type) {
-        tea_ast_node_t *return_type_node = tea_ast_node_create(TEA_AST_NODE_RETURN_TYPE, NULL);
-        if (return_type_node) {
-            tea_ast_node_add_child(return_type_node, return_type);
-        }
-        tea_ast_node_add_child(header_node, return_type_node);
+        tea_ast_node_add_child(header_node, return_type);
     }
 }
 
@@ -210,7 +206,7 @@ struct_field_init(field_init_node) ::= IDENT(field_name) COLON expression(value_
 param_list_opt(param_list_node) ::= param_list(params). { param_list_node = params; }
 param_list_opt(param_list_node) ::= . { param_list_node = NULL; }
 
-return_type_opt(return_type_node) ::= ARROW IDENT(type_name). { return_type_node = tea_ast_node_create(TEA_AST_NODE_IDENT, type_name); }
+return_type_opt(return_type_node) ::= ARROW IDENT(type_name). { return_type_node = tea_ast_node_create(TEA_AST_NODE_RETURN_TYPE, type_name); }
 return_type_opt(return_type_node) ::= . { return_type_node = NULL; }
 
 type_annotation_opt(type_annotation_node) ::= COLON IDENT(type_name). { type_annotation_node = tea_ast_node_create(TEA_AST_NODE_TYPE_ANNOT, type_name); }

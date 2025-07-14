@@ -5,6 +5,7 @@
 typedef struct
 {
   rtl_list_entry_t variables;
+  rtl_list_entry_t functions;
 } tea_context_t;
 
 typedef enum
@@ -37,6 +38,16 @@ typedef struct
   tea_value_t value;
   unsigned char is_mutable : 1;
 } tea_variable_t;
+
+typedef struct
+{
+  rtl_list_entry_t link;
+  const tea_token_t* name;
+  const tea_token_t* return_type;
+  const tea_ast_node_t* params;
+  const tea_ast_node_t* body;
+  unsigned char is_mutable : 1;
+} tea_function_t;
 
 void tea_interpret_init(tea_context_t* context);
 void tea_interpret_cleanup(const tea_context_t* context);
