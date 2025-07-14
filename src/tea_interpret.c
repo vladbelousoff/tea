@@ -56,11 +56,6 @@ static bool tea_interpret_execute_stmt(tea_context_t* context, const tea_ast_nod
   return true;
 }
 
-static bool tea_interpret_execute_program(tea_context_t* context, const tea_ast_node_t* node)
-{
-  return tea_interpret_execute_stmt(context, node);
-}
-
 static tea_variable_t* tea_context_find_variable(const tea_context_t* context, const char* name);
 
 static bool tea_declare_variable(tea_context_t* context, const tea_token_t* name,
@@ -266,8 +261,6 @@ static bool tea_interpret_execute_while(tea_context_t* context, const tea_ast_no
 bool tea_interpret_execute(tea_context_t* context, const tea_ast_node_t* node)
 {
   switch (node->type) {
-    case TEA_AST_NODE_PROGRAM:
-      return tea_interpret_execute_program(context, node);
     case TEA_AST_NODE_LET:
       return tea_interpret_execute_let(context, node);
     case TEA_AST_NODE_ASSIGN:
@@ -276,6 +269,7 @@ bool tea_interpret_execute(tea_context_t* context, const tea_ast_node_t* node)
       return tea_interpret_execute_if(context, node);
     case TEA_AST_NODE_WHILE:
       return tea_interpret_execute_while(context, node);
+    case TEA_AST_NODE_PROGRAM:
     case TEA_AST_NODE_STMT:
     case TEA_AST_NODE_THEN:
     case TEA_AST_NODE_ELSE:
