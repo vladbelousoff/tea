@@ -705,13 +705,51 @@ static tea_value_t tea_interpret_evaluate_function_call(
       const tea_ast_node_t* param_name = rtl_list_record(param_name_entry, tea_ast_node_t, link);
       const tea_ast_node_t* param_expr = rtl_list_record(param_expr_entry, tea_ast_node_t, link);
 
-      if (param_name && param_expr) {
-        /* TODO: Currently all function arguments are not mutable by default and
-         * I don't check the types */
-        const bool is_mutable = false;
-        tea_declare_variable(
-          context, &inner_scope, param_name->token, is_mutable, NULL, param_expr);
+      if (!param_name) {
+        continue;
       }
+
+      if (!param_expr) {
+        continue;
+      }
+
+      tea_token_t* param_name_token = param_name->token;
+      if (!param_name_token) {
+        continue;
+      }
+
+      tea_variable_t* variable = rtl_malloc(sizeof(*variable));
+      if (!variable) {
+        rtl_log_err("Failed to allocate memory for variable %.*s", param_name_token->buffer_size,
+          param_name_token->buffer);
+        continue;
+      }
+
+      variable->name = param_name_token;
+      /* TODO: Currently all function arguments are not mutable by default and I don't check the
+       * types */
+      const bool is_mutable = false;
+      variable->is_mutable = is_mutable;
+      variable->value = tea_interpret_evaluate_expression(context, scope, param_expr);
+
+      switch (variable->value.type) {
+        case TEA_VALUE_I32:
+          rtl_log_dbg("Declare param %s : %s = %d", param_name_token->buffer,
+            tea_value_get_type_string(variable->value.type), variable->value.i32_value);
+          break;
+        case TEA_VALUE_F32:
+          rtl_log_dbg("Declare param %s : %s = %f", param_name_token->buffer,
+            tea_value_get_type_string(variable->value.type), variable->value.f32_value);
+          break;
+        case TEA_VALUE_STRING:
+          rtl_log_dbg("Declare param %s : %s = '%s'", param_name_token->buffer,
+            tea_value_get_type_string(variable->value.type), variable->value.string_value);
+        default:
+          break;
+      }
+
+      // TODO: Check if the param already exists
+      rtl_list_add_tail(&inner_scope.variables, &variable->link);
 
       param_name_entry = rtl_list_next(param_name_entry, &function_params->children);
       param_expr_entry = rtl_list_next(param_expr_entry, &function_call_args->children);
