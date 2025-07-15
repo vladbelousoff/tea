@@ -47,18 +47,11 @@ typedef struct
 
 typedef struct
 {
-  const tea_token_t* name;
-  const tea_token_t* type;
-} tea_function_param_t;
-
-typedef struct
-{
   rtl_list_entry_t link;
   const tea_token_t* name;
   const tea_token_t* return_type;
   const tea_ast_node_t* body;
-  tea_function_param_t* params;
-  int param_count;
+  const tea_ast_node_t* params;
   unsigned char is_mutable : 1;
 } tea_function_t;
 

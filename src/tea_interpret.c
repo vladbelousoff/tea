@@ -59,9 +59,6 @@ void tea_interpret_cleanup(const tea_context_t* context)
   {
     tea_function_t* function = rtl_list_record(entry, tea_function_t, link);
     rtl_list_remove(entry);
-    if (function->params && function->param_count > 0) {
-      rtl_free(function->params);
-    }
     rtl_free(function);
   }
 }
@@ -85,21 +82,32 @@ static bool tea_interpret_execute_stmt(tea_context_t* context, tea_scope_t* scop
   return true;
 }
 
+static tea_variable_t* tea_context_find_variable_this_scope_only(
+  const tea_scope_t* scope, const char* name)
+{
+  rtl_list_entry_t* entry;
+  rtl_list_for_each(entry, &scope->variables)
+  {
+    tea_variable_t* variable = rtl_list_record(entry, tea_variable_t, link);
+    const tea_token_t* variable_name = variable->name;
+    if (!variable_name) {
+      continue;
+    }
+    if (!strcmp(variable_name->buffer, name)) {
+      return variable;
+    }
+  }
+
+  return NULL;
+}
+
 static tea_variable_t* tea_context_find_variable(const tea_scope_t* scope, const char* name)
 {
   const tea_scope_t* current_scope = scope;
   while (current_scope) {
-    rtl_list_entry_t* entry;
-    rtl_list_for_each(entry, &current_scope->variables)
-    {
-      tea_variable_t* variable = rtl_list_record(entry, tea_variable_t, link);
-      const tea_token_t* variable_name = variable->name;
-      if (!variable_name) {
-        continue;
-      }
-      if (!strcmp(variable_name->buffer, name)) {
-        return variable;
-      }
+    tea_variable_t* variable = tea_context_find_variable_this_scope_only(current_scope, name);
+    if (variable) {
+      return variable;
     }
 
     current_scope = current_scope->parent_scope;
@@ -116,7 +124,7 @@ static bool tea_declare_variable(tea_context_t* context, tea_scope_t* scope,
     return false;
   }
 
-  tea_variable_t* variable = tea_context_find_variable(scope, name->buffer);
+  tea_variable_t* variable = tea_context_find_variable_this_scope_only(scope, name->buffer);
   if (variable) {
     rtl_log_err("Variable %s is already declared (line: %d, col: %d)", name->buffer, name->line,
       name->column);
@@ -324,65 +332,6 @@ static bool tea_interpret_execute_while(tea_context_t* context, tea_scope_t* sco
   return true;
 }
 
-static tea_function_param_t* tea_construct_function_params(
-  const tea_ast_node_t* fn_params, int* param_count)
-{
-  int index = 0;
-  rtl_list_entry_t* entry;
-
-  if (fn_params) {
-    rtl_list_for_each(entry, &fn_params->children)
-    {
-      index++;
-    }
-  }
-
-  if (index == 0) {
-    *param_count = 0;
-    return NULL;
-  }
-
-  tea_function_param_t* params = rtl_malloc(sizeof(*params) * index);
-  if (!params) {
-    return NULL;
-  }
-
-  index = 0;
-  rtl_list_for_each(entry, &fn_params->children)
-  {
-    const tea_ast_node_t* param_name_node = rtl_list_record(entry, tea_ast_node_t, link);
-    if (!param_name_node) {
-      continue;
-    }
-
-    const tea_ast_node_t* param_type_node =
-      rtl_list_record(rtl_list_first(&param_name_node->children), tea_ast_node_t, link);
-    if (!param_type_node) {
-      continue;
-    }
-
-    const tea_token_t* param_name = param_name_node->token;
-    if (!param_name) {
-      continue;
-    }
-
-    const tea_token_t* param_type = param_type_node->token;
-    if (!param_type) {
-      continue;
-    }
-
-    params[index].name = param_name;
-    params[index].type = param_type;
-
-    rtl_log_dbg("Register param '%s' with type '%s'", param_name->buffer, param_type->buffer);
-
-    index++;
-  }
-
-  *param_count = index;
-  return params;
-}
-
 static bool tea_interpret_execute_function_declaration(
   tea_context_t* context, const tea_ast_node_t* node)
 {
@@ -425,7 +374,7 @@ static bool tea_interpret_execute_function_declaration(
   fn->name = fn_name;
   fn->body = fn_body;
   fn->is_mutable = is_mutable;
-  fn->params = tea_construct_function_params(fn_params, &fn->param_count);
+  fn->params = fn_params;
   if (fn_return_type) {
     fn->return_type = fn_return_type->token;
   } else {
@@ -725,20 +674,46 @@ static tea_value_t tea_interpret_evaluate_function_call(
     exit(1);
   }
 
+  const tea_ast_node_t* function_call_args = NULL;
+
+  rtl_list_entry_t* entry;
+  rtl_list_for_each(entry, &node->children)
+  {
+    const tea_ast_node_t* child = rtl_list_record(entry, tea_ast_node_t, link);
+    switch (child->type) {
+      case TEA_AST_NODE_FUNCTION_CALL_ARGS:
+        function_call_args = child;
+        break;
+      default:
+        break;
+    }
+  }
+
   tea_return_context_t return_context = { 0 };
   return_context.is_set = false;
-
-  bool result = false;
 
   tea_scope_t inner_scope;
   tea_scope_init(&inner_scope, scope);
 
-  if (function->param_count > 0) {
-    rtl_log_err("Functions with params are not supported yet, just returning 0");
-  } else {
-    result = tea_interpret_execute(context, &inner_scope, function->body, &return_context);
+  const tea_ast_node_t* function_params = function->params;
+  if (function_params && function_call_args) {
+    rtl_list_entry_t* param_name_entry = rtl_list_first(&function_params->children);
+    rtl_list_entry_t* param_expr_entry = rtl_list_first(&function_call_args->children);
+
+    while (param_name_entry && param_expr_entry) {
+      const tea_ast_node_t* param_name = rtl_list_record(param_name_entry, tea_ast_node_t, link);
+      const tea_ast_node_t* param_expr = rtl_list_record(param_expr_entry, tea_ast_node_t, link);
+
+      if (param_name && param_expr) {
+        tea_declare_variable(context, &inner_scope, param_name->token, false, NULL, param_expr);
+      }
+
+      param_name_entry = rtl_list_next(param_name_entry, &function_params->children);
+      param_expr_entry = rtl_list_next(param_expr_entry, &function_call_args->children);
+    }
   }
 
+  const bool result = tea_interpret_execute(context, &inner_scope, function->body, &return_context);
   tea_scope_cleanup(&inner_scope);
 
   if (result && return_context.is_set) {
@@ -753,7 +728,7 @@ tea_value_t tea_interpret_evaluate_expression(
   tea_context_t* context, tea_scope_t* scope, const tea_ast_node_t* node)
 {
   if (!node) {
-    rtl_log_err("Node %s is null!", tea_ast_node_get_type_name(node->type));
+    rtl_log_err("Node is null!");
     exit(1);
   }
 
