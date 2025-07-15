@@ -9,6 +9,8 @@
 const char* tea_value_get_type_string(const tea_value_type_t type)
 {
   switch (type) {
+    case TEA_VALUE_UNSET:
+      return "unset";
     case TEA_VALUE_I32:
       return "i32";
     case TEA_VALUE_F32:
@@ -20,6 +22,12 @@ const char* tea_value_get_type_string(const tea_value_type_t type)
   }
 
   return "UNKNOWN";
+}
+
+tea_value_t tea_value_unset()
+{
+  static tea_value_t unset = { 0 };
+  return unset;
 }
 
 void tea_scope_init(tea_scope_t* scope, tea_scope_t* parent_scope)
@@ -59,6 +67,13 @@ void tea_interpret_cleanup(const tea_context_t* context)
   rtl_list_for_each_safe(entry, safe, &context->functions)
   {
     tea_function_t* function = rtl_list_record(entry, tea_function_t, link);
+    rtl_list_remove(entry);
+    rtl_free(function);
+  }
+
+  rtl_list_for_each_safe(entry, safe, &context->native_functions)
+  {
+    tea_native_function_t* function = rtl_list_record(entry, tea_native_function_t, link);
     rtl_list_remove(entry);
     rtl_free(function);
   }
@@ -242,7 +257,7 @@ static bool tea_interpret_execute_assign(
       rtl_log_dbg("New value for variable %s : %s = '%s'", name->buffer,
         tea_value_get_type_string(variable->value.type), variable->value.string_value);
       break;
-    case TEA_VALUE_OBJECT:
+    default:
       break;
   }
 
@@ -685,18 +700,6 @@ static tea_value_t tea_interpret_evaluate_function_call(
     exit(1);
   }
 
-  const tea_native_function_t* native_function =
-    tea_context_find_native_function(context, token->buffer);
-  if (native_function) {
-    return native_function->cb(node);
-  }
-
-  const tea_function_t* function = tea_context_find_function(context, token->buffer);
-  if (!function) {
-    rtl_log_err("Can't find function %s", token->buffer);
-    exit(1);
-  }
-
   const tea_ast_node_t* function_call_args = NULL;
 
   rtl_list_entry_t* entry;
@@ -710,6 +713,18 @@ static tea_value_t tea_interpret_evaluate_function_call(
       default:
         break;
     }
+  }
+
+  const tea_native_function_t* native_function =
+    tea_context_find_native_function(context, token->buffer);
+  if (native_function) {
+    return native_function->cb(function_call_args);
+  }
+
+  const tea_function_t* function = tea_context_find_function(context, token->buffer);
+  if (!function) {
+    rtl_log_err("Can't find function %s", token->buffer);
+    exit(1);
   }
 
   tea_return_context_t return_context = { 0 };

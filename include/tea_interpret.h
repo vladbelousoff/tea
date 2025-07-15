@@ -4,6 +4,7 @@
 
 typedef enum
 {
+  TEA_VALUE_UNSET,
   TEA_VALUE_I32,
   TEA_VALUE_F32,
   TEA_VALUE_STRING,
@@ -14,7 +15,7 @@ const char* tea_value_get_type_string(tea_value_type_t type);
 
 typedef struct
 {
-  tea_value_type_t type : 2;
+  tea_value_type_t type;
 
   union
   {
@@ -70,6 +71,8 @@ typedef struct
   tea_value_t returned_value;
   bool is_set;
 } tea_return_context_t;
+
+tea_value_t tea_value_unset();
 
 void tea_scope_init(tea_scope_t* scope, tea_scope_t* parent_scope);
 void tea_scope_cleanup(const tea_scope_t* scope);

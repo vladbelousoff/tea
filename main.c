@@ -18,10 +18,17 @@ void print_usage(const char *program_name)
 
 static tea_value_t tea_print(const tea_ast_node_t *args)
 {
-  rtl_log_err("Hello!");
+  rtl_list_entry_t *entry;
+  rtl_list_for_each(entry, &args->children)
+  {
+    const tea_ast_node_t *arg = rtl_list_record(entry, tea_ast_node_t, link);
+    const tea_token_t *name = arg->token;
+    if (name) {
+      printf("%.*s", name->buffer_size, name->buffer);
+    }
+  }
 
-  static tea_value_t ret_val = { 0 };
-  return ret_val;
+  return tea_value_unset();
 }
 
 int main(const int argc, char *argv[])
