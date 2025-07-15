@@ -706,23 +706,23 @@ static tea_value_t tea_interpret_evaluate_function_call(
       const tea_ast_node_t* param_expr = rtl_list_record(param_expr_entry, tea_ast_node_t, link);
 
       if (!param_name) {
-        continue;
+        break;
       }
 
       if (!param_expr) {
-        continue;
+        break;
       }
 
       tea_token_t* param_name_token = param_name->token;
       if (!param_name_token) {
-        continue;
+        break;
       }
 
       tea_variable_t* variable = rtl_malloc(sizeof(*variable));
       if (!variable) {
         rtl_log_err("Failed to allocate memory for variable %.*s", param_name_token->buffer_size,
           param_name_token->buffer);
-        continue;
+        break;
       }
 
       variable->name = param_name_token;
