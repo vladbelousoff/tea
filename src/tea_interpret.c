@@ -44,8 +44,9 @@ void tea_scope_cleanup(const tea_scope_t* scope)
   }
 }
 
-void tea_interpret_init(tea_context_t* context)
+void tea_interpret_init(tea_context_t* context, const char* filename)
 {
+  context->filename = filename;
   rtl_list_init(&context->functions);
 }
 
@@ -478,11 +479,13 @@ bool tea_interpret_execute(tea_context_t* context, tea_scope_t* scope, const tea
     default: {
       const tea_token_t* token = node->token;
       if (token) {
-        rtl_log_err("Not implemented node: %s, token: <%s> '%.*s' (line %d, col %d)",
-          tea_ast_node_get_type_name(node->type), tea_token_get_name(token->type),
-          token->buffer_size, token->buffer, token->line, token->column);
+        rtl_log_err("Not implemented node <%s> in file %s, token: <%s> '%.*s' (line %d, col %d)",
+          tea_ast_node_get_type_name(node->type), context->filename,
+          tea_token_get_name(token->type), token->buffer_size, token->buffer, token->line,
+          token->column);
       } else {
-        rtl_log_err("Not implemented node: %s", tea_ast_node_get_type_name(node->type));
+        rtl_log_err("Not implemented node <%s> in file %s", tea_ast_node_get_type_name(node->type),
+          context->filename);
       }
     } break;
   }

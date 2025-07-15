@@ -72,7 +72,7 @@ int main(const int argc, char *argv[])
   int ret_code = 0;
   if (ast) {
     tea_context_t context;
-    tea_interpret_init(&context);
+    tea_interpret_init(&context, filename);
     tea_scope_t global_scope;
     tea_scope_init(&global_scope, NULL);
     if (!tea_interpret_execute(&context, &global_scope, ast)) {
