@@ -24,7 +24,7 @@ static tea_value_t tea_print(const tea_ast_node_t *args)
     const tea_ast_node_t *arg = rtl_list_record(entry, tea_ast_node_t, link);
     const tea_token_t *name = arg->token;
     if (name) {
-      printf("%.*s", name->buffer_size, name->buffer);
+      printf("%.*s\n", name->buffer_size, name->buffer);
     }
   }
 
