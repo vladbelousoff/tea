@@ -16,15 +16,23 @@ void print_usage(const char *program_name)
   rtl_log_inf("  %s example.tea", program_name);
 }
 
-static tea_value_t tea_print(const tea_ast_node_t *args)
+static tea_value_t tea_print(const tea_value_t *args, const int arg_count)
 {
-  rtl_list_entry_t *entry;
-  rtl_list_for_each(entry, &args->children)
-  {
-    const tea_ast_node_t *arg = rtl_list_record(entry, tea_ast_node_t, link);
-    const tea_token_t *name = arg->token;
-    if (name) {
-      printf("%.*s\n", name->buffer_size, name->buffer);
+  for (int i = 0; i < arg_count; i++) {
+    const tea_value_t arg = args[i];
+    switch (arg.type) {
+      case TEA_VALUE_I32:
+        printf("%d\n", arg.i32_value);
+        break;
+      case TEA_VALUE_F32:
+        printf("%f\n", arg.f32_value);
+        break;
+      case TEA_VALUE_STRING:
+        printf("%s\n", arg.string_value);
+        break;
+      case TEA_VALUE_UNSET:
+      case TEA_VALUE_OBJECT:
+        break;
     }
   }
 

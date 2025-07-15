@@ -724,7 +724,29 @@ static tea_value_t tea_interpret_evaluate_function_call(
   const tea_native_function_t* native_function =
     tea_context_find_native_function(context, token->buffer);
   if (native_function) {
-    return native_function->cb(function_call_args);
+    int arg_count = 0;
+    rtl_list_for_each(entry, &function_call_args->children)
+    {
+      arg_count++;
+    }
+
+    tea_value_t* args = arg_count > 0 ? rtl_malloc(sizeof(tea_value_t) * arg_count) : NULL;
+
+    if (args) {
+      int index = 0;
+      rtl_list_for_each(entry, &function_call_args->children)
+      {
+        const tea_ast_node_t* arg_expr = rtl_list_record(entry, tea_ast_node_t, link);
+        args[index++] = tea_interpret_evaluate_expression(context, scope, arg_expr);
+      }
+    }
+
+    const tea_value_t ret_value = native_function->cb(args, arg_count);
+    if (args) {
+      rtl_free(args);
+    }
+
+    return ret_value;
   }
 
   const tea_function_t* function = tea_context_find_function(context, token->buffer);

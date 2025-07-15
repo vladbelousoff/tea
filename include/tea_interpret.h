@@ -57,7 +57,7 @@ typedef struct
   unsigned char is_mutable : 1;
 } tea_function_t;
 
-typedef tea_value_t (*tea_native_function_cb_t)(const tea_ast_node_t* args);
+typedef tea_value_t (*tea_native_function_cb_t)(const tea_value_t* args, int arg_count);
 
 typedef struct
 {
