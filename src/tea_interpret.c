@@ -471,6 +471,7 @@ bool tea_interpret_execute(tea_context_t* context, tea_scope_t* scope, const tea
       return tea_interpret_execute_return(context, scope, node);
     case TEA_AST_NODE_PROGRAM:
     case TEA_AST_NODE_STMT:
+    case TEA_AST_NODE_FUNCTION_CALL_ARGS:
     case TEA_AST_NODE_THEN:
     case TEA_AST_NODE_ELSE:
     case TEA_AST_NODE_WHILE_COND:
@@ -753,7 +754,7 @@ tea_value_t tea_interpret_evaluate_expression(
       return tea_interpret_evaluate_ident(scope, node);
     case TEA_AST_NODE_STRING:
       return tea_interpret_evaluate_string(node);
-    case TEA_AST_NODE_CALL:
+    case TEA_AST_NODE_FUNCTION_CALL:
       return tea_interpret_evaluate_function_call(context, scope, node);
     default: {
       rtl_log_err("Failed to evaluate node <%s>", tea_ast_node_get_type_name(node->type));

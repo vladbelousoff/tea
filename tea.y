@@ -244,14 +244,14 @@ parameter(param_node) ::= IDENT(param_name) COLON IDENT(param_type). {
 }
 
 arg_list(arg_list_node) ::= arg_list(existing_args) COMMA expression(new_arg). {
-    arg_list_node = existing_args ? existing_args : tea_ast_node_create(TEA_AST_NODE_STMT, NULL);
+    arg_list_node = existing_args ? existing_args : tea_ast_node_create(TEA_AST_NODE_FUNCTION_CALL_ARGS, NULL);
     if (new_arg) {
         tea_ast_node_add_child(arg_list_node, new_arg);
     }
 }
 
 arg_list(arg_list_node) ::= expression(single_arg). {
-    arg_list_node = tea_ast_node_create(TEA_AST_NODE_STMT, NULL);
+    arg_list_node = tea_ast_node_create(TEA_AST_NODE_FUNCTION_CALL_ARGS, NULL);
     if (single_arg) {
         tea_ast_node_add_child(arg_list_node, single_arg);
     }
@@ -417,11 +417,11 @@ primary_expr(primary_expr_node) ::= IDENT(ident_name). {
 }
 
 primary_expr(primary_expr_node) ::= IDENT(func_name) LPAREN RPAREN. {
-    primary_expr_node = tea_ast_node_create(TEA_AST_NODE_CALL, func_name);
+    primary_expr_node = tea_ast_node_create(TEA_AST_NODE_FUNCTION_CALL, func_name);
 }
 
 primary_expr(primary_expr_node) ::= IDENT(func_name) LPAREN arg_list(args) RPAREN. {
-    primary_expr_node = tea_ast_node_create(TEA_AST_NODE_CALL, func_name);
+    primary_expr_node = tea_ast_node_create(TEA_AST_NODE_FUNCTION_CALL, func_name);
     if (args) {
         tea_ast_node_add_child(primary_expr_node, args);
     }

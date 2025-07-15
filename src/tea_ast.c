@@ -106,8 +106,10 @@ const char *tea_ast_node_get_type_name(const tea_ast_node_type_t type)
       return "TYPE_ANNOT";
     case TEA_AST_NODE_NUMBER:
       return "NUMBER";
-    case TEA_AST_NODE_CALL:
-      return "CALL";
+    case TEA_AST_NODE_FUNCTION_CALL:
+      return "FUNCTION_CALL";
+    case TEA_AST_NODE_FUNCTION_CALL_ARGS:
+      return "FUNCTION_CALL_ARGS";
     case TEA_AST_NODE_RETURN:
       return "RETURN";
     case TEA_AST_NODE_IF:
