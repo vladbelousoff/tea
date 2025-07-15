@@ -35,6 +35,7 @@ typedef struct
 {
   const char* filename;
   rtl_list_entry_t functions;
+  rtl_list_entry_t native_functions;
 } tea_context_t;
 
 typedef struct
@@ -55,6 +56,15 @@ typedef struct
   unsigned char is_mutable : 1;
 } tea_function_t;
 
+typedef tea_value_t (*tea_native_function_cb_t)(const tea_ast_node_t* args);
+
+typedef struct
+{
+  rtl_list_entry_t link;
+  const char* name;
+  tea_native_function_cb_t cb;
+} tea_native_function_t;
+
 typedef struct
 {
   tea_value_t returned_value;
@@ -70,3 +80,6 @@ bool tea_interpret_execute(tea_context_t* context, tea_scope_t* scope, const tea
   tea_return_context_t* return_context);
 tea_value_t tea_interpret_evaluate_expression(
   tea_context_t* context, tea_scope_t* scope, const tea_ast_node_t* node);
+
+void tea_bind_native_function(
+  tea_context_t* context, const char* name, tea_native_function_cb_t cb);

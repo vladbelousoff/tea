@@ -48,6 +48,7 @@ void tea_interpret_init(tea_context_t* context, const char* filename)
 {
   context->filename = filename;
   rtl_list_init(&context->functions);
+  rtl_list_init(&context->native_functions);
 }
 
 void tea_interpret_cleanup(const tea_context_t* context)
@@ -641,6 +642,21 @@ static tea_value_t tea_interpret_evaluate_string(const tea_ast_node_t* node)
   return result;
 }
 
+static const tea_native_function_t* tea_context_find_native_function(
+  const tea_context_t* context, const char* name)
+{
+  rtl_list_entry_t* entry;
+  rtl_list_for_each(entry, &context->native_functions)
+  {
+    const tea_native_function_t* function = rtl_list_record(entry, tea_native_function_t, link);
+    if (!strcmp(function->name, name)) {
+      return function;
+    }
+  }
+
+  return NULL;
+}
+
 static const tea_function_t* tea_context_find_function(
   const tea_context_t* context, const char* name)
 {
@@ -667,6 +683,12 @@ static tea_value_t tea_interpret_evaluate_function_call(
   if (!token) {
     rtl_log_err("Impossible to evaluate ident token");
     exit(1);
+  }
+
+  const tea_native_function_t* native_function =
+    tea_context_find_native_function(context, token->buffer);
+  if (native_function) {
+    return native_function->cb(node);
   }
 
   const tea_function_t* function = tea_context_find_function(context, token->buffer);
@@ -799,4 +821,15 @@ tea_value_t tea_interpret_evaluate_expression(
   }
 
   exit(1);
+}
+
+void tea_bind_native_function(
+  tea_context_t* context, const char* name, const tea_native_function_cb_t cb)
+{
+  tea_native_function_t* function = rtl_malloc(sizeof(*function));
+  if (function) {
+    function->name = name;
+    function->cb = cb;
+    rtl_list_add_tail(&context->native_functions, &function->link);
+  }
 }

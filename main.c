@@ -16,6 +16,14 @@ void print_usage(const char *program_name)
   rtl_log_inf("  %s example.tea", program_name);
 }
 
+static tea_value_t tea_print(const tea_ast_node_t *args)
+{
+  rtl_log_err("Hello!");
+
+  static tea_value_t ret_val = { 0 };
+  return ret_val;
+}
+
 int main(const int argc, char *argv[])
 {
   const char *filename = NULL;
@@ -73,11 +81,15 @@ int main(const int argc, char *argv[])
   if (ast) {
     tea_context_t context;
     tea_interpret_init(&context, filename);
+
+    tea_bind_native_function(&context, "print", tea_print);
+
     tea_scope_t global_scope;
     tea_scope_init(&global_scope, NULL);
     if (!tea_interpret_execute(&context, &global_scope, ast, NULL)) {
       ret_code = 1;
     }
+
     tea_interpret_cleanup(&context);
     tea_scope_cleanup(&global_scope);
     tea_ast_node_free(ast);
