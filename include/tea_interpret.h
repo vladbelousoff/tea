@@ -33,7 +33,6 @@ typedef struct tea_scope
 
 typedef struct
 {
-  tea_scope_t global_scope;
   rtl_list_entry_t functions;
   tea_value_t returned_value;
 } tea_context_t;
@@ -63,7 +62,11 @@ typedef struct
   unsigned char is_mutable : 1;
 } tea_function_t;
 
+void tea_scope_init(tea_scope_t* scope, tea_scope_t* parent_scope);
+void tea_scope_cleanup(const tea_scope_t* scope);
+
 void tea_interpret_init(tea_context_t* context);
 void tea_interpret_cleanup(const tea_context_t* context);
-bool tea_interpret_execute(tea_context_t* context, const tea_ast_node_t* node);
-tea_value_t tea_interpret_evaluate_expression(tea_context_t* context, const tea_ast_node_t* node);
+bool tea_interpret_execute(tea_context_t* context, tea_scope_t* scope, const tea_ast_node_t* node);
+tea_value_t tea_interpret_evaluate_expression(
+  tea_context_t* context, tea_scope_t* scope, const tea_ast_node_t* node);

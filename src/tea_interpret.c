@@ -22,21 +22,18 @@ const char* tea_value_get_type_string(const tea_value_type_t type)
   return "UNKNOWN";
 }
 
-void tea_interpret_init(tea_context_t* context)
+void tea_scope_init(tea_scope_t* scope, tea_scope_t* parent_scope)
 {
-  tea_scope_t* global_scope = &context->global_scope;
-  global_scope->parent_scope = NULL;
-  rtl_list_init(&global_scope->variables);
-  rtl_list_init(&context->functions);
+  scope->parent_scope = parent_scope;
+  rtl_list_init(&scope->variables);
 }
 
-void tea_interpret_cleanup(const tea_context_t* context)
+void tea_scope_cleanup(const tea_scope_t* scope)
 {
   rtl_list_entry_t* entry;
   rtl_list_entry_t* safe;
 
-  const tea_scope_t* global_scope = &context->global_scope;
-  rtl_list_for_each_safe(entry, safe, &global_scope->variables)
+  rtl_list_for_each_safe(entry, safe, &scope->variables)
   {
     tea_variable_t* variable = rtl_list_record(entry, tea_variable_t, link);
     rtl_list_remove(entry);
@@ -45,6 +42,17 @@ void tea_interpret_cleanup(const tea_context_t* context)
     }
     rtl_free(variable);
   }
+}
+
+void tea_interpret_init(tea_context_t* context)
+{
+  rtl_list_init(&context->functions);
+}
+
+void tea_interpret_cleanup(const tea_context_t* context)
+{
+  rtl_list_entry_t* entry;
+  rtl_list_entry_t* safe;
 
   rtl_list_for_each_safe(entry, safe, &context->functions)
   {
@@ -57,13 +65,14 @@ void tea_interpret_cleanup(const tea_context_t* context)
   }
 }
 
-static bool tea_interpret_execute_stmt(tea_context_t* context, const tea_ast_node_t* node)
+static bool tea_interpret_execute_stmt(
+  tea_context_t* context, tea_scope_t* scope, const tea_ast_node_t* node)
 {
   rtl_list_entry_t* entry;
   rtl_list_for_each(entry, &node->children)
   {
     const tea_ast_node_t* child = rtl_list_record(entry, tea_ast_node_t, link);
-    if (!tea_interpret_execute(context, child)) {
+    if (!tea_interpret_execute(context, scope, child)) {
       return false;
     }
   }
@@ -71,16 +80,38 @@ static bool tea_interpret_execute_stmt(tea_context_t* context, const tea_ast_nod
   return true;
 }
 
-static tea_variable_t* tea_context_find_variable(const tea_context_t* context, const char* name);
+static tea_variable_t* tea_context_find_variable(const tea_scope_t* scope, const char* name)
+{
+  const tea_scope_t* current_scope = scope;
+  while (current_scope) {
+    rtl_list_entry_t* entry;
+    rtl_list_for_each(entry, &current_scope->variables)
+    {
+      tea_variable_t* variable = rtl_list_record(entry, tea_variable_t, link);
+      const tea_token_t* variable_name = variable->name;
+      if (!variable_name) {
+        continue;
+      }
+      if (!strcmp(variable_name->buffer, name)) {
+        return variable;
+      }
+    }
 
-static bool tea_declare_variable(tea_context_t* context, const tea_token_t* name,
-  const bool is_mutable, const tea_ast_node_t* type, const tea_ast_node_t* initial_value)
+    current_scope = current_scope->parent_scope;
+  }
+
+  return NULL;
+}
+
+static bool tea_declare_variable(tea_context_t* context, tea_scope_t* scope,
+  const tea_token_t* name, const bool is_mutable, const tea_ast_node_t* type,
+  const tea_ast_node_t* initial_value)
 {
   if (!name) {
     return false;
   }
 
-  tea_variable_t* variable = tea_context_find_variable(context, name->buffer);
+  tea_variable_t* variable = tea_context_find_variable(scope, name->buffer);
   if (variable) {
     rtl_log_err("Variable %s is already declared (line: %d, col: %d)", name->buffer, name->line,
       name->column);
@@ -95,7 +126,7 @@ static bool tea_declare_variable(tea_context_t* context, const tea_token_t* name
 
   variable->name = name;
   variable->is_mutable = is_mutable;
-  variable->value = tea_interpret_evaluate_expression(context, initial_value);
+  variable->value = tea_interpret_evaluate_expression(context, scope, initial_value);
 
   switch (variable->value.type) {
     case TEA_VALUE_I32:
@@ -113,13 +144,13 @@ static bool tea_declare_variable(tea_context_t* context, const tea_token_t* name
       break;
   }
 
-  tea_scope_t* global_scope = &context->global_scope;
-  rtl_list_add_tail(&global_scope->variables, &variable->link);
+  rtl_list_add_tail(&scope->variables, &variable->link);
 
   return true;
 }
 
-static bool tea_interpret_execute_let(tea_context_t* context, const tea_ast_node_t* node)
+static bool tea_interpret_execute_let(
+  tea_context_t* context, tea_scope_t* scope, const tea_ast_node_t* node)
 {
   const tea_token_t* name = node->token;
 
@@ -144,10 +175,11 @@ static bool tea_interpret_execute_let(tea_context_t* context, const tea_ast_node
     }
   }
 
-  return tea_declare_variable(context, name, is_mutable, type, expr);
+  return tea_declare_variable(context, scope, name, is_mutable, type, expr);
 }
 
-static bool tea_interpret_execute_assign(tea_context_t* context, const tea_ast_node_t* node)
+static bool tea_interpret_execute_assign(
+  tea_context_t* context, tea_scope_t* scope, const tea_ast_node_t* node)
 {
   const tea_token_t* name = node->token;
   if (!name) {
@@ -156,7 +188,7 @@ static bool tea_interpret_execute_assign(tea_context_t* context, const tea_ast_n
     exit(1);
   }
 
-  tea_variable_t* variable = tea_context_find_variable(context, name->buffer);
+  tea_variable_t* variable = tea_context_find_variable(scope, name->buffer);
   if (!variable) {
     rtl_log_err("Cannot find variable '%s'", name->buffer);
     exit(1);
@@ -170,7 +202,7 @@ static bool tea_interpret_execute_assign(tea_context_t* context, const tea_ast_n
   // First child is the value on the right
   const tea_ast_node_t* rhs =
     rtl_list_record(rtl_list_first(&node->children), tea_ast_node_t, link);
-  const tea_value_t new_value = tea_interpret_evaluate_expression(context, rhs);
+  const tea_value_t new_value = tea_interpret_evaluate_expression(context, scope, rhs);
 
   if (new_value.type == variable->value.type) {
     variable->value = new_value;
@@ -202,7 +234,8 @@ static bool tea_interpret_execute_assign(tea_context_t* context, const tea_ast_n
   return true;
 }
 
-static bool tea_interpret_execute_if(tea_context_t* context, const tea_ast_node_t* node)
+static bool tea_interpret_execute_if(
+  tea_context_t* context, tea_scope_t* scope, const tea_ast_node_t* node)
 {
   const tea_ast_node_t* condition = NULL;
   const tea_ast_node_t* then_node = NULL;
@@ -225,19 +258,24 @@ static bool tea_interpret_execute_if(tea_context_t* context, const tea_ast_node_
     }
   }
 
-  const tea_value_t cond_val = tea_interpret_evaluate_expression(context, condition);
+  tea_scope_t inner_scope;
+  tea_scope_init(&inner_scope, scope);
+
+  const tea_value_t cond_val = tea_interpret_evaluate_expression(context, &inner_scope, condition);
+
+  bool result = false;
   if (cond_val.i32_value != 0) {
-    return tea_interpret_execute(context, then_node);
+    result = tea_interpret_execute(context, &inner_scope, then_node);
+  } else if (else_node) {
+    result = tea_interpret_execute(context, &inner_scope, else_node);
   }
 
-  if (else_node) {
-    return tea_interpret_execute(context, else_node);
-  }
-
-  return true;
+  tea_scope_cleanup(&inner_scope);
+  return result;
 }
 
-static bool tea_interpret_execute_while(tea_context_t* context, const tea_ast_node_t* node)
+static bool tea_interpret_execute_while(
+  tea_context_t* context, tea_scope_t* scope, const tea_ast_node_t* node)
 {
   const tea_ast_node_t* while_cond = NULL;
   const tea_ast_node_t* while_body = NULL;
@@ -263,11 +301,17 @@ static bool tea_interpret_execute_while(tea_context_t* context, const tea_ast_no
   }
 
   while (true) {
-    const tea_value_t cond_val = tea_interpret_evaluate_expression(context, while_cond);
+    const tea_value_t cond_val = tea_interpret_evaluate_expression(context, scope, while_cond);
     if (cond_val.i32_value == 0) {
       break;
     }
-    if (!tea_interpret_execute(context, while_body)) {
+
+    tea_scope_t inner_scope;
+    tea_scope_init(&inner_scope, scope);
+    const bool result = tea_interpret_execute(context, &inner_scope, while_body);
+    tea_scope_cleanup(&inner_scope);
+
+    if (!result) {
       break;
     }
   }
@@ -395,41 +439,42 @@ static bool tea_interpret_execute_function_declaration(
   return true;
 }
 
-static bool tea_interpret_execute_return(tea_context_t* context, const tea_ast_node_t* node)
+static bool tea_interpret_execute_return(
+  tea_context_t* context, tea_scope_t* scope, const tea_ast_node_t* node)
 {
   rtl_list_entry_t* entry = rtl_list_first(&node->children);
   if (entry) {
     const tea_ast_node_t* expr = rtl_list_record(entry, tea_ast_node_t, link);
     if (expr) {
-      context->returned_value = tea_interpret_evaluate_expression(context, expr);
+      context->returned_value = tea_interpret_evaluate_expression(context, scope, expr);
     }
   }
 
   return true;
 }
 
-bool tea_interpret_execute(tea_context_t* context, const tea_ast_node_t* node)
+bool tea_interpret_execute(tea_context_t* context, tea_scope_t* scope, const tea_ast_node_t* node)
 {
   switch (node->type) {
     case TEA_AST_NODE_LET:
-      return tea_interpret_execute_let(context, node);
+      return tea_interpret_execute_let(context, scope, node);
     case TEA_AST_NODE_ASSIGN:
-      return tea_interpret_execute_assign(context, node);
+      return tea_interpret_execute_assign(context, scope, node);
     case TEA_AST_NODE_IF:
-      return tea_interpret_execute_if(context, node);
+      return tea_interpret_execute_if(context, scope, node);
     case TEA_AST_NODE_WHILE:
-      return tea_interpret_execute_while(context, node);
+      return tea_interpret_execute_while(context, scope, node);
     case TEA_AST_NODE_FUNCTION:
       return tea_interpret_execute_function_declaration(context, node);
     case TEA_AST_NODE_RETURN:
-      return tea_interpret_execute_return(context, node);
+      return tea_interpret_execute_return(context, scope, node);
     case TEA_AST_NODE_PROGRAM:
     case TEA_AST_NODE_STMT:
     case TEA_AST_NODE_THEN:
     case TEA_AST_NODE_ELSE:
     case TEA_AST_NODE_WHILE_COND:
     case TEA_AST_NODE_WHILE_BODY:
-      return tea_interpret_execute_stmt(context, node);
+      return tea_interpret_execute_stmt(context, scope, node);
     default: {
       const tea_token_t* token = node->token;
       if (token) {
@@ -562,19 +607,21 @@ static tea_value_t tea_value_binop(
 
 #undef TEA_APPLY_BINOP
 
-static tea_value_t tea_interpret_evaluate_binop(tea_context_t* context, const tea_ast_node_t* node)
+static tea_value_t tea_interpret_evaluate_binop(
+  tea_context_t* context, tea_scope_t* scope, const tea_ast_node_t* node)
 {
-  const tea_value_t lhs_val = tea_interpret_evaluate_expression(context, node->binop.lhs);
-  const tea_value_t rhs_val = tea_interpret_evaluate_expression(context, node->binop.rhs);
+  const tea_value_t lhs_val = tea_interpret_evaluate_expression(context, scope, node->binop.lhs);
+  const tea_value_t rhs_val = tea_interpret_evaluate_expression(context, scope, node->binop.rhs);
 
   return tea_value_binop(lhs_val, rhs_val, node->token);
 }
 
-static tea_value_t tea_interpret_evaluate_unary(tea_context_t* context, const tea_ast_node_t* node)
+static tea_value_t tea_interpret_evaluate_unary(
+  tea_context_t* context, tea_scope_t* scope, const tea_ast_node_t* node)
 {
   rtl_list_entry_t* entry = rtl_list_first(&node->children);
   const tea_ast_node_t* operand = rtl_list_record(entry, tea_ast_node_t, link);
-  tea_value_t operand_val = tea_interpret_evaluate_expression(context, operand);
+  tea_value_t operand_val = tea_interpret_evaluate_expression(context, scope, operand);
   const tea_token_t* token = node->token;
 
   switch (token->type) {
@@ -601,28 +648,8 @@ static tea_value_t tea_interpret_evaluate_unary(tea_context_t* context, const te
   return operand_val;
 }
 
-static tea_variable_t* tea_context_find_variable(const tea_context_t* context, const char* name)
-{
-  rtl_list_entry_t* entry;
-
-  const tea_scope_t* global_scope = &context->global_scope;
-  rtl_list_for_each(entry, &global_scope->variables)
-  {
-    tea_variable_t* variable = rtl_list_record(entry, tea_variable_t, link);
-    const tea_token_t* variable_name = variable->name;
-    if (!variable_name) {
-      continue;
-    }
-    if (!strcmp(variable_name->buffer, name)) {
-      return variable;
-    }
-  }
-
-  return NULL;
-}
-
 static tea_value_t tea_interpret_evaluate_ident(
-  const tea_context_t* context, const tea_ast_node_t* node)
+  const tea_scope_t* scope, const tea_ast_node_t* node)
 {
   const tea_token_t* token = node->token;
   if (!token) {
@@ -630,7 +657,7 @@ static tea_value_t tea_interpret_evaluate_ident(
     exit(1);
   }
 
-  const tea_variable_t* variable = tea_context_find_variable(context, token->buffer);
+  const tea_variable_t* variable = tea_context_find_variable(scope, token->buffer);
   if (!variable) {
     rtl_log_err("Can't find variable %s", token->buffer);
     exit(1);
@@ -639,8 +666,7 @@ static tea_value_t tea_interpret_evaluate_ident(
   return variable->value;
 }
 
-static tea_value_t tea_interpret_evaluate_string(
-  const tea_context_t* context, const tea_ast_node_t* node)
+static tea_value_t tea_interpret_evaluate_string(const tea_ast_node_t* node)
 {
   const tea_token_t* token = node->token;
   if (!token) {
@@ -650,7 +676,7 @@ static tea_value_t tea_interpret_evaluate_string(
 
   tea_value_t result;
   result.type = TEA_VALUE_STRING;
-  result.string_value = rtl_strdup(&token->buffer[0]);
+  result.string_value = rtl_strdup(token->buffer);
 
   return result;
 }
@@ -675,7 +701,7 @@ static const tea_function_t* tea_context_find_function(
 }
 
 static tea_value_t tea_interpret_evaluate_function_call(
-  tea_context_t* context, const tea_ast_node_t* node)
+  tea_context_t* context, tea_scope_t* scope, const tea_ast_node_t* node)
 {
   const tea_token_t* token = node->token;
   if (!token) {
@@ -689,19 +715,24 @@ static tea_value_t tea_interpret_evaluate_function_call(
     exit(1);
   }
 
+  tea_scope_t inner_scope;
+  tea_scope_init(&inner_scope, scope);
+
   tea_value_t result = { 0 };
   if (function->param_count > 0) {
     rtl_log_err("Functions with params are not supported yet, just returning 0");
   } else {
-    if (tea_interpret_execute(context, function->body)) {
+    if (tea_interpret_execute(context, &inner_scope, function->body)) {
       result = context->returned_value;
     }
   }
 
+  tea_scope_cleanup(&inner_scope);
   return result;
 }
 
-tea_value_t tea_interpret_evaluate_expression(tea_context_t* context, const tea_ast_node_t* node)
+tea_value_t tea_interpret_evaluate_expression(
+  tea_context_t* context, tea_scope_t* scope, const tea_ast_node_t* node)
 {
   if (!node) {
     rtl_log_err("Node %s is null!", tea_ast_node_get_type_name(node->type));
@@ -712,15 +743,15 @@ tea_value_t tea_interpret_evaluate_expression(tea_context_t* context, const tea_
     case TEA_AST_NODE_NUMBER:
       return tea_interpret_evaluate_number(node->token);
     case TEA_AST_NODE_BINOP:
-      return tea_interpret_evaluate_binop(context, node);
+      return tea_interpret_evaluate_binop(context, scope, node);
     case TEA_AST_NODE_UNARY:
-      return tea_interpret_evaluate_unary(context, node);
+      return tea_interpret_evaluate_unary(context, scope, node);
     case TEA_AST_NODE_IDENT:
-      return tea_interpret_evaluate_ident(context, node);
+      return tea_interpret_evaluate_ident(scope, node);
     case TEA_AST_NODE_STRING:
-      return tea_interpret_evaluate_string(context, node);
+      return tea_interpret_evaluate_string(node);
     case TEA_AST_NODE_CALL:
-      return tea_interpret_evaluate_function_call(context, node);
+      return tea_interpret_evaluate_function_call(context, scope, node);
     default: {
       rtl_log_err("Failed to evaluate node <%s>", tea_ast_node_get_type_name(node->type));
       tea_token_t* token = node->token;

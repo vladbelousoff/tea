@@ -73,10 +73,13 @@ int main(const int argc, char *argv[])
   if (ast) {
     tea_context_t context;
     tea_interpret_init(&context);
-    if (!tea_interpret_execute(&context, ast)) {
+    tea_scope_t global_scope;
+    tea_scope_init(&global_scope, NULL);
+    if (!tea_interpret_execute(&context, &global_scope, ast)) {
       ret_code = 1;
     }
     tea_interpret_cleanup(&context);
+    tea_scope_cleanup(&global_scope);
     tea_ast_node_free(ast);
   }
 
