@@ -121,6 +121,7 @@ static bool tea_declare_variable(tea_context_t* context, tea_scope_t* scope,
   const tea_ast_node_t* initial_value)
 {
   if (!name) {
+    rtl_log_err("Invalid name");
     return false;
   }
 
@@ -276,7 +277,7 @@ static bool tea_interpret_execute_if(tea_context_t* context, tea_scope_t* scope,
 
   const tea_value_t cond_val = tea_interpret_evaluate_expression(context, &inner_scope, condition);
 
-  bool result = false;
+  bool result = true;
   if (cond_val.i32_value != 0) {
     result = tea_interpret_execute(context, &inner_scope, then_node, return_context);
   } else if (else_node) {
@@ -705,7 +706,11 @@ static tea_value_t tea_interpret_evaluate_function_call(
       const tea_ast_node_t* param_expr = rtl_list_record(param_expr_entry, tea_ast_node_t, link);
 
       if (param_name && param_expr) {
-        tea_declare_variable(context, &inner_scope, param_name->token, false, NULL, param_expr);
+        /* TODO: Currently all function arguments are not mutable by default and
+         * I don't check the types */
+        const bool is_mutable = false;
+        tea_declare_variable(
+          context, &inner_scope, param_name->token, is_mutable, NULL, param_expr);
       }
 
       param_name_entry = rtl_list_next(param_name_entry, &function_params->children);
