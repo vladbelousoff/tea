@@ -28,6 +28,10 @@
 %token NEW.
 %token DOT.
 
+%left ASSIGN.
+%left PLUS MINUS.
+%left STAR SLASH.
+
 program(program_node) ::= item_list(items). {
     program_node = tea_ast_node_create(TEA_AST_NODE_PROGRAM, NULL);
     if (items) {
@@ -275,6 +279,7 @@ statement(stmt_node) ::= assign_stmt(assign_stmt_node). { stmt_node = assign_stm
 statement(stmt_node) ::= return_stmt(return_stmt_node). { stmt_node = return_stmt_node; }
 statement(stmt_node) ::= if_stmt(if_stmt_node). { stmt_node = if_stmt_node; }
 statement(stmt_node) ::= while_stmt(while_stmt_node). { stmt_node = while_stmt_node; }
+statement(stmt_node) ::= expression(expr_node) SEMICOLON. { stmt_node = expr_node; }
 
 let_stmt(let_stmt_node) ::= LET mut_opt(mut) IDENT(var_name) type_annotation_opt(type_annot) ASSIGN expression(init_expr) SEMICOLON. {
     let_stmt_node = tea_ast_node_create(TEA_AST_NODE_LET, var_name);
@@ -296,14 +301,6 @@ assign_stmt(assign_stmt_node) ::= IDENT(var_name) ASSIGN expression(value_expr) 
     }
 }
 
-assign_stmt(assign_stmt_node) ::= IDENT(var_name) PLUS|MINUS|STAR|SLASH(op) ASSIGN expression(value_expr) SEMICOLON. {
-    assign_stmt_node = tea_ast_node_create(TEA_AST_NODE_ASSIGN, var_name);
-    tea_ast_node_t *binop_node = tea_ast_node_create(TEA_AST_NODE_BINOP, op);
-    tea_ast_node_t *var_name_node = tea_ast_node_create(TEA_AST_NODE_IDENT, var_name);
-    tea_ast_node_set_binop_children(binop_node, var_name_node, value_expr);
-    tea_ast_node_add_child(assign_stmt_node, binop_node);
-}
-
 assign_stmt(assign_stmt_node) ::= field_access(field_expr) ASSIGN expression(value_expr) SEMICOLON. {
     assign_stmt_node = tea_ast_node_create(TEA_AST_NODE_ASSIGN, NULL);
     if (field_expr) {
@@ -312,14 +309,6 @@ assign_stmt(assign_stmt_node) ::= field_access(field_expr) ASSIGN expression(val
     if (value_expr) {
         tea_ast_node_add_child(assign_stmt_node, value_expr);
     }
-}
-
-assign_stmt(assign_stmt_node) ::= field_access(field_expr) PLUS_ASSIGN|MINUS_ASSIGN|STAR_ASSIGN|SLASH_ASSIGN(op) expression(value_expr) SEMICOLON. {
-    assign_stmt_node = tea_ast_node_create(TEA_AST_NODE_ASSIGN, NULL);
-    tea_ast_node_add_child(assign_stmt_node, field_expr);
-    tea_ast_node_t *binop_node = tea_ast_node_create(TEA_AST_NODE_BINOP, op);
-    tea_ast_node_set_binop_children(binop_node, field_expr, value_expr);
-    tea_ast_node_add_child(assign_stmt_node, binop_node);
 }
 
 return_stmt(return_stmt_node) ::= RETURN SEMICOLON. {

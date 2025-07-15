@@ -425,6 +425,9 @@ static bool tea_interpret_execute_return(tea_context_t* context, tea_scope_t* sc
   return true;
 }
 
+static tea_value_t tea_interpret_evaluate_function_call(
+  tea_context_t* context, tea_scope_t* scope, const tea_ast_node_t* node);
+
 bool tea_interpret_execute(tea_context_t* context, tea_scope_t* scope, const tea_ast_node_t* node,
   tea_return_context_t* return_context)
 {
@@ -441,6 +444,9 @@ bool tea_interpret_execute(tea_context_t* context, tea_scope_t* scope, const tea
       return tea_interpret_execute_function_declaration(context, node);
     case TEA_AST_NODE_RETURN:
       return tea_interpret_execute_return(context, scope, node, return_context);
+    case TEA_AST_NODE_FUNCTION_CALL:
+      tea_interpret_evaluate_function_call(context, scope, node);
+      return true;
     case TEA_AST_NODE_PROGRAM:
     case TEA_AST_NODE_STMT:
     case TEA_AST_NODE_FUNCTION_CALL_ARGS:
