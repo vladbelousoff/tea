@@ -6,6 +6,8 @@
 #include "rtl_memory.h"
 #include "tea.h"
 
+#define TEA_NATIVE_FUNCTION_MAX_ARG_COUNT 6
+
 const char* tea_value_get_type_string(const tea_value_type_t type)
 {
   switch (type) {
@@ -697,6 +699,28 @@ static const tea_function_t* tea_context_find_function(
   return NULL;
 }
 
+static tea_value_t tea_interpret_evaluate_native_function_call(tea_context_t* context,
+  tea_scope_t* scope, const tea_native_function_t* native_function,
+  const tea_ast_node_t* function_call_args)
+{
+  tea_value_t args[TEA_NATIVE_FUNCTION_MAX_ARG_COUNT];
+
+  int arg_count = 0;
+  rtl_list_entry_t* entry;
+  rtl_list_for_each(entry, &function_call_args->children)
+  {
+    if (arg_count >= TEA_NATIVE_FUNCTION_MAX_ARG_COUNT) {
+      rtl_log_err("Too many arguments for function call!");
+      break;
+    }
+
+    const tea_ast_node_t* arg_expr = rtl_list_record(entry, tea_ast_node_t, link);
+    args[arg_count++] = tea_interpret_evaluate_expression(context, scope, arg_expr);
+  }
+
+  return native_function->cb(arg_count > 0 ? args : NULL, arg_count);
+}
+
 static tea_value_t tea_interpret_evaluate_function_call(
   tea_context_t* context, tea_scope_t* scope, const tea_ast_node_t* node)
 {
@@ -724,29 +748,8 @@ static tea_value_t tea_interpret_evaluate_function_call(
   const tea_native_function_t* native_function =
     tea_context_find_native_function(context, token->buffer);
   if (native_function) {
-    int arg_count = 0;
-    rtl_list_for_each(entry, &function_call_args->children)
-    {
-      arg_count++;
-    }
-
-    tea_value_t* args = arg_count > 0 ? rtl_malloc(sizeof(tea_value_t) * arg_count) : NULL;
-
-    if (args) {
-      int index = 0;
-      rtl_list_for_each(entry, &function_call_args->children)
-      {
-        const tea_ast_node_t* arg_expr = rtl_list_record(entry, tea_ast_node_t, link);
-        args[index++] = tea_interpret_evaluate_expression(context, scope, arg_expr);
-      }
-    }
-
-    const tea_value_t ret_value = native_function->cb(args, arg_count);
-    if (args) {
-      rtl_free(args);
-    }
-
-    return ret_value;
+    return tea_interpret_evaluate_native_function_call(
+      context, scope, native_function, function_call_args);
   }
 
   const tea_function_t* function = tea_context_find_function(context, token->buffer);
@@ -876,3 +879,5 @@ void tea_bind_native_function(
     rtl_list_add_tail(&context->native_functions, &function->link);
   }
 }
+
+#undef TEA_NATIVE_FUNCTION_MAX_ARG_COUNT
