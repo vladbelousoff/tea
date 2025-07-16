@@ -710,8 +710,8 @@ static tea_value_t tea_interpret_evaluate_native_function_call(tea_context_t* co
   rtl_list_for_each(entry, &function_call_args->children)
   {
     if (arg_count >= TEA_NATIVE_FUNCTION_MAX_ARG_COUNT) {
-      rtl_log_err("Too many arguments for function call!");
-      break;
+      rtl_log_err("Too many arguments for function call '%s'", native_function->name);
+      exit(1);
     }
 
     const tea_ast_node_t* arg_expr = rtl_list_record(entry, tea_ast_node_t, link);
