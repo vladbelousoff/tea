@@ -298,14 +298,14 @@ Once bound, native functions can be called like regular Tea functions:
 
 ```tea
 // Call the built-in print function
-print("Hello from Tea!");
+print('Hello from Tea!');
 
 // Call custom native functions
 let sum = add_numbers(10, 20);
 print(sum);
 
 // File operations
-let content = read_file("data.txt");
+let content = read_file('data.txt');
 print(content);
 ```
 
