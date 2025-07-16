@@ -7,6 +7,7 @@
 #include "tea.h"
 
 #define TEA_NATIVE_FUNCTION_MAX_ARG_COUNT 6
+#define TEA_VARIABLE_POOL_ENABLED         1
 
 const char* tea_value_get_type_string(const tea_value_type_t type)
 {
@@ -34,6 +35,7 @@ tea_value_t tea_value_unset()
 
 static tea_variable_t* tea_allocate_variable(const tea_context_t* context)
 {
+#if TEA_VARIABLE_POOL_ENABLED
   rtl_list_entry_t* entry;
   rtl_list_entry_t* safe;
 
@@ -43,15 +45,19 @@ static tea_variable_t* tea_allocate_variable(const tea_context_t* context)
     rtl_list_remove(entry);
     return variable;
   }
-
+#endif
   return rtl_malloc(sizeof(tea_variable_t));
 }
 
 static void tea_free_variable(tea_context_t* context, tea_variable_t* variable)
 {
+#if TEA_VARIABLE_POOL_ENABLED
   if (variable) {
     rtl_list_add_head(&context->variable_pool, &variable->link);
   }
+#else
+  rtl_free(variable);
+#endif
 }
 
 void tea_scope_init(tea_scope_t* scope, tea_scope_t* parent_scope)
@@ -911,3 +917,4 @@ void tea_bind_native_function(
 }
 
 #undef TEA_NATIVE_FUNCTION_MAX_ARG_COUNT
+#undef TEA_VARIABLE_POOL_ENABLED
