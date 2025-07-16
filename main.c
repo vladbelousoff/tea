@@ -105,8 +105,9 @@ int main(const int argc, char *argv[])
       ret_code = 1;
     }
 
+    tea_scope_cleanup(&context, &global_scope);
     tea_interpret_cleanup(&context);
-    tea_scope_cleanup(&global_scope);
+
     tea_ast_node_free(ast);
   }
 

@@ -37,6 +37,7 @@ typedef struct
   const char* filename;
   rtl_list_entry_t functions;
   rtl_list_entry_t native_functions;
+  rtl_list_entry_t variable_pool;
 } tea_context_t;
 
 typedef struct
@@ -75,7 +76,7 @@ typedef struct
 tea_value_t tea_value_unset();
 
 void tea_scope_init(tea_scope_t* scope, tea_scope_t* parent_scope);
-void tea_scope_cleanup(const tea_scope_t* scope);
+void tea_scope_cleanup(tea_context_t* context, const tea_scope_t* scope);
 
 void tea_interpret_init(tea_context_t* context, const char* filename);
 void tea_interpret_cleanup(const tea_context_t* context);

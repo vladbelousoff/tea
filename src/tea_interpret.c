@@ -32,13 +32,35 @@ tea_value_t tea_value_unset()
   return unset;
 }
 
+static tea_variable_t* tea_allocate_variable(const tea_context_t* context)
+{
+  rtl_list_entry_t* entry;
+  rtl_list_entry_t* safe;
+
+  rtl_list_for_each_safe(entry, safe, &context->variable_pool)
+  {
+    tea_variable_t* variable = rtl_list_record(entry, tea_variable_t, link);
+    rtl_list_remove(entry);
+    return variable;
+  }
+
+  return rtl_malloc(sizeof(tea_variable_t));
+}
+
+static void tea_free_variable(tea_context_t* context, tea_variable_t* variable)
+{
+  if (variable) {
+    rtl_list_add_head(&context->variable_pool, &variable->link);
+  }
+}
+
 void tea_scope_init(tea_scope_t* scope, tea_scope_t* parent_scope)
 {
   scope->parent_scope = parent_scope;
   rtl_list_init(&scope->variables);
 }
 
-void tea_scope_cleanup(const tea_scope_t* scope)
+void tea_scope_cleanup(tea_context_t* context, const tea_scope_t* scope)
 {
   rtl_list_entry_t* entry;
   rtl_list_entry_t* safe;
@@ -50,7 +72,7 @@ void tea_scope_cleanup(const tea_scope_t* scope)
     if (variable->value.type == TEA_VALUE_STRING) {
       rtl_free(variable->value.string_value);
     }
-    rtl_free(variable);
+    tea_free_variable(context, variable);
   }
 }
 
@@ -59,6 +81,7 @@ void tea_interpret_init(tea_context_t* context, const char* filename)
   context->filename = filename;
   rtl_list_init(&context->functions);
   rtl_list_init(&context->native_functions);
+  rtl_list_init(&context->variable_pool);
 }
 
 void tea_interpret_cleanup(const tea_context_t* context)
@@ -78,6 +101,13 @@ void tea_interpret_cleanup(const tea_context_t* context)
     tea_native_function_t* function = rtl_list_record(entry, tea_native_function_t, link);
     rtl_list_remove(entry);
     rtl_free(function);
+  }
+
+  rtl_list_for_each_safe(entry, safe, &context->variable_pool)
+  {
+    tea_variable_t* variable = rtl_list_record(entry, tea_variable_t, link);
+    rtl_list_remove(entry);
+    rtl_free(variable);
   }
 }
 
@@ -150,7 +180,7 @@ static bool tea_declare_variable(tea_context_t* context, tea_scope_t* scope,
     return false;
   }
 
-  variable = rtl_malloc(sizeof(*variable));
+  variable = tea_allocate_variable(context);
   if (!variable) {
     rtl_log_err("Failed to allocate memory for variable %.*s", name->buffer_size, name->buffer);
     return false;
@@ -302,7 +332,7 @@ static bool tea_interpret_execute_if(tea_context_t* context, tea_scope_t* scope,
     result = tea_interpret_execute(context, &inner_scope, else_node, return_context);
   }
 
-  tea_scope_cleanup(&inner_scope);
+  tea_scope_cleanup(context, &inner_scope);
   return result;
 }
 
@@ -341,7 +371,7 @@ static bool tea_interpret_execute_while(tea_context_t* context, tea_scope_t* sco
     tea_scope_t inner_scope;
     tea_scope_init(&inner_scope, scope);
     const bool result = tea_interpret_execute(context, &inner_scope, while_body, return_context);
-    tea_scope_cleanup(&inner_scope);
+    tea_scope_cleanup(context, &inner_scope);
 
     if (!result) {
       break;
@@ -786,7 +816,7 @@ static tea_value_t tea_interpret_evaluate_function_call(
         break;
       }
 
-      tea_variable_t* variable = rtl_malloc(sizeof(*variable));
+      tea_variable_t* variable = tea_allocate_variable(context);
       if (!variable) {
         rtl_log_err("Failed to allocate memory for variable %.*s", param_name_token->buffer_size,
           param_name_token->buffer);
@@ -825,7 +855,7 @@ static tea_value_t tea_interpret_evaluate_function_call(
   }
 
   const bool result = tea_interpret_execute(context, &inner_scope, function->body, &return_context);
-  tea_scope_cleanup(&inner_scope);
+  tea_scope_cleanup(context, &inner_scope);
 
   if (result && return_context.is_set) {
     return return_context.returned_value;
