@@ -145,6 +145,8 @@ const char *tea_ast_node_get_type_name(const tea_ast_node_type_t type)
   }
 }
 
+#ifdef TEA_DEBUG_BUILD
+
 static void print_tree_prefix(const int depth)
 {
   for (int i = 0; i < depth; i++) {
@@ -197,9 +199,13 @@ static void tea_ast_node_print_tree_recursive(tea_ast_node_t *node, const int de
   }
 }
 
+#endif
+
 void tea_ast_node_print(tea_ast_node_t *node, const int depth)
 {
+#ifdef TEA_DEBUG_BUILD
   tea_ast_node_print_tree_recursive(node, depth);
+#endif
 }
 
 void tea_ast_node_set_binop_children(

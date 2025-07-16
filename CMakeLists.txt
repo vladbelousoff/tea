@@ -108,6 +108,7 @@ target_include_directories(tea_lang PUBLIC
 )
 
 target_compile_definitions(tea_lang PUBLIC
+        $<$<CONFIG:Debug>:TEA_DEBUG_BUILD>
         $<$<PLATFORM_ID:Windows>:_CRT_SECURE_NO_WARNINGS>
 )
 
