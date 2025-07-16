@@ -217,6 +217,115 @@ fn main() {
 }
 ```
 
+## Native Function Binding
+
+Tea supports binding native C functions to make them callable from Tea code. This allows you to extend Tea with system
+functionality, I/O operations, and performance-critical code written in C.
+
+### Defining Native Functions
+
+Native functions in C must follow this signature:
+
+```c
+tea_value_t your_function_name(const tea_value_t* args, int arg_count)
+```
+
+The function receives an array of `tea_value_t` arguments and must return a `tea_value_t`. Here's an example:
+
+```c
+// Native function to add two numbers
+static tea_value_t tea_add_numbers(const tea_value_t* args, const int arg_count) {
+    if (arg_count != 2) {
+        // Handle error case
+        return tea_value_unset();
+    }
+    
+    if (args[0].type == TEA_VALUE_I32 && args[1].type == TEA_VALUE_I32) {
+        tea_value_t result = {0};
+        result.type = TEA_VALUE_I32;
+        result.i32_value = args[0].i32_value + args[1].i32_value;
+        return result;
+    }
+    
+    return tea_value_unset();
+}
+
+// Native function for file operations
+static tea_value_t tea_read_file(const tea_value_t* args, const int arg_count) {
+    if (arg_count != 1 || args[0].type != TEA_VALUE_STRING) {
+        return tea_value_unset();
+    }
+    
+    FILE* file = fopen(args[0].string_value, "r");
+    if (!file) {
+        return tea_value_unset();
+    }
+    
+    // Read file content...
+    // (implementation details omitted for brevity)
+    
+    tea_value_t result = {0};
+    result.type = TEA_VALUE_STRING;
+    result.string_value = file_content; // allocated string
+    return result;
+}
+```
+
+### Binding Functions
+
+Register your native functions with the Tea context using `tea_bind_native_function`:
+
+```c
+int main() {
+    tea_context_t context;
+    tea_interpret_init(&context, "example.tea");
+    
+    // Bind native functions
+    tea_bind_native_function(&context, "print", tea_print);
+    tea_bind_native_function(&context, "add_numbers", tea_add_numbers);
+    tea_bind_native_function(&context, "read_file", tea_read_file);
+    
+    // Execute Tea code...
+    
+    tea_interpret_cleanup(&context);
+    return 0;
+}
+```
+
+### Using Native Functions in Tea
+
+Once bound, native functions can be called like regular Tea functions:
+
+```tea
+// Call the built-in print function
+print("Hello from Tea!");
+
+// Call custom native functions
+let sum = add_numbers(10, 20);
+print(sum);
+
+// File operations
+let content = read_file("data.txt");
+print(content);
+```
+
+### Tea Value Types
+
+Native functions work with the `tea_value_t` type system:
+
+- `TEA_VALUE_I32` - 32-bit signed integers
+- `TEA_VALUE_F32` - 32-bit floating-point numbers
+- `TEA_VALUE_STRING` - Null-terminated strings
+- `TEA_VALUE_OBJECT` - Complex objects (structs)
+- `TEA_VALUE_UNSET` - Uninitialized or error state
+
+### Best Practices
+
+1. **Always validate arguments**: Check argument count and types
+2. **Handle errors gracefully**: Return `tea_value_unset()` if there is nothing to return
+3. **Memory management**: Strings returned from native functions should be allocated with `rtl_malloc`
+4. **Performance**: Use native functions for computationally intensive operations
+
 ## Building
 
 Tea uses CMake for building. Here are several approaches:
@@ -259,6 +368,7 @@ Tea is currently in development. The core language features are implemented incl
 - ✅ Control flow statements
 - ✅ Expression evaluation
 - ✅ Type system foundations
+- ✅ Native function binding
 
 **Planned Features:**
 
