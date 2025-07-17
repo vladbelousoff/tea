@@ -427,7 +427,8 @@ primary_expr(primary_expr_node) ::= FLOAT_NUMBER(number_value). {
 primary_expr(primary_expr_node) ::= NEW IDENT(struct_type) LBRACE struct_field_init_list_opt(field_inits) RBRACE. {
     primary_expr_node = tea_ast_node_create(TEA_AST_NODE_STRUCT_INSTANCE, struct_type);
     if (field_inits) {
-        tea_ast_node_add_child(primary_expr_node, field_inits);
+        tea_ast_node_add_children(primary_expr_node, &field_inits->children);
+        tea_ast_node_free(field_inits);
     }
 }
 
