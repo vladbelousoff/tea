@@ -170,9 +170,11 @@ static void tea_ast_node_print_tree_recursive(tea_ast_node_t *node, const int de
   printf("%s", tea_ast_node_get_type_name(node->type));
 
   const tea_token_t *token = node->token;
-  if (token) {
-    if (node->type == TEA_AST_NODE_STRING) {
-      printf(": '%.*s'", token->buffer_size, token->buffer);
+  if (token && node->type != TEA_AST_NODE_STRING) {
+    if (node->type == TEA_AST_NODE_INTEGER_NUMBER) {
+      printf(": %d", *(int *)token->buffer);
+    } else if (node->type == TEA_AST_NODE_FLOAT_NUMBER) {
+      printf(": %f", *(float *)token->buffer);
     } else {
       printf(": %.*s", token->buffer_size, token->buffer);
     }

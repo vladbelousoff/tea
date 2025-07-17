@@ -60,8 +60,7 @@ static void create_token(
   }
 
   if (token_type == TEA_TOKEN_STRING) {
-    rtl_log_dbg(
-      "Token: '%.*s' (line: %d, col: %d)", buffer_size, buffer, token->line, token->column);
+    rtl_log_dbg("Token: <STRING> (line: %d, col: %d)", token->line, token->column);
   } else if (token_type == TEA_TOKEN_IDENT) {
     rtl_log_dbg("Token: %.*s (line: %d, col: %d)", buffer_size, buffer, token->line, token->column);
   } else if (token_type == TEA_TOKEN_INTEGER_NUMBER) {
