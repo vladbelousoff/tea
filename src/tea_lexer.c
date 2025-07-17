@@ -289,7 +289,7 @@ static bool scan_number(tea_lexer_t *self, const char *input)
     const int length = current_position - start_position;
     const char *buffer = &input[start_position];
 
-    const char tmp_buffer[32] = { 0 };
+    char tmp_buffer[32] = { 0 };
     if (length < 32) {
       strncpy(tmp_buffer, buffer, length);
     } else {
