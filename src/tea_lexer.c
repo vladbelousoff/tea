@@ -289,8 +289,13 @@ static bool scan_number(tea_lexer_t *self, const char *input)
     const int length = current_position - start_position;
     const char *buffer = &input[start_position];
 
-    char tmp_buffer[32] = { 0 };
-    strncpy(tmp_buffer, buffer, length);
+    const char tmp_buffer[32] = { 0 };
+    if (length < 32) {
+      strncpy(tmp_buffer, buffer, length);
+    } else {
+      rtl_log_err("The number is too big! Line %d, col %d", self->line, self->column);
+      return true;
+    }
 
     char *end;
     if (is_float) {
