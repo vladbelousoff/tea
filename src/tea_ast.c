@@ -114,6 +114,8 @@ const char *tea_ast_node_get_type_name(const tea_ast_node_type_t type)
       return "FUNCTION_CALL_ARGS";
     case TEA_AST_NODE_RETURN:
       return "RETURN";
+    case TEA_AST_NODE_BREAK:
+      return "BREAK";
     case TEA_AST_NODE_IF:
       return "IF";
     case TEA_AST_NODE_THEN:
