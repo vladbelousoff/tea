@@ -384,7 +384,7 @@ static bool tea_interpret_execute_while(tea_context_t* context, tea_scope_t* sco
     const bool result = tea_interpret_execute(context, &inner_scope, while_body, return_context);
     tea_scope_cleanup(context, &inner_scope);
 
-    if (return_context->is_set) {
+    if (return_context && return_context->is_set) {
       break;
     }
 
