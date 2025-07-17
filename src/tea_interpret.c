@@ -20,7 +20,7 @@ const char* tea_value_get_type_string(const tea_value_type_t type)
       return "f32";
     case TEA_VALUE_STRING:
       return "string";
-    case TEA_VALUE_OBJECT:
+    case TEA_VALUE_INSTANCE:
       return "object";
   }
 
@@ -76,7 +76,7 @@ void tea_scope_cleanup(tea_context_t* context, const tea_scope_t* scope)
     tea_variable_t* variable = rtl_list_record(entry, tea_variable_t, link);
     rtl_list_remove(entry);
     if (variable->value.type == TEA_VALUE_STRING) {
-      rtl_free(variable->value.string_value);
+      rtl_free(variable->value.val_str);
     }
     tea_free_variable(context, variable);
   }
@@ -199,15 +199,15 @@ static bool tea_declare_variable(tea_context_t* context, tea_scope_t* scope,
   switch (variable->value.type) {
     case TEA_VALUE_I32:
       rtl_log_dbg("Declare variable %s : %s = %d", name->buffer,
-        tea_value_get_type_string(variable->value.type), variable->value.i32_value);
+        tea_value_get_type_string(variable->value.type), variable->value.val_i32);
       break;
     case TEA_VALUE_F32:
       rtl_log_dbg("Declare variable %s : %s = %f", name->buffer,
-        tea_value_get_type_string(variable->value.type), variable->value.f32_value);
+        tea_value_get_type_string(variable->value.type), variable->value.val_f32);
       break;
     case TEA_VALUE_STRING:
       rtl_log_dbg("Declare variable %s : %s = '%s'", name->buffer,
-        tea_value_get_type_string(variable->value.type), variable->value.string_value);
+        tea_value_get_type_string(variable->value.type), variable->value.val_str);
     default:
       break;
   }
@@ -285,15 +285,15 @@ static bool tea_interpret_execute_assign(
   switch (variable->value.type) {
     case TEA_VALUE_I32:
       rtl_log_dbg("New value for variable %s : %s = %d", name->buffer,
-        tea_value_get_type_string(variable->value.type), variable->value.i32_value);
+        tea_value_get_type_string(variable->value.type), variable->value.val_i32);
       break;
     case TEA_VALUE_F32:
       rtl_log_dbg("New value for variable %s : %s = %f", name->buffer,
-        tea_value_get_type_string(variable->value.type), variable->value.f32_value);
+        tea_value_get_type_string(variable->value.type), variable->value.val_f32);
       break;
     case TEA_VALUE_STRING:
       rtl_log_dbg("New value for variable %s : %s = '%s'", name->buffer,
-        tea_value_get_type_string(variable->value.type), variable->value.string_value);
+        tea_value_get_type_string(variable->value.type), variable->value.val_str);
       break;
     default:
       break;
@@ -332,7 +332,7 @@ static bool tea_interpret_execute_if(tea_context_t* context, tea_scope_t* scope,
   const tea_value_t cond_val = tea_interpret_evaluate_expression(context, &inner_scope, condition);
 
   bool result = true;
-  if (cond_val.i32_value != 0) {
+  if (cond_val.val_i32 != 0) {
     result = tea_interpret_execute(context, &inner_scope, then_node, return_context);
   } else if (else_node) {
     result = tea_interpret_execute(context, &inner_scope, else_node, return_context);
@@ -370,7 +370,7 @@ static bool tea_interpret_execute_while(tea_context_t* context, tea_scope_t* sco
 
   while (true) {
     const tea_value_t cond_val = tea_interpret_evaluate_expression(context, scope, while_cond);
-    if (cond_val.i32_value == 0) {
+    if (cond_val.val_i32 == 0) {
       break;
     }
 
@@ -514,7 +514,7 @@ static tea_value_t tea_interpret_evaluate_integer_number(tea_token_t* token)
 {
   tea_value_t value;
   value.type = TEA_VALUE_I32;
-  value.i32_value = *(int*)&token->buffer;
+  value.val_i32 = *(int*)&token->buffer;
 
   return value;
 }
@@ -523,7 +523,7 @@ static tea_value_t tea_interpret_evaluate_float_number(tea_token_t* token)
 {
   tea_value_t value;
   value.type = TEA_VALUE_F32;
-  value.f32_value = *(float*)&token->buffer;
+  value.val_f32 = *(float*)&token->buffer;
 
   return value;
 }
@@ -578,10 +578,10 @@ static tea_value_t tea_value_binop(
 
   switch (op->type) {
     case TEA_TOKEN_OR:
-      result.i32_value = lhs_val.i32_value || rhs_val.i32_value;
+      result.val_i32 = lhs_val.val_i32 || rhs_val.val_i32;
       return result;
     case TEA_TOKEN_AND:
-      result.i32_value = lhs_val.i32_value && rhs_val.i32_value;
+      result.val_i32 = lhs_val.val_i32 && rhs_val.val_i32;
       return result;
     default:
       break;
@@ -590,12 +590,12 @@ static tea_value_t tea_value_binop(
   if (lhs_val.type == TEA_VALUE_I32) {
     if (rhs_val.type == TEA_VALUE_I32) {
       result.type = TEA_VALUE_I32;
-      TEA_APPLY_BINOP(lhs_val.i32_value, rhs_val.i32_value, op->type, result.i32_value);
+      TEA_APPLY_BINOP(lhs_val.val_i32, rhs_val.val_i32, op->type, result.val_i32);
       return result;
     }
     if (rhs_val.type == TEA_VALUE_F32) {
       result.type = TEA_VALUE_F32;
-      TEA_APPLY_BINOP(lhs_val.i32_value, rhs_val.f32_value, op->type, result.f32_value);
+      TEA_APPLY_BINOP(lhs_val.val_i32, rhs_val.val_f32, op->type, result.val_f32);
       return result;
     }
   }
@@ -603,12 +603,12 @@ static tea_value_t tea_value_binop(
   if (lhs_val.type == TEA_VALUE_F32) {
     if (rhs_val.type == TEA_VALUE_I32) {
       result.type = TEA_VALUE_F32;
-      TEA_APPLY_BINOP(lhs_val.f32_value, rhs_val.i32_value, op->type, result.f32_value);
+      TEA_APPLY_BINOP(lhs_val.val_f32, rhs_val.val_i32, op->type, result.val_f32);
       return result;
     }
     if (rhs_val.type == TEA_VALUE_F32) {
       result.type = TEA_VALUE_F32;
-      TEA_APPLY_BINOP(lhs_val.f32_value, rhs_val.f32_value, op->type, result.f32_value);
+      TEA_APPLY_BINOP(lhs_val.val_f32, rhs_val.val_f32, op->type, result.val_f32);
       return result;
     }
   }
@@ -643,10 +643,10 @@ static tea_value_t tea_interpret_evaluate_unary(
     case TEA_TOKEN_MINUS:
       switch (operand_val.type) {
         case TEA_VALUE_I32:
-          operand_val.i32_value = -operand_val.i32_value;
+          operand_val.val_i32 = -operand_val.val_i32;
           break;
         case TEA_VALUE_F32:
-          operand_val.f32_value = -operand_val.f32_value;
+          operand_val.val_f32 = -operand_val.val_f32;
           break;
         default:
           break;
@@ -689,7 +689,7 @@ static tea_value_t tea_interpret_evaluate_string(const tea_ast_node_t* node)
 
   tea_value_t result;
   result.type = TEA_VALUE_STRING;
-  result.string_value = rtl_strdup(token->buffer);
+  result.val_str = rtl_strdup(token->buffer);
 
   return result;
 }
@@ -832,15 +832,15 @@ static tea_value_t tea_interpret_evaluate_function_call(
       switch (variable->value.type) {
         case TEA_VALUE_I32:
           rtl_log_dbg("Declare param %s : %s = %d", param_name_token->buffer,
-            tea_value_get_type_string(variable->value.type), variable->value.i32_value);
+            tea_value_get_type_string(variable->value.type), variable->value.val_i32);
           break;
         case TEA_VALUE_F32:
           rtl_log_dbg("Declare param %s : %s = %f", param_name_token->buffer,
-            tea_value_get_type_string(variable->value.type), variable->value.f32_value);
+            tea_value_get_type_string(variable->value.type), variable->value.val_f32);
           break;
         case TEA_VALUE_STRING:
           rtl_log_dbg("Declare param %s : %s = '%s'", param_name_token->buffer,
-            tea_value_get_type_string(variable->value.type), variable->value.string_value);
+            tea_value_get_type_string(variable->value.type), variable->value.val_str);
         default:
           break;
       }

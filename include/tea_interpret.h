@@ -8,7 +8,7 @@ typedef enum
   TEA_VALUE_I32,
   TEA_VALUE_F32,
   TEA_VALUE_STRING,
-  TEA_VALUE_OBJECT,
+  TEA_VALUE_INSTANCE,
 } tea_value_type_t;
 
 const char* tea_value_get_type_string(tea_value_type_t type);
@@ -19,10 +19,10 @@ typedef struct
 
   union
   {
-    int i32_value;
-    float f32_value;
-    char* string_value;
-    void* object_value;
+    int val_i32;
+    float val_f32;
+    char* val_str;
+    void* val_inst;
   };
 } tea_value_t;
 
