@@ -19,7 +19,7 @@
 %token MINUS PLUS STAR SLASH.
 %token GT LT EQ NE GE LE.
 %token AND OR.
-%token NUMBER.
+%token INTEGER_NUMBER FLOAT_NUMBER.
 %token STRING.
 %token ARROW.
 %token IF ELSE WHILE.
@@ -415,8 +415,12 @@ primary_expr(primary_expr_node) ::= IDENT(func_name) LPAREN arg_list(args) RPARE
     }
 }
 
-primary_expr(primary_expr_node) ::= NUMBER(number_value). {
-    primary_expr_node = tea_ast_node_create(TEA_AST_NODE_NUMBER, number_value);
+primary_expr(primary_expr_node) ::= INTEGER_NUMBER(number_value). {
+    primary_expr_node = tea_ast_node_create(TEA_AST_NODE_INTEGER_NUMBER, number_value);
+}
+
+primary_expr(primary_expr_node) ::= FLOAT_NUMBER(number_value). {
+    primary_expr_node = tea_ast_node_create(TEA_AST_NODE_FLOAT_NUMBER, number_value);
 }
 
 primary_expr(primary_expr_node) ::= NEW IDENT(struct_type) LBRACE struct_field_init_list_opt(field_inits) RBRACE. {

@@ -62,8 +62,12 @@ static void create_token(
   if (token_type == TEA_TOKEN_STRING) {
     rtl_log_dbg(
       "Token: '%.*s' (line: %d, col: %d)", buffer_size, buffer, token->line, token->column);
-  } else if (token_type == TEA_TOKEN_IDENT || token_type == TEA_TOKEN_NUMBER) {
+  } else if (token_type == TEA_TOKEN_IDENT) {
     rtl_log_dbg("Token: %.*s (line: %d, col: %d)", buffer_size, buffer, token->line, token->column);
+  } else if (token_type == TEA_TOKEN_INTEGER_NUMBER) {
+    rtl_log_dbg("Token: %d (line: %d, col: %d)", *(int *)buffer, token->line, token->column);
+  } else if (token_type == TEA_TOKEN_FLOAT_NUMBER) {
+    rtl_log_dbg("Token: %f (line: %d, col: %d)", *(float *)buffer, token->line, token->column);
   } else {
     rtl_log_dbg("Token: <%s> (line: %d, col: %d)", tea_token_get_name(token_type), token->line,
       token->column);
@@ -285,7 +289,25 @@ static bool scan_number(tea_lexer_t *self, const char *input)
     const int length = current_position - start_position;
     const char *buffer = &input[start_position];
 
-    create_token(self, TEA_TOKEN_NUMBER, buffer, length);
+    char tmp_buffer[32] = { 0 };
+    strncpy(tmp_buffer, buffer, length);
+
+    char *end;
+    if (is_float) {
+      float value = strtof(tmp_buffer, &end);
+      if (*end == 0) {
+        create_token(self, TEA_TOKEN_FLOAT_NUMBER, (char *)&value, sizeof(value));
+      } else {
+        rtl_log_err("Error converting %s to a f32!", buffer);
+      }
+    } else {
+      int value = (int)strtol(tmp_buffer, &end, 10);
+      if (*end == 0) {
+        create_token(self, TEA_TOKEN_INTEGER_NUMBER, (char *)&value, sizeof(value));
+      } else {
+        rtl_log_err("Error converting %s to a i32!", buffer);
+      }
+    }
 
     self->column += length;
     self->position = current_position;

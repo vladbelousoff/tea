@@ -103,8 +103,10 @@ const char *tea_token_get_name(const int token_type)
       return "AND";
     case TEA_TOKEN_OR:
       return "OR";
-    case TEA_TOKEN_NUMBER:
-      return "NUMBER";
+    case TEA_TOKEN_INTEGER_NUMBER:
+      return "INTEGER";
+    case TEA_TOKEN_FLOAT_NUMBER:
+      return "FLOAT";
     case TEA_TOKEN_STRING:
       return "STRING";
     case TEA_TOKEN_DOT:

@@ -510,29 +510,22 @@ bool tea_interpret_execute(tea_context_t* context, tea_scope_t* scope, const tea
   return false;
 }
 
-static tea_value_t tea_interpret_evaluate_number(tea_token_t* token)
+static tea_value_t tea_interpret_evaluate_integer_number(tea_token_t* token)
 {
   tea_value_t value;
-  char* end;
+  value.type = TEA_VALUE_I32;
+  value.i32_value = *(int*)&token->buffer;
 
-  // Try i32 first
-  const int i32_value = (int)strtol(token->buffer, &end, 10);
-  if (*end == 0) {
-    value.type = TEA_VALUE_I32;
-    value.i32_value = i32_value;
-    return value;
-  }
+  return value;
+}
 
-  // Next try f32
-  const float f32_value = strtof(token->buffer, &end);
-  if (*end == 0) {
-    value.type = TEA_VALUE_F32;
-    value.f32_value = f32_value;
-    return value;
-  }
+static tea_value_t tea_interpret_evaluate_float_number(tea_token_t* token)
+{
+  tea_value_t value;
+  value.type = TEA_VALUE_F32;
+  value.f32_value = *(float*)&token->buffer;
 
-  rtl_log_err("Error parsing %s as a number!", token->buffer);
-  exit(1);
+  return value;
 }
 
 #define TEA_APPLY_BINOP(a, b, op, result)                                                          \
@@ -880,8 +873,10 @@ tea_value_t tea_interpret_evaluate_expression(
   }
 
   switch (node->type) {
-    case TEA_AST_NODE_NUMBER:
-      return tea_interpret_evaluate_number(node->token);
+    case TEA_AST_NODE_INTEGER_NUMBER:
+      return tea_interpret_evaluate_integer_number(node->token);
+    case TEA_AST_NODE_FLOAT_NUMBER:
+      return tea_interpret_evaluate_float_number(node->token);
     case TEA_AST_NODE_BINOP:
       return tea_interpret_evaluate_binop(context, scope, node);
     case TEA_AST_NODE_UNARY:
