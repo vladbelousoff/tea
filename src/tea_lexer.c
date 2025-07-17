@@ -298,14 +298,14 @@ static bool scan_number(tea_lexer_t *self, const char *input)
       if (*end == 0) {
         create_token(self, TEA_TOKEN_FLOAT_NUMBER, (char *)&value, sizeof(value));
       } else {
-        rtl_log_err("Error converting %s to a f32!", buffer);
+        rtl_log_err("Error converting %s to a f32!", tmp_buffer);
       }
     } else {
       int value = (int)strtol(tmp_buffer, &end, 10);
       if (*end == 0) {
         create_token(self, TEA_TOKEN_INTEGER_NUMBER, (char *)&value, sizeof(value));
       } else {
-        rtl_log_err("Error converting %s to a i32!", buffer);
+        rtl_log_err("Error converting %s to a i32!", tmp_buffer);
       }
     }
 
