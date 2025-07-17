@@ -37,6 +37,7 @@ typedef struct
   const char* filename;
   rtl_list_entry_t functions;
   rtl_list_entry_t native_functions;
+  rtl_list_entry_t struct_decls;
   rtl_list_entry_t variable_pool;
 } tea_context_t;
 
@@ -72,6 +73,12 @@ typedef struct
   tea_value_t returned_value;
   bool is_set;
 } tea_return_context_t;
+
+typedef struct
+{
+  rtl_list_entry_t link;
+  const tea_ast_node_t* node;
+} tea_struct_decl_t;
 
 tea_value_t tea_value_unset();
 

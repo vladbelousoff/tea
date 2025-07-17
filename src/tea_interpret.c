@@ -87,6 +87,7 @@ void tea_interpret_init(tea_context_t* context, const char* filename)
   context->filename = filename;
   rtl_list_init(&context->functions);
   rtl_list_init(&context->native_functions);
+  rtl_list_init(&context->struct_decls);
   rtl_list_init(&context->variable_pool);
 }
 
@@ -107,6 +108,13 @@ void tea_interpret_cleanup(const tea_context_t* context)
     tea_native_function_t* function = rtl_list_record(entry, tea_native_function_t, link);
     rtl_list_remove(entry);
     rtl_free(function);
+  }
+
+  rtl_list_for_each_safe(entry, safe, &context->struct_decls)
+  {
+    tea_struct_decl_t* struct_decl = rtl_list_record(entry, tea_struct_decl_t, link);
+    rtl_list_remove(entry);
+    rtl_free(struct_decl);
   }
 
   rtl_list_for_each_safe(entry, safe, &context->variable_pool)
@@ -466,6 +474,22 @@ static bool tea_interpret_execute_return(tea_context_t* context, tea_scope_t* sc
 static tea_value_t tea_interpret_evaluate_function_call(
   tea_context_t* context, tea_scope_t* scope, const tea_ast_node_t* node);
 
+static bool tea_interpret_execute_struct(tea_context_t* context, const tea_ast_node_t* node)
+{
+  tea_struct_decl_t* struct_decl = rtl_malloc(sizeof(*struct_decl));
+  if (!struct_decl) {
+    return false;
+  }
+
+  struct_decl->node = node;
+  rtl_list_add_tail(&context->struct_decls, &struct_decl->link);
+
+  tea_token_t* name = node->token;
+  rtl_log_dbg("Declare struct '%s'", name ? name->buffer : "");
+
+  return true;
+}
+
 bool tea_interpret_execute(tea_context_t* context, tea_scope_t* scope, const tea_ast_node_t* node,
   tea_return_context_t* return_context)
 {
@@ -485,6 +509,8 @@ bool tea_interpret_execute(tea_context_t* context, tea_scope_t* scope, const tea
     case TEA_AST_NODE_FUNCTION_CALL:
       tea_interpret_evaluate_function_call(context, scope, node);
       return true;
+    case TEA_AST_NODE_STRUCT:
+      return tea_interpret_execute_struct(context, node);
     case TEA_AST_NODE_PROGRAM:
     case TEA_AST_NODE_STMT:
     case TEA_AST_NODE_FUNCTION_CALL_ARGS:

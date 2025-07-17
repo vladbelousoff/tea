@@ -115,7 +115,8 @@ function_body(body_node) ::= SEMICOLON. { body_node = NULL; }
 struct_definition(struct_def_node) ::= STRUCT IDENT(struct_name) LBRACE struct_field_list_opt(fields) RBRACE. {
     struct_def_node = tea_ast_node_create(TEA_AST_NODE_STRUCT, struct_name);
     if (fields) {
-        tea_ast_node_add_child(struct_def_node, fields);
+        tea_ast_node_add_children(struct_def_node, &fields->children);
+        tea_ast_node_free(fields);
     }
 }
 
