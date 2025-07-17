@@ -22,13 +22,13 @@ static tea_value_t tea_print(const tea_value_t *args, const int arg_count)
     const tea_value_t arg = args[i];
     switch (arg.type) {
       case TEA_VALUE_I32:
-        printf("%d\n", arg.i32_value);
+        printf("%d", arg.i32_value);
         break;
       case TEA_VALUE_F32:
-        printf("%f\n", arg.f32_value);
+        printf("%f", arg.f32_value);
         break;
       case TEA_VALUE_STRING:
-        printf("%s\n", arg.string_value);
+        printf("%s", arg.string_value);
         break;
       case TEA_VALUE_UNSET:
       case TEA_VALUE_OBJECT:

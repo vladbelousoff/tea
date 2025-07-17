@@ -323,12 +323,16 @@ static bool scan_number(tea_lexer_t *self, const char *input)
   return false;
 }
 
+#define TEA_STRING_MAX_SIZE 1024
+
 static bool scan_string(tea_lexer_t *self, const char *input)
 {
   if (input[self->position] == '\'') {
     const int start_position = self->position + 1;  // Skip the opening quote
     int current_position = start_position;
-    int string_length = 0;
+
+    char tmp_string[TEA_STRING_MAX_SIZE] = { 0 };
+    int tmp_string_length = 0;
 
     // Scan until we find the closing quote
     while (true) {
@@ -344,16 +348,41 @@ static bool scan_string(tea_lexer_t *self, const char *input)
       }
 
       if (c == EOL) {
-        return false;
+        rtl_log_err("Cannot process strings with \\n, line: %d, col: %d", self->line, self->column);
+        exit(1);
       }
 
-      self->column++;
-      current_position++;
-      string_length++;
+      int shift;
+      if (c != '\\') {
+        tmp_string[tmp_string_length++] = c;
+        shift = 1;
+      } else {
+        switch (input[current_position + 1]) {
+          case '\\':
+          case '\'':
+          case '\"':
+            tmp_string[tmp_string_length++] = input[current_position + 1];
+            break;
+          case 'n':
+            tmp_string[tmp_string_length++] = EOL;
+            break;
+          case 't':
+            tmp_string[tmp_string_length++] = TAB;
+            break;
+          case 'r':
+            tmp_string[tmp_string_length++] = CRR;
+            break;
+          default:
+            break;
+        }
+        shift = 2;
+      }
+
+      self->column += shift;
+      current_position += shift;
     }
 
-    const char *string_content = &input[start_position];
-    create_token(self, TEA_TOKEN_STRING, string_content, string_length);
+    create_token(self, TEA_TOKEN_STRING, tmp_string, tmp_string_length);
 
     self->position = current_position + 1;  // Skip the closing quote
     self->column++;
