@@ -75,9 +75,6 @@ void tea_scope_cleanup(tea_context_t* context, const tea_scope_t* scope)
   {
     tea_variable_t* variable = rtl_list_record(entry, tea_variable_t, link);
     rtl_list_remove(entry);
-    if (variable->value.type == TEA_VALUE_STRING) {
-      rtl_free(variable->value.val_str);
-    }
     tea_free_variable(context, variable);
   }
 }
@@ -386,6 +383,10 @@ static bool tea_interpret_execute_while(tea_context_t* context, tea_scope_t* sco
     tea_scope_init(&inner_scope, scope);
     const bool result = tea_interpret_execute(context, &inner_scope, while_body, return_context);
     tea_scope_cleanup(context, &inner_scope);
+
+    if (return_context->is_set) {
+      break;
+    }
 
     if (!result) {
       break;
@@ -715,7 +716,7 @@ static tea_value_t tea_interpret_evaluate_string(const tea_ast_node_t* node)
 
   tea_value_t result;
   result.type = TEA_VALUE_STRING;
-  result.val_str = rtl_strdup(token->buffer);
+  result.val_str = token->buffer;
 
   return result;
 }

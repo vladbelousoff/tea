@@ -21,7 +21,7 @@ typedef struct
   {
     int val_i32;
     float val_f32;
-    char* val_str;
+    const char* val_str;
     void* val_inst;
   };
 } tea_value_t;
