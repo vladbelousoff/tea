@@ -77,6 +77,7 @@ typedef struct
 typedef struct
 {
   unsigned char is_break_set : 1;
+  unsigned char is_continue_set : 1;
 } tea_loop_context_t;
 
 typedef struct

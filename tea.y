@@ -22,7 +22,7 @@
 %token INTEGER_NUMBER FLOAT_NUMBER.
 %token STRING.
 %token ARROW.
-%token IF ELSE WHILE BREAK.
+%token IF ELSE WHILE BREAK CONTINUE.
 %token STRUCT.
 %token IMPL.
 %token NEW.
@@ -279,6 +279,7 @@ statement(stmt_node) ::= let_stmt(let_stmt_node). { stmt_node = let_stmt_node; }
 statement(stmt_node) ::= assign_stmt(assign_stmt_node). { stmt_node = assign_stmt_node; }
 statement(stmt_node) ::= return_stmt(return_stmt_node). { stmt_node = return_stmt_node; }
 statement(stmt_node) ::= break_stmt(break_stmt_node). { stmt_node = break_stmt_node; }
+statement(stmt_node) ::= continue_stmt(continue_stmt_node). { stmt_node = continue_stmt_node; }
 statement(stmt_node) ::= if_stmt(if_stmt_node). { stmt_node = if_stmt_node; }
 statement(stmt_node) ::= while_stmt(while_stmt_node). { stmt_node = while_stmt_node; }
 statement(stmt_node) ::= expression(expr_node) SEMICOLON. { stmt_node = expr_node; }
@@ -326,6 +327,10 @@ return_stmt(return_stmt_node) ::= RETURN expression(return_expr) SEMICOLON. {
 
 break_stmt(break_stmt_node) ::= BREAK SEMICOLON. {
     break_stmt_node = tea_ast_node_create(TEA_AST_NODE_BREAK, NULL);
+}
+
+continue_stmt(continue_stmt_node) ::= CONTINUE SEMICOLON. {
+    continue_stmt_node = tea_ast_node_create(TEA_AST_NODE_CONTINUE, NULL);
 }
 
 if_stmt(if_stmt_node) ::= IF expression(condition) LBRACE stmt_list_opt(then_body) RBRACE else_opt(else_body). {

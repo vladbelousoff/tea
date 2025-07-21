@@ -373,6 +373,7 @@ static bool tea_interpret_execute_while(tea_context_t* context, tea_scope_t* sco
 
   tea_loop_context_t loop_context;
   loop_context.is_break_set = false;
+  loop_context.is_continue_set = false;
 
   while (true) {
     const tea_value_t cond_val = tea_interpret_evaluate_expression(context, scope, while_cond);
@@ -380,21 +381,24 @@ static bool tea_interpret_execute_while(tea_context_t* context, tea_scope_t* sco
       break;
     }
 
+    // Reset continue flag at the beginning of each iteration
+    loop_context.is_continue_set = false;
+
     tea_scope_t inner_scope;
     tea_scope_init(&inner_scope, scope);
     const bool result =
       tea_interpret_execute(context, &inner_scope, while_body, return_context, &loop_context);
     tea_scope_cleanup(context, &inner_scope);
 
+    if (!result) {
+      return false;
+    }
+
     if (return_context && return_context->is_set) {
       break;
     }
 
     if (loop_context.is_break_set) {
-      break;
-    }
-
-    if (!result) {
       break;
     }
   }
@@ -505,6 +509,14 @@ static bool tea_interpret_execute_break(tea_loop_context_t* loop_context)
   return true;
 }
 
+static bool tea_interpret_execute_continue(tea_loop_context_t* loop_context)
+{
+  if (loop_context) {
+    loop_context->is_continue_set = true;
+  }
+  return true;
+}
+
 bool tea_interpret_execute(tea_context_t* context, tea_scope_t* scope, const tea_ast_node_t* node,
   tea_return_context_t* return_context, tea_loop_context_t* loop_context)
 {
@@ -513,6 +525,10 @@ bool tea_interpret_execute(tea_context_t* context, tea_scope_t* scope, const tea
   }
 
   if (loop_context && loop_context->is_break_set) {
+    return true;
+  }
+
+  if (loop_context && loop_context->is_continue_set) {
     return true;
   }
 
@@ -531,6 +547,8 @@ bool tea_interpret_execute(tea_context_t* context, tea_scope_t* scope, const tea
       return tea_interpret_execute_return(context, scope, node, return_context);
     case TEA_AST_NODE_BREAK:
       return tea_interpret_execute_break(loop_context);
+    case TEA_AST_NODE_CONTINUE:
+      return tea_interpret_execute_continue(loop_context);
     case TEA_AST_NODE_FUNCTION_CALL:
       tea_interpret_evaluate_function_call(context, scope, node);
       return true;

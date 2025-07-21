@@ -116,6 +116,8 @@ const char *tea_ast_node_get_type_name(const tea_ast_node_type_t type)
       return "RETURN";
     case TEA_AST_NODE_BREAK:
       return "BREAK";
+    case TEA_AST_NODE_CONTINUE:
+      return "CONTINUE";
     case TEA_AST_NODE_IF:
       return "IF";
     case TEA_AST_NODE_THEN:
