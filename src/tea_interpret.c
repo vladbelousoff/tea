@@ -133,6 +133,10 @@ static bool tea_interpret_execute_stmt(tea_context_t* context, tea_scope_t* scop
       return true;
     }
 
+    if (break_context && break_context->is_set) {
+      return true;
+    }
+
     const tea_ast_node_t* child = rtl_list_record(entry, tea_ast_node_t, link);
     if (!tea_interpret_execute(context, scope, child, return_context, break_context)) {
       return false;
