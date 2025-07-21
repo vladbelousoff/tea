@@ -397,6 +397,8 @@ static bool tea_interpret_execute_while(
     }
 
     if (inner_scope.flags & TEA_SCOPE_FLAG_RETURN) {
+      scope->flags |= TEA_SCOPE_FLAG_RETURN;
+      scope->returned_value = inner_scope.returned_value;
       break;
     }
   }
