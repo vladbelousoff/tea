@@ -124,21 +124,13 @@ void tea_interpret_cleanup(const tea_context_t* context)
 
 static bool tea_interpret_execute_stmt(tea_context_t* context, tea_scope_t* scope,
   const tea_ast_node_t* node, tea_return_context_t* return_context,
-  tea_break_context_t* break_context)
+  tea_loop_context_t* loop_context)
 {
   rtl_list_entry_t* entry;
   rtl_list_for_each(entry, &node->children)
   {
-    if (return_context && return_context->is_set) {
-      return true;
-    }
-
-    if (break_context && break_context->is_set) {
-      return true;
-    }
-
     const tea_ast_node_t* child = rtl_list_record(entry, tea_ast_node_t, link);
-    if (!tea_interpret_execute(context, scope, child, return_context, break_context)) {
+    if (!tea_interpret_execute(context, scope, child, return_context, loop_context)) {
       return false;
     }
   }
@@ -314,7 +306,7 @@ static bool tea_interpret_execute_assign(
 
 static bool tea_interpret_execute_if(tea_context_t* context, tea_scope_t* scope,
   const tea_ast_node_t* node, tea_return_context_t* return_context,
-  tea_break_context_t* break_context)
+  tea_loop_context_t* loop_context)
 {
   const tea_ast_node_t* condition = NULL;
   const tea_ast_node_t* then_node = NULL;
@@ -344,9 +336,9 @@ static bool tea_interpret_execute_if(tea_context_t* context, tea_scope_t* scope,
 
   bool result = true;
   if (cond_val.val_i32 != 0) {
-    result = tea_interpret_execute(context, &inner_scope, then_node, return_context, break_context);
+    result = tea_interpret_execute(context, &inner_scope, then_node, return_context, loop_context);
   } else if (else_node) {
-    result = tea_interpret_execute(context, &inner_scope, else_node, return_context, break_context);
+    result = tea_interpret_execute(context, &inner_scope, else_node, return_context, loop_context);
   }
 
   tea_scope_cleanup(context, &inner_scope);
@@ -379,8 +371,8 @@ static bool tea_interpret_execute_while(tea_context_t* context, tea_scope_t* sco
     return false;
   }
 
-  tea_break_context_t break_context;
-  break_context.is_set = false;
+  tea_loop_context_t loop_context;
+  loop_context.is_break_set = false;
 
   while (true) {
     const tea_value_t cond_val = tea_interpret_evaluate_expression(context, scope, while_cond);
@@ -391,14 +383,14 @@ static bool tea_interpret_execute_while(tea_context_t* context, tea_scope_t* sco
     tea_scope_t inner_scope;
     tea_scope_init(&inner_scope, scope);
     const bool result =
-      tea_interpret_execute(context, &inner_scope, while_body, return_context, &break_context);
+      tea_interpret_execute(context, &inner_scope, while_body, return_context, &loop_context);
     tea_scope_cleanup(context, &inner_scope);
 
     if (return_context && return_context->is_set) {
       break;
     }
 
-    if (break_context.is_set) {
+    if (loop_context.is_break_set) {
       break;
     }
 
@@ -505,24 +497,32 @@ static bool tea_interpret_execute_struct(tea_context_t* context, const tea_ast_n
   return true;
 }
 
-static bool tea_interpret_execute_break(tea_break_context_t* break_context)
+static bool tea_interpret_execute_break(tea_loop_context_t* loop_context)
 {
-  if (break_context) {
-    break_context->is_set = true;
+  if (loop_context) {
+    loop_context->is_break_set = true;
   }
   return true;
 }
 
 bool tea_interpret_execute(tea_context_t* context, tea_scope_t* scope, const tea_ast_node_t* node,
-  tea_return_context_t* return_context, tea_break_context_t* break_context)
+  tea_return_context_t* return_context, tea_loop_context_t* loop_context)
 {
+  if (return_context && return_context->is_set) {
+    return true;
+  }
+
+  if (loop_context && loop_context->is_break_set) {
+    return true;
+  }
+
   switch (node->type) {
     case TEA_AST_NODE_LET:
       return tea_interpret_execute_let(context, scope, node);
     case TEA_AST_NODE_ASSIGN:
       return tea_interpret_execute_assign(context, scope, node);
     case TEA_AST_NODE_IF:
-      return tea_interpret_execute_if(context, scope, node, return_context, break_context);
+      return tea_interpret_execute_if(context, scope, node, return_context, loop_context);
     case TEA_AST_NODE_WHILE:
       return tea_interpret_execute_while(context, scope, node, return_context);
     case TEA_AST_NODE_FUNCTION:
@@ -530,7 +530,7 @@ bool tea_interpret_execute(tea_context_t* context, tea_scope_t* scope, const tea
     case TEA_AST_NODE_RETURN:
       return tea_interpret_execute_return(context, scope, node, return_context);
     case TEA_AST_NODE_BREAK:
-      return tea_interpret_execute_break(break_context);
+      return tea_interpret_execute_break(loop_context);
     case TEA_AST_NODE_FUNCTION_CALL:
       tea_interpret_evaluate_function_call(context, scope, node);
       return true;
@@ -543,7 +543,7 @@ bool tea_interpret_execute(tea_context_t* context, tea_scope_t* scope, const tea
     case TEA_AST_NODE_ELSE:
     case TEA_AST_NODE_WHILE_COND:
     case TEA_AST_NODE_WHILE_BODY:
-      return tea_interpret_execute_stmt(context, scope, node, return_context, break_context);
+      return tea_interpret_execute_stmt(context, scope, node, return_context, loop_context);
     default: {
       const tea_token_t* token = node->token;
       if (token) {
