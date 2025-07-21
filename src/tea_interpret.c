@@ -505,16 +505,22 @@ static bool tea_interpret_execute_break(tea_loop_context_t* loop_context)
 {
   if (loop_context) {
     loop_context->is_break_set = true;
+    return true;
   }
-  return true;
+
+  rtl_log_err("Break cannot be used outside of loops");
+  return false;
 }
 
 static bool tea_interpret_execute_continue(tea_loop_context_t* loop_context)
 {
   if (loop_context) {
     loop_context->is_continue_set = true;
+    return true;
   }
-  return true;
+
+  rtl_log_err("Continue cannot be used outside of loops");
+  return false;
 }
 
 bool tea_interpret_execute(tea_context_t* context, tea_scope_t* scope, const tea_ast_node_t* node,
