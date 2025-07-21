@@ -965,11 +965,13 @@ tea_value_t tea_interpret_evaluate_expression(
     case TEA_AST_NODE_FUNCTION_CALL:
       return tea_interpret_evaluate_function_call(context, scope, node);
     default: {
-      rtl_log_err("Failed to evaluate node <%s>", tea_ast_node_get_type_name(node->type));
       tea_token_t* token = node->token;
       if (token) {
-        rtl_log_err("Token: <%s> %.*s (line: %d, column: %d)", tea_token_get_name(token->type),
+        rtl_log_err("Failed to evaluate node <%s>, token: <%s> %.*s (line %d, col %d)",
+          tea_ast_node_get_type_name(node->type), tea_token_get_name(token->type),
           token->buffer_size, token->buffer, token->line, token->column);
+      } else {
+        rtl_log_err("Failed to evaluate node <%s>", tea_ast_node_get_type_name(node->type));
       }
     } break;
   }
