@@ -63,19 +63,11 @@ static void tea_free_variable(tea_context_t* context, tea_variable_t* variable)
 void tea_scope_init(tea_scope_t* scope, tea_scope_t* parent_scope)
 {
   scope->parent_scope = parent_scope;
-  scope->returned_value = tea_value_unset();
-  scope->flags = 0;
   rtl_list_init(&scope->variables);
 }
 
 void tea_scope_cleanup(tea_context_t* context, const tea_scope_t* scope)
 {
-  tea_scope_t* parent_scope = scope->parent_scope;
-  if (parent_scope) {
-    parent_scope->returned_value = scope->returned_value;
-    parent_scope->flags |= scope->flags;
-  }
-
   rtl_list_entry_t* entry;
   rtl_list_entry_t* safe;
 
@@ -130,14 +122,23 @@ void tea_interpret_cleanup(const tea_context_t* context)
   }
 }
 
-static bool tea_interpret_execute_stmt(
-  tea_context_t* context, tea_scope_t* scope, const tea_ast_node_t* node)
+static bool tea_interpret_execute_stmt(tea_context_t* context, tea_scope_t* scope,
+  const tea_ast_node_t* node, tea_return_context_t* return_context,
+  tea_break_context_t* break_context)
 {
   rtl_list_entry_t* entry;
   rtl_list_for_each(entry, &node->children)
   {
+    if (return_context && return_context->is_set) {
+      return true;
+    }
+
+    if (break_context && break_context->is_set) {
+      return true;
+    }
+
     const tea_ast_node_t* child = rtl_list_record(entry, tea_ast_node_t, link);
-    if (!tea_interpret_execute(context, scope, child)) {
+    if (!tea_interpret_execute(context, scope, child, return_context, break_context)) {
       return false;
     }
   }
@@ -311,8 +312,9 @@ static bool tea_interpret_execute_assign(
   return true;
 }
 
-static bool tea_interpret_execute_if(
-  tea_context_t* context, tea_scope_t* scope, const tea_ast_node_t* node)
+static bool tea_interpret_execute_if(tea_context_t* context, tea_scope_t* scope,
+  const tea_ast_node_t* node, tea_return_context_t* return_context,
+  tea_break_context_t* break_context)
 {
   const tea_ast_node_t* condition = NULL;
   const tea_ast_node_t* then_node = NULL;
@@ -342,17 +344,17 @@ static bool tea_interpret_execute_if(
 
   bool result = true;
   if (cond_val.val_i32 != 0) {
-    result = tea_interpret_execute(context, &inner_scope, then_node);
+    result = tea_interpret_execute(context, &inner_scope, then_node, return_context, break_context);
   } else if (else_node) {
-    result = tea_interpret_execute(context, &inner_scope, else_node);
+    result = tea_interpret_execute(context, &inner_scope, else_node, return_context, break_context);
   }
 
   tea_scope_cleanup(context, &inner_scope);
   return result;
 }
 
-static bool tea_interpret_execute_while(
-  tea_context_t* context, tea_scope_t* scope, const tea_ast_node_t* node)
+static bool tea_interpret_execute_while(tea_context_t* context, tea_scope_t* scope,
+  const tea_ast_node_t* node, tea_return_context_t* return_context)
 {
   const tea_ast_node_t* while_cond = NULL;
   const tea_ast_node_t* while_body = NULL;
@@ -377,6 +379,9 @@ static bool tea_interpret_execute_while(
     return false;
   }
 
+  tea_break_context_t break_context;
+  break_context.is_set = false;
+
   while (true) {
     const tea_value_t cond_val = tea_interpret_evaluate_expression(context, scope, while_cond);
     if (cond_val.val_i32 == 0) {
@@ -385,26 +390,22 @@ static bool tea_interpret_execute_while(
 
     tea_scope_t inner_scope;
     tea_scope_init(&inner_scope, scope);
-    const bool result = tea_interpret_execute(context, &inner_scope, while_body);
-
+    const bool result =
+      tea_interpret_execute(context, &inner_scope, while_body, return_context, &break_context);
     tea_scope_cleanup(context, &inner_scope);
-    if (!result) {
-      return false;
-    }
 
-    if (inner_scope.flags & TEA_SCOPE_FLAG_BREAK) {
+    if (return_context && return_context->is_set) {
       break;
     }
 
-    if (inner_scope.flags & TEA_SCOPE_FLAG_RETURN) {
-      scope->flags |= TEA_SCOPE_FLAG_RETURN;
-      scope->returned_value = inner_scope.returned_value;
+    if (break_context.is_set) {
+      break;
+    }
+
+    if (!result) {
       break;
     }
   }
-
-  // Clear break flag if it was set
-  scope->flags &= ~TEA_SCOPE_FLAG_BREAK;
 
   return true;
 }
@@ -470,15 +471,15 @@ static bool tea_interpret_execute_function_declaration(
   return true;
 }
 
-static bool tea_interpret_execute_return(
-  tea_context_t* context, tea_scope_t* scope, const tea_ast_node_t* node)
+static bool tea_interpret_execute_return(tea_context_t* context, tea_scope_t* scope,
+  const tea_ast_node_t* node, tea_return_context_t* return_context)
 {
   rtl_list_entry_t* entry = rtl_list_first(&node->children);
   if (entry) {
     const tea_ast_node_t* expr = rtl_list_record(entry, tea_ast_node_t, link);
-    if (expr) {
-      scope->returned_value = tea_interpret_evaluate_expression(context, scope, expr);
-      scope->flags |= TEA_SCOPE_FLAG_RETURN;
+    if (expr && return_context) {
+      return_context->returned_value = tea_interpret_evaluate_expression(context, scope, expr);
+      return_context->is_set = true;
     }
   }
 
@@ -504,39 +505,32 @@ static bool tea_interpret_execute_struct(tea_context_t* context, const tea_ast_n
   return true;
 }
 
-static bool tea_interpret_execute_break(tea_scope_t* scope)
+static bool tea_interpret_execute_break(tea_break_context_t* break_context)
 {
-  if (scope) {
-    scope->flags |= TEA_SCOPE_FLAG_BREAK;
+  if (break_context) {
+    break_context->is_set = true;
   }
   return true;
 }
 
-bool tea_interpret_execute(tea_context_t* context, tea_scope_t* scope, const tea_ast_node_t* node)
+bool tea_interpret_execute(tea_context_t* context, tea_scope_t* scope, const tea_ast_node_t* node,
+  tea_return_context_t* return_context, tea_break_context_t* break_context)
 {
-  if (scope->flags & TEA_SCOPE_FLAG_RETURN) {
-    return true;
-  }
-
-  if (scope->flags & TEA_SCOPE_FLAG_BREAK) {
-    return true;
-  }
-
   switch (node->type) {
     case TEA_AST_NODE_LET:
       return tea_interpret_execute_let(context, scope, node);
     case TEA_AST_NODE_ASSIGN:
       return tea_interpret_execute_assign(context, scope, node);
     case TEA_AST_NODE_IF:
-      return tea_interpret_execute_if(context, scope, node);
+      return tea_interpret_execute_if(context, scope, node, return_context, break_context);
     case TEA_AST_NODE_WHILE:
-      return tea_interpret_execute_while(context, scope, node);
+      return tea_interpret_execute_while(context, scope, node, return_context);
     case TEA_AST_NODE_FUNCTION:
       return tea_interpret_execute_function_declaration(context, node);
     case TEA_AST_NODE_RETURN:
-      return tea_interpret_execute_return(context, scope, node);
+      return tea_interpret_execute_return(context, scope, node, return_context);
     case TEA_AST_NODE_BREAK:
-      return tea_interpret_execute_break(scope);
+      return tea_interpret_execute_break(break_context);
     case TEA_AST_NODE_FUNCTION_CALL:
       tea_interpret_evaluate_function_call(context, scope, node);
       return true;
@@ -549,7 +543,7 @@ bool tea_interpret_execute(tea_context_t* context, tea_scope_t* scope, const tea
     case TEA_AST_NODE_ELSE:
     case TEA_AST_NODE_WHILE_COND:
     case TEA_AST_NODE_WHILE_BODY:
-      return tea_interpret_execute_stmt(context, scope, node);
+      return tea_interpret_execute_stmt(context, scope, node, return_context, break_context);
     default: {
       const tea_token_t* token = node->token;
       if (token) {
@@ -844,6 +838,9 @@ static tea_value_t tea_interpret_evaluate_function_call(
     exit(1);
   }
 
+  tea_return_context_t return_context = { 0 };
+  return_context.is_set = false;
+
   tea_scope_t inner_scope;
   tea_scope_init(&inner_scope, scope);
 
@@ -907,18 +904,16 @@ static tea_value_t tea_interpret_evaluate_function_call(
     }
   }
 
-  const bool result = tea_interpret_execute(context, &inner_scope, function->body);
+  const bool result =
+    tea_interpret_execute(context, &inner_scope, function->body, &return_context, NULL);
   tea_scope_cleanup(context, &inner_scope);
 
-  // Clear return flag if it was set
-  scope->flags &= ~TEA_SCOPE_FLAG_RETURN;
-
-  if (!result) {
-    rtl_log_err("Failed to execute function %s", token->buffer);
-    exit(1);
+  if (result && return_context.is_set) {
+    return return_context.returned_value;
   }
 
-  return inner_scope.returned_value;
+  static tea_value_t return_value = { 0 };
+  return return_value;
 }
 
 tea_value_t tea_interpret_evaluate_expression(
