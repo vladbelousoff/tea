@@ -84,7 +84,7 @@ void tea_interpret_init(tea_context_t* context, const char* filename)
   context->filename = filename;
   rtl_list_init(&context->functions);
   rtl_list_init(&context->native_functions);
-  rtl_list_init(&context->struct_decls);
+  rtl_list_init(&context->struct_declarations);
   rtl_list_init(&context->variable_pool);
 }
 
@@ -107,11 +107,12 @@ void tea_interpret_cleanup(const tea_context_t* context)
     rtl_free(function);
   }
 
-  rtl_list_for_each_safe(entry, safe, &context->struct_decls)
+  rtl_list_for_each_safe(entry, safe, &context->struct_declarations)
   {
-    tea_struct_decl_t* struct_decl = rtl_list_record(entry, tea_struct_decl_t, link);
+    tea_struct_declaration_t* struct_declaration =
+      rtl_list_record(entry, tea_struct_declaration_t, link);
     rtl_list_remove(entry);
-    rtl_free(struct_decl);
+    rtl_free(struct_declaration);
   }
 
   rtl_list_for_each_safe(entry, safe, &context->variable_pool)
@@ -487,13 +488,13 @@ static tea_value_t tea_interpret_evaluate_function_call(
 
 static bool tea_interpret_execute_struct(tea_context_t* context, const tea_ast_node_t* node)
 {
-  tea_struct_decl_t* struct_decl = rtl_malloc(sizeof(*struct_decl));
-  if (!struct_decl) {
+  tea_struct_declaration_t* struct_declaration = rtl_malloc(sizeof(*struct_declaration));
+  if (!struct_declaration) {
     return false;
   }
 
-  struct_decl->node = node;
-  rtl_list_add_tail(&context->struct_decls, &struct_decl->link);
+  struct_declaration->node = node;
+  rtl_list_add_tail(&context->struct_declarations, &struct_declaration->link);
 
   tea_token_t* name = node->token;
   rtl_log_dbg("Declare struct '%s'", name ? name->buffer : "");
