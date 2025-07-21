@@ -26,10 +26,15 @@ typedef struct
   };
 } tea_value_t;
 
+#define TEA_SCOPE_FLAG_RETURN 1 << 0
+#define TEA_SCOPE_FLAG_BREAK  1 << 1
+
 typedef struct tea_scope
 {
   struct tea_scope* parent_scope;
   rtl_list_entry_t variables;
+  tea_value_t returned_value;
+  unsigned int flags;
 } tea_scope_t;
 
 typedef struct
@@ -70,17 +75,6 @@ typedef struct
 
 typedef struct
 {
-  tea_value_t returned_value;
-  bool is_set;
-} tea_return_context_t;
-
-typedef struct
-{
-  bool is_set;
-} tea_break_context_t;
-
-typedef struct
-{
   rtl_list_entry_t link;
   const tea_ast_node_t* node;
 } tea_struct_decl_t;
@@ -92,8 +86,7 @@ void tea_scope_cleanup(tea_context_t* context, const tea_scope_t* scope);
 
 void tea_interpret_init(tea_context_t* context, const char* filename);
 void tea_interpret_cleanup(const tea_context_t* context);
-bool tea_interpret_execute(tea_context_t* context, tea_scope_t* scope, const tea_ast_node_t* node,
-  tea_return_context_t* return_context, tea_break_context_t* break_context);
+bool tea_interpret_execute(tea_context_t* context, tea_scope_t* scope, const tea_ast_node_t* node);
 tea_value_t tea_interpret_evaluate_expression(
   tea_context_t* context, tea_scope_t* scope, const tea_ast_node_t* node);
 

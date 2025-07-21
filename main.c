@@ -101,7 +101,7 @@ int main(const int argc, char *argv[])
 
     tea_scope_t global_scope;
     tea_scope_init(&global_scope, NULL);
-    if (!tea_interpret_execute(&context, &global_scope, ast, NULL, NULL)) {
+    if (!tea_interpret_execute(&context, &global_scope, ast)) {
       ret_code = 1;
     }
 
