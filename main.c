@@ -30,8 +30,8 @@ static tea_value_t tea_print(const tea_value_t *args, const int arg_count)
       case TEA_VALUE_STRING:
         printf("%s", arg.val_str);
         break;
-      case TEA_VALUE_UNSET:
       case TEA_VALUE_INSTANCE:
+      case TEA_VALUE_UNSET:
         break;
     }
   }

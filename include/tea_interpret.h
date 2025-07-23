@@ -15,6 +15,13 @@ const char* tea_value_get_type_string(tea_value_type_t type);
 
 typedef struct
 {
+  const char* type;
+  unsigned long buffer_size;
+  char buffer[0];
+} tea_instance_t;
+
+typedef struct
+{
   tea_value_type_t type;
 
   union
@@ -22,7 +29,7 @@ typedef struct
     int val_i32;
     float val_f32;
     const char* val_str;
-    void* val_inst;
+    tea_instance_t* inst;
   };
 } tea_value_t;
 
@@ -84,6 +91,7 @@ typedef struct
 {
   rtl_list_entry_t link;
   const tea_ast_node_t* node;
+  unsigned long field_count;
 } tea_struct_declaration_t;
 
 tea_value_t tea_value_unset();
