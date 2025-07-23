@@ -1043,6 +1043,69 @@ static tea_value_t tea_interpret_evaluate_new(
   return result;
 }
 
+static tea_value_t tea_interpret_field_access(
+  tea_context_t* context, tea_scope_t* scope, const tea_ast_node_t* node)
+{
+  const tea_token_t* field_name = node->token;
+  if (!field_name) {
+    rtl_log_err("Invalid name!");
+    exit(1);
+  }
+
+  rtl_list_entry_t* inst_entry = rtl_list_first(&node->children);
+  if (!inst_entry) {
+    rtl_log_err("Invalid inst_entry for %s (line %d, col %d)!", field_name->buffer,
+      field_name->line, field_name->column);
+    exit(1);
+  }
+
+  tea_ast_node_t* inst_node = rtl_list_record(inst_entry, tea_ast_node_t, link);
+  if (!inst_node) {
+    rtl_log_err("Invalid inst_node for %s (line %d, col %d)!", field_name->buffer, field_name->line,
+      field_name->column);
+    exit(1);
+  }
+
+  const tea_token_t* inst_name = inst_node->token;
+  if (!inst_name) {
+    rtl_log_err("Invalid inst_name!");
+    exit(1);
+  }
+
+  const tea_variable_t* variable = tea_context_find_variable(scope, inst_name->buffer);
+  if (!variable) {
+    rtl_log_err("Invalid variable name for %s (line %d, col %d)!", inst_name->buffer,
+      inst_name->line, inst_name->column);
+    exit(1);
+  }
+
+  const tea_instance_t* inst = variable->value.inst;
+
+  const tea_struct_declaration_t* struct_declr = tea_find_struct_declaration(context, inst->type);
+  if (!struct_declr) {
+    rtl_log_err("Can't find struct with name %s", inst->type);
+    exit(1);
+  }
+
+  unsigned long field_index = 0;
+
+  rtl_list_entry_t* field_entry;
+  rtl_list_for_each(field_entry, &struct_declr->node->children)
+  {
+    assert(field_index < struct_declr->field_count);
+
+    const tea_ast_node_t* field_node = rtl_list_record(field_entry, tea_ast_node_t, link);
+    if (!strcmp(field_node->token->buffer, field_name->buffer)) {
+      const tea_value_t* result = (tea_value_t*)&inst->buffer[field_index * sizeof(tea_value_t)];
+      return *result;
+    }
+
+    field_index++;
+  }
+
+  return tea_value_unset();
+}
+
 tea_value_t tea_interpret_evaluate_expression(
   tea_context_t* context, tea_scope_t* scope, const tea_ast_node_t* node)
 {
@@ -1068,6 +1131,8 @@ tea_value_t tea_interpret_evaluate_expression(
       return tea_interpret_evaluate_function_call(context, scope, node);
     case TEA_AST_NODE_STRUCT_INSTANCE:
       return tea_interpret_evaluate_new(context, scope, node);
+    case TEA_AST_NODE_FIELD_ACCESS:
+      return tea_interpret_field_access(context, scope, node);
     default: {
       tea_token_t* token = node->token;
       if (token) {
