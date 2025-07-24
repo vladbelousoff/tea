@@ -250,14 +250,39 @@ static bool tea_interpret_execute_let(
   return tea_declare_variable(context, scope, name, is_mutable, type, expr);
 }
 
+static tea_value_t* tea_field_access(
+  const tea_context_t* context, const tea_scope_t* scope, const tea_ast_node_t* node);
+
 static bool tea_interpret_execute_assign(
   tea_context_t* context, tea_scope_t* scope, const tea_ast_node_t* node)
 {
   const tea_token_t* name = node->token;
   if (!name) {
-    rtl_log_err(
-      "Can't process node %s, because it's name is null", tea_ast_node_get_type_name(node->type));
-    exit(1);
+    // Probably if the name is null, then it's a field access
+    rtl_list_entry_t* field_entry = rtl_list_first(&node->children);
+    if (!field_entry) {
+      exit(1);
+    }
+
+    const tea_ast_node_t* field_node = rtl_list_record(field_entry, tea_ast_node_t, link);
+    if (!field_node) {
+      exit(1);
+    }
+
+    tea_value_t* value = tea_field_access(context, scope, field_node);
+    if (!value) {
+      return false;
+    }
+
+    // First child is the value on the right
+    const tea_ast_node_t* rhs =
+      rtl_list_record(rtl_list_first(&node->children), tea_ast_node_t, link);
+    const tea_value_t new_value = tea_interpret_evaluate_expression(context, scope, rhs);
+
+    // TODO: Make it clearer with checking mutability
+    *value = new_value;
+
+    return true;
   }
 
   tea_variable_t* variable = tea_context_find_variable(scope, name->buffer);
@@ -1043,8 +1068,7 @@ static tea_value_t tea_interpret_evaluate_new(
   return result;
 }
 
-static tea_value_t tea_interpret_field_access(
-  tea_context_t* context, tea_scope_t* scope, const tea_ast_node_t* node)
+static tea_instance_t* tea_inst_get(const tea_scope_t* scope, const tea_ast_node_t* node)
 {
   const tea_token_t* field_name = node->token;
   if (!field_name) {
@@ -1079,12 +1103,24 @@ static tea_value_t tea_interpret_field_access(
     exit(1);
   }
 
-  const tea_instance_t* inst = variable->value.inst;
+  return variable->value.inst;
+}
+
+static tea_value_t* tea_field_access(
+  const tea_context_t* context, const tea_scope_t* scope, const tea_ast_node_t* node)
+{
+  const tea_instance_t* inst = tea_inst_get(scope, node);
 
   const tea_struct_declaration_t* struct_declr = tea_find_struct_declaration(context, inst->type);
   if (!struct_declr) {
     rtl_log_err("Can't find struct with name %s", inst->type);
-    exit(1);
+    return NULL;
+  }
+
+  const tea_token_t* field_name = node->token;
+  if (!field_name) {
+    rtl_log_err("Invalid name!");
+    return NULL;
   }
 
   unsigned long field_index = 0;
@@ -1096,11 +1132,22 @@ static tea_value_t tea_interpret_field_access(
 
     const tea_ast_node_t* field_node = rtl_list_record(field_entry, tea_ast_node_t, link);
     if (!strcmp(field_node->token->buffer, field_name->buffer)) {
-      const tea_value_t* result = (tea_value_t*)&inst->buffer[field_index * sizeof(tea_value_t)];
-      return *result;
+      tea_value_t* result = (tea_value_t*)&inst->buffer[field_index * sizeof(tea_value_t)];
+      return result;
     }
 
     field_index++;
+  }
+
+  return NULL;
+}
+
+static tea_value_t tea_interpret_field_access(
+  const tea_context_t* context, const tea_scope_t* scope, const tea_ast_node_t* node)
+{
+  const tea_value_t* result = tea_field_access(context, scope, node);
+  if (result) {
+    return *result;
   }
 
   return tea_value_unset();

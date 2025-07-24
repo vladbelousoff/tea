@@ -14,8 +14,11 @@ fn main() {
     // Access struct fields using dot operator
     let person_name = person.name;
     let person_age = person.age;
+
+    person.name = 'Bob';
+    person.age = 15;
     
     return person_name;
 }
 
-main();
+print(main(), '\n');
