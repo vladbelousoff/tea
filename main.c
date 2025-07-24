@@ -31,12 +31,12 @@ static tea_value_t tea_print(const tea_value_t *args, const int arg_count)
         printf("%s", arg.val_str);
         break;
       case TEA_VALUE_INSTANCE:
-      case TEA_VALUE_UNSET:
+      case TEA_VALUE_NONE:
         break;
     }
   }
 
-  return tea_value_unset();
+  return tea_value_none();
 }
 
 int main(const int argc, char *argv[])
