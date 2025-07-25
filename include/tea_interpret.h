@@ -53,7 +53,7 @@ typedef struct
 typedef struct
 {
   rtl_list_entry_t link;
-  const tea_token_t* name;
+  const char* name;
   tea_value_t value;
   unsigned char is_mutable : 1;
 } tea_variable_t;

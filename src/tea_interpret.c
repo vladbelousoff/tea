@@ -148,11 +148,11 @@ static tea_variable_t* tea_context_find_variable_this_scope_only(
   rtl_list_for_each(entry, &scope->variables)
   {
     tea_variable_t* variable = rtl_list_record(entry, tea_variable_t, link);
-    const tea_token_t* variable_name = variable->name;
+    const char* variable_name = variable->name;
     if (!variable_name) {
       continue;
     }
-    if (!strcmp(variable_name->buffer, name)) {
+    if (!strcmp(variable_name, name)) {
       return variable;
     }
   }
@@ -197,7 +197,7 @@ static bool tea_declare_variable(tea_context_t* context, tea_scope_t* scope,
     return false;
   }
 
-  variable->name = name;
+  variable->name = name->buffer;
   variable->is_mutable = is_mutable;
   variable->value = tea_interpret_evaluate_expression(context, scope, initial_value);
 
@@ -926,7 +926,7 @@ static tea_value_t tea_interpret_evaluate_function_call(
         break;
       }
 
-      variable->name = param_name_token;
+      variable->name = param_name_token->buffer;
       /* TODO: Currently all function arguments are not mutable by default and I don't check the
        * types */
       const bool is_mutable = false;
