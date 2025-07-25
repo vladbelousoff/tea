@@ -60,7 +60,7 @@ typedef struct tea_ast_node
 
     struct
     {
-      struct tea_ast_node* inst;
+      struct tea_ast_node* object;
       struct tea_ast_node* field;
     } field_access;
   };
@@ -82,7 +82,7 @@ void tea_ast_node_add_children(tea_ast_node_t* parent, const rtl_list_entry_t* c
 void tea_ast_node_set_binop_children(
   tea_ast_node_t* parent, tea_ast_node_t* lhs, tea_ast_node_t* rhs);
 void tea_ast_node_set_field_access_children(
-  tea_ast_node_t* parent, tea_ast_node_t* inst, tea_ast_node_t* field);
+  tea_ast_node_t* parent, tea_ast_node_t* object, tea_ast_node_t* field);
 void tea_ast_node_free(tea_ast_node_t* node);
 void tea_ast_node_print(tea_ast_node_t* node, int depth);
 

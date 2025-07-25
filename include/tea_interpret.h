@@ -29,7 +29,7 @@ typedef struct
     int val_i32;
     float val_f32;
     const char* val_str;
-    tea_instance_t* inst;
+    tea_instance_t* object;
   };
 } tea_value_t;
 

@@ -1000,10 +1000,10 @@ static tea_value_t tea_interpret_evaluate_new(
   const tea_struct_declaration_t* struct_declr =
     tea_find_struct_declaration(context, struct_name->buffer);
 
-  tea_instance_t* inst =
+  tea_instance_t* object =
     rtl_malloc(sizeof(tea_instance_t) + struct_declr->field_count * sizeof(tea_value_t));
-  if (!inst) {
-    rtl_log_err("Failed to allocate memory for instance!");
+  if (!object) {
+    rtl_log_err("Failed to allocate memory for object!");
     exit(1);
   }
 
@@ -1055,16 +1055,16 @@ static tea_value_t tea_interpret_evaluate_new(
     }
 
     tea_value_t value_expr = tea_interpret_evaluate_expression(context, scope, value_node);
-    memcpy(&inst->buffer[field_index++ * sizeof(tea_value_t)], &value_expr, sizeof(tea_value_t));
+    memcpy(&object->buffer[field_index++ * sizeof(tea_value_t)], &value_expr, sizeof(tea_value_t));
 
     field_entry = rtl_list_next(field_entry, &struct_declr->node->children);
   }
 
-  inst->type = struct_name->buffer;
+  object->type = struct_name->buffer;
 
   tea_value_t result;
   result.type = TEA_VALUE_INSTANCE;
-  result.inst = inst;
+  result.object = object;
 
   return result;
 }
@@ -1079,28 +1079,28 @@ static tea_value_t* tea_field_access(
   const tea_token_t* field_name = field_node->token;
   rtl_assert(field_name, "Field AST node missing token information");
 
-  // Extract instance information
-  tea_ast_node_t* inst_node = node->field_access.inst;
-  rtl_assert(inst_node, "Field access node missing instance component in AST node");
+  // Extract object information
+  tea_ast_node_t* object_node = node->field_access.object;
+  rtl_assert(object_node, "Field access node missing object component in AST node");
 
-  const tea_token_t* inst_name = inst_node->token;
-  rtl_assert(inst_name, "Instance AST node missing token information");
+  const tea_token_t* object_name = object_node->token;
+  rtl_assert(object_name, "Object AST node missing token information");
 
-  // Get the variable containing the instance
-  const tea_variable_t* variable = tea_context_find_variable(scope, inst_name->buffer);
+  // Get the variable containing the object
+  const tea_variable_t* variable = tea_context_find_variable(scope, object_name->buffer);
   rtl_assert(variable, "Variable '%s' not found in current scope (line %d, col %d)",
-    inst_name->buffer, inst_name->line, inst_name->column);
+    object_name->buffer, object_name->line, object_name->column);
 
-  const tea_instance_t* inst = variable->value.inst;
-  rtl_assert(inst, "Variable '%s' has type %s but expected instance type (line %d, col %d)",
-    inst_name->buffer, tea_value_get_type_string(variable->value.type), inst_name->line,
-    inst_name->column);
+  const tea_instance_t* object = variable->value.object;
+  rtl_assert(variable->value.type == TEA_VALUE_INSTANCE,
+    "Variable '%s' has type %s but expected object type (line %d, col %d)", object_name->buffer,
+    tea_value_get_type_string(variable->value.type), object_name->line, object_name->column);
 
-  // Find the struct declaration for this instance type
-  const tea_struct_declaration_t* struct_declr = tea_find_struct_declaration(context, inst->type);
+  // Find the struct declaration for this object type
+  const tea_struct_declaration_t* struct_declr = tea_find_struct_declaration(context, object->type);
   rtl_assert(struct_declr,
     "Struct declaration not found for type '%s' when accessing field '%s' (line %d, col %d)",
-    inst->type, field_name->buffer, field_name->line, field_name->column);
+    object->type, field_name->buffer, field_name->line, field_name->column);
 
   // Find the field by name and return its value
   unsigned long field_index = 0;
@@ -1114,7 +1114,7 @@ static tea_value_t* tea_field_access(
     rtl_assert(field_decl_node && field_decl_node->token, "Invalid field declaration node!");
 
     if (!strcmp(field_decl_node->token->buffer, field_name->buffer)) {
-      return (tea_value_t*)&inst->buffer[field_index * sizeof(tea_value_t)];
+      return (tea_value_t*)&object->buffer[field_index * sizeof(tea_value_t)];
     }
   }
 
