@@ -14,7 +14,7 @@
 const char* tea_value_get_type_string(const tea_value_type_t type)
 {
   switch (type) {
-    case TEA_VALUE_NONE:
+    case TEA_VALUE_INVALID:
       return "unset";
     case TEA_VALUE_I32:
       return "i32";
@@ -29,10 +29,10 @@ const char* tea_value_get_type_string(const tea_value_type_t type)
   return "UNKNOWN";
 }
 
-tea_value_t tea_value_none()
+tea_value_t tea_value_invalid()
 {
-  static tea_value_t none = { 0 };
-  return none;
+  static tea_value_t result = { 0 };
+  return result;
 }
 
 static tea_variable_t* tea_allocate_variable(const tea_context_t* context)
@@ -1032,7 +1032,7 @@ static tea_value_t tea_interpret_evaluate_function_call(
     return return_context.returned_value;
   }
 
-  return tea_value_none();
+  return tea_value_invalid();
 }
 
 static tea_value_t tea_interpret_evaluate_new(
@@ -1176,7 +1176,7 @@ static tea_value_t tea_interpret_field_access(
     return *result;
   }
 
-  return tea_value_none();
+  return tea_value_invalid();
 }
 
 tea_value_t tea_interpret_evaluate_expression(

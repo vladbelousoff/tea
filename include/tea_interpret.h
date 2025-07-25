@@ -6,7 +6,7 @@
 
 typedef enum
 {
-  TEA_VALUE_NONE,
+  TEA_VALUE_INVALID,
   TEA_VALUE_I32,
   TEA_VALUE_F32,
   TEA_VALUE_STRING,
@@ -97,7 +97,7 @@ typedef struct
   rtl_list_entry_t functions;
 } tea_struct_declaration_t;
 
-tea_value_t tea_value_none();
+tea_value_t tea_value_invalid();
 
 void tea_scope_init(tea_scope_t* scope, tea_scope_t* parent_scope);
 void tea_scope_cleanup(tea_context_t* context, const tea_scope_t* scope);
