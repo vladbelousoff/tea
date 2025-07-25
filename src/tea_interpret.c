@@ -1069,57 +1069,40 @@ static tea_value_t tea_interpret_evaluate_new(
   return result;
 }
 
-static tea_instance_t* tea_inst_get(const tea_scope_t* scope, const tea_ast_node_t* node)
-{
-  tea_ast_node_t* field_node = node->field_access.field;
-  if (!field_node) {
-    rtl_log_err("Invalid field node!");
-    exit(1);
-  }
-
-  const tea_token_t* field_name = field_node->token;
-  if (!field_name) {
-    rtl_log_err("Invalid field name!");
-    exit(1);
-  }
-
-  tea_ast_node_t* inst_node = node->field_access.inst;
-  if (!inst_node) {
-    rtl_log_err("Invalid inst_node for %s (line %d, col %d)!", field_name->buffer, field_name->line,
-      field_name->column);
-    exit(1);
-  }
-
-  const tea_token_t* inst_name = inst_node->token;
-  if (!inst_name) {
-    rtl_log_err("Invalid inst_name!");
-    exit(1);
-  }
-
-  const tea_variable_t* variable = tea_context_find_variable(scope, inst_name->buffer);
-  if (!variable) {
-    rtl_log_err("Invalid variable name for %s (line %d, col %d)!", inst_name->buffer,
-      inst_name->line, inst_name->column);
-    exit(1);
-  }
-
-  return variable->value.inst;
-}
-
 static tea_value_t* tea_field_access(
   const tea_context_t* context, const tea_scope_t* scope, const tea_ast_node_t* node)
 {
-  const tea_instance_t* inst = tea_inst_get(scope, node);
-
-  const tea_struct_declaration_t* struct_declr = tea_find_struct_declaration(context, inst->type);
-  rtl_assert(struct_declr, "Struct declaration can't be null!");
-
+  // Extract field information
   tea_ast_node_t* field_node = node->field_access.field;
-  rtl_assert(field_node, "Field node can't be null!");
+  rtl_assert(field_node, "Field access node missing field component in AST node");
 
   const tea_token_t* field_name = field_node->token;
-  rtl_assert(field_name, "Field name can't be null!");
+  rtl_assert(field_name, "Field AST node missing token information");
 
+  // Extract instance information
+  tea_ast_node_t* inst_node = node->field_access.inst;
+  rtl_assert(inst_node, "Field access node missing instance component in AST node");
+
+  const tea_token_t* inst_name = inst_node->token;
+  rtl_assert(inst_name, "Instance AST node missing token information");
+
+  // Get the variable containing the instance
+  const tea_variable_t* variable = tea_context_find_variable(scope, inst_name->buffer);
+  rtl_assert(variable, "Variable '%s' not found in current scope (line %d, col %d)",
+    inst_name->buffer, inst_name->line, inst_name->column);
+
+  const tea_instance_t* inst = variable->value.inst;
+  rtl_assert(inst, "Variable '%s' has type %s but expected instance type (line %d, col %d)",
+    inst_name->buffer, tea_value_get_type_string(variable->value.type), inst_name->line,
+    inst_name->column);
+
+  // Find the struct declaration for this instance type
+  const tea_struct_declaration_t* struct_declr = tea_find_struct_declaration(context, inst->type);
+  rtl_assert(struct_declr,
+    "Struct declaration not found for type '%s' when accessing field '%s' (line %d, col %d)",
+    inst->type, field_name->buffer, field_name->line, field_name->column);
+
+  // Find the field by name and return its value
   unsigned long field_index = 0;
   rtl_list_entry_t* field_entry;
 
@@ -1127,15 +1110,11 @@ static tea_value_t* tea_field_access(
   {
     rtl_assert(field_index < struct_declr->field_count, "Field index out of range!");
 
-    const tea_ast_node_t* _node = rtl_list_record(field_entry, tea_ast_node_t, link);
-    rtl_assert(_node, "Field node can't be null!");
+    const tea_ast_node_t* field_decl_node = rtl_list_record(field_entry, tea_ast_node_t, link);
+    rtl_assert(field_decl_node && field_decl_node->token, "Invalid field declaration node!");
 
-    const tea_token_t* token = _node->token;
-    rtl_assert(token, "Token can't be null!");
-
-    if (!strcmp(token->buffer, field_name->buffer)) {
-      tea_value_t* result = (tea_value_t*)&inst->buffer[field_index * sizeof(tea_value_t)];
-      return result;
+    if (!strcmp(field_decl_node->token->buffer, field_name->buffer)) {
+      return (tea_value_t*)&inst->buffer[field_index * sizeof(tea_value_t)];
     }
   }
 
