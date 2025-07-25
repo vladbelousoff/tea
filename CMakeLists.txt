@@ -19,7 +19,7 @@ include(FetchContent)
 FetchContent_Declare(
         rtlib
         GIT_REPOSITORY https://github.com/vladbelousoff/rtlib.git
-        GIT_TAG 02fc494f9add1181321c8ec575a151effc3ea842
+        GIT_TAG c40a73c59a32a1c995df90e30ed2be1807e5f12b
 )
 
 FetchContent_MakeAvailable(rtlib)

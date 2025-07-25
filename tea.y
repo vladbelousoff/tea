@@ -447,9 +447,10 @@ primary_expr(primary_expr_node) ::= STRING(string_value). {
 }
 
 field_access(field_access_node) ::= primary_expr(object_expr) DOT IDENT(field_name). {
-    field_access_node = tea_ast_node_create(TEA_AST_NODE_FIELD_ACCESS, field_name);
+    field_access_node = tea_ast_node_create(TEA_AST_NODE_FIELD_ACCESS, NULL);
     if (object_expr) {
-        tea_ast_node_add_child(field_access_node, object_expr);
+        tea_ast_node_t* field_node = tea_ast_node_create(TEA_AST_NODE_IDENT, field_name);
+        tea_ast_node_set_field_access_children(field_access_node, object_expr, field_node);
     }
 }
 

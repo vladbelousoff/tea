@@ -57,6 +57,12 @@ typedef struct tea_ast_node
       struct tea_ast_node* lhs;
       struct tea_ast_node* rhs;
     } binop;
+
+    struct
+    {
+      struct tea_ast_node* inst;
+      struct tea_ast_node* field;
+    } field_access;
   };
 } tea_ast_node_t;
 
@@ -75,6 +81,8 @@ void tea_ast_node_add_child(tea_ast_node_t* parent, tea_ast_node_t* child);
 void tea_ast_node_add_children(tea_ast_node_t* parent, const rtl_list_entry_t* children);
 void tea_ast_node_set_binop_children(
   tea_ast_node_t* parent, tea_ast_node_t* lhs, tea_ast_node_t* rhs);
+void tea_ast_node_set_field_access_children(
+  tea_ast_node_t* parent, tea_ast_node_t* inst, tea_ast_node_t* field);
 void tea_ast_node_free(tea_ast_node_t* node);
 void tea_ast_node_print(tea_ast_node_t* node, int depth);
 

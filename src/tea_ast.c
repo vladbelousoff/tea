@@ -20,6 +20,9 @@ tea_ast_node_t *_tea_ast_node_create(
   if (type == TEA_AST_NODE_BINOP) {
     node->binop.lhs = NULL;
     node->binop.rhs = NULL;
+  } else if (type == TEA_AST_NODE_FIELD_ACCESS) {
+    node->field_access.inst = NULL;
+    node->field_access.field = NULL;
   } else {
     rtl_list_init(&node->children);
   }
@@ -60,6 +63,13 @@ void tea_ast_node_free(tea_ast_node_t *node)
     }
     if (node->binop.rhs) {
       tea_ast_node_free(node->binop.rhs);
+    }
+  } else if (node->type == TEA_AST_NODE_FIELD_ACCESS) {
+    if (node->field_access.inst) {
+      tea_ast_node_free(node->field_access.inst);
+    }
+    if (node->field_access.field) {
+      tea_ast_node_free(node->field_access.field);
     }
   } else {
     rtl_list_entry_t *entry;
@@ -197,6 +207,13 @@ static void tea_ast_node_print_tree_recursive(tea_ast_node_t *node, const int de
     if (node->binop.rhs) {
       tea_ast_node_print_tree_recursive(node->binop.rhs, depth + 1);
     }
+  } else if (node->type == TEA_AST_NODE_FIELD_ACCESS) {
+    if (node->field_access.inst) {
+      tea_ast_node_print_tree_recursive(node->field_access.inst, depth + 1);
+    }
+    if (node->field_access.field) {
+      tea_ast_node_print_tree_recursive(node->field_access.field, depth + 1);
+    }
   } else {
     rtl_list_entry_t *entry;
     rtl_list_for_each(entry, &node->children)
@@ -225,5 +242,16 @@ void tea_ast_node_set_binop_children(
 
   parent->binop.lhs = lhs;
   parent->binop.rhs = rhs;
+}
+
+void tea_ast_node_set_field_access_children(
+  tea_ast_node_t *parent, tea_ast_node_t *inst, tea_ast_node_t *field)
+{
+  if (!parent || parent->type != TEA_AST_NODE_FIELD_ACCESS) {
+    return;
+  }
+
+  parent->field_access.inst = inst;
+  parent->field_access.field = field;
 }
 

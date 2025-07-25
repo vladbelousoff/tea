@@ -3,6 +3,7 @@
 #include <assert.h>
 #include <stdlib.h>
 
+#include "rtl.h"
 #include "rtl_log.h"
 #include "rtl_memory.h"
 #include "tea.h"
@@ -1070,20 +1071,19 @@ static tea_value_t tea_interpret_evaluate_new(
 
 static tea_instance_t* tea_inst_get(const tea_scope_t* scope, const tea_ast_node_t* node)
 {
-  const tea_token_t* field_name = node->token;
+  tea_ast_node_t* field_node = node->field_access.field;
+  if (!field_node) {
+    rtl_log_err("Invalid field node!");
+    exit(1);
+  }
+
+  const tea_token_t* field_name = field_node->token;
   if (!field_name) {
-    rtl_log_err("Invalid name!");
+    rtl_log_err("Invalid field name!");
     exit(1);
   }
 
-  rtl_list_entry_t* inst_entry = rtl_list_first(&node->children);
-  if (!inst_entry) {
-    rtl_log_err("Invalid inst_entry for %s (line %d, col %d)!", field_name->buffer,
-      field_name->line, field_name->column);
-    exit(1);
-  }
-
-  tea_ast_node_t* inst_node = rtl_list_record(inst_entry, tea_ast_node_t, link);
+  tea_ast_node_t* inst_node = node->field_access.inst;
   if (!inst_node) {
     rtl_log_err("Invalid inst_node for %s (line %d, col %d)!", field_name->buffer, field_name->line,
       field_name->column);
@@ -1112,26 +1112,23 @@ static tea_value_t* tea_field_access(
   const tea_instance_t* inst = tea_inst_get(scope, node);
 
   const tea_struct_declaration_t* struct_declr = tea_find_struct_declaration(context, inst->type);
-  if (!struct_declr) {
-    rtl_log_err("Can't find struct with name %s", inst->type);
-    return NULL;
-  }
+  rtl_assert(struct_declr, "Struct declaration can't be null!");
 
-  const tea_token_t* field_name = node->token;
-  if (!field_name) {
-    rtl_log_err("Invalid name!");
-    return NULL;
-  }
+  tea_ast_node_t* field_node = node->field_access.field;
+  rtl_assert(field_node, "Field node can't be null!");
+
+  const tea_token_t* field_name = field_node->token;
+  rtl_assert(field_name, "Field name can't be null!");
 
   unsigned long field_index = 0;
 
   rtl_list_entry_t* field_entry;
   rtl_list_for_each(field_entry, &struct_declr->node->children)
   {
-    assert(field_index < struct_declr->field_count);
+    rtl_assert(field_index < struct_declr->field_count, "Field index out of range!");
 
-    const tea_ast_node_t* field_node = rtl_list_record(field_entry, tea_ast_node_t, link);
-    if (!strcmp(field_node->token->buffer, field_name->buffer)) {
+    const tea_ast_node_t* _node = rtl_list_record(field_entry, tea_ast_node_t, link);
+    if (!strcmp(_node->token->buffer, field_name->buffer)) {
       tea_value_t* result = (tea_value_t*)&inst->buffer[field_index * sizeof(tea_value_t)];
       return result;
     }
