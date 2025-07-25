@@ -1121,19 +1121,22 @@ static tea_value_t* tea_field_access(
   rtl_assert(field_name, "Field name can't be null!");
 
   unsigned long field_index = 0;
-
   rtl_list_entry_t* field_entry;
-  rtl_list_for_each(field_entry, &struct_declr->node->children)
+
+  rtl_list_for_each_indexed(field_index, field_entry, &struct_declr->node->children)
   {
     rtl_assert(field_index < struct_declr->field_count, "Field index out of range!");
 
     const tea_ast_node_t* _node = rtl_list_record(field_entry, tea_ast_node_t, link);
-    if (!strcmp(_node->token->buffer, field_name->buffer)) {
+    rtl_assert(_node, "Field node can't be null!");
+
+    const tea_token_t* token = _node->token;
+    rtl_assert(token, "Token can't be null!");
+
+    if (!strcmp(token->buffer, field_name->buffer)) {
       tea_value_t* result = (tea_value_t*)&inst->buffer[field_index * sizeof(tea_value_t)];
       return result;
     }
-
-    field_index++;
   }
 
   return NULL;
