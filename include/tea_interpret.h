@@ -94,6 +94,7 @@ typedef struct
   rtl_list_entry_t link;
   const tea_ast_node_t* node;
   unsigned long field_count;
+  rtl_list_entry_t functions;
 } tea_struct_declaration_t;
 
 tea_value_t tea_value_none();

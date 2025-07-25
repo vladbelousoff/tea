@@ -114,6 +114,16 @@ void tea_interpret_cleanup(const tea_context_t* context)
     tea_struct_declaration_t* struct_declaration =
       rtl_list_record(entry, tea_struct_declaration_t, link);
     rtl_list_remove(entry);
+
+    rtl_list_entry_t* function_entry;
+    rtl_list_entry_t* function_entry_safe;
+    rtl_list_for_each_safe(function_entry, function_entry_safe, &struct_declaration->functions)
+    {
+      tea_function_t* function = rtl_list_record(function_entry, tea_function_t, link);
+      rtl_list_remove(function_entry);
+      rtl_free(function);
+    }
+
     rtl_free(struct_declaration);
   }
 
@@ -434,8 +444,7 @@ static bool tea_interpret_execute_while(tea_context_t* context, tea_scope_t* sco
   return true;
 }
 
-static bool tea_interpret_execute_function_declaration(
-  tea_context_t* context, const tea_ast_node_t* node)
+static bool tea_declare_function(const tea_ast_node_t* node, rtl_list_entry_t* functions)
 {
   const tea_token_t* fn_name = node->token;
   if (!fn_name) {
@@ -483,7 +492,7 @@ static bool tea_interpret_execute_function_declaration(
     fn->return_type = NULL;
   }
 
-  rtl_list_add_tail(&context->functions, &fn->link);
+  rtl_list_add_tail(functions, &fn->link);
 
   if (fn->return_type) {
     rtl_log_dbg("Declare function: '%.*s' -> %.*s", fn_name->buffer_size, fn_name->buffer,
@@ -493,6 +502,11 @@ static bool tea_interpret_execute_function_declaration(
   }
 
   return true;
+}
+
+static bool tea_interpret_function_declaration(tea_context_t* context, const tea_ast_node_t* node)
+{
+  return tea_declare_function(node, &context->functions);
 }
 
 static bool tea_interpret_execute_return(tea_context_t* context, tea_scope_t* scope,
@@ -522,10 +536,61 @@ static bool tea_interpret_struct_declaration(tea_context_t* context, const tea_a
 
   struct_declaration->node = node;
   struct_declaration->field_count = rtl_list_length(&node->children);
+  rtl_list_init(&struct_declaration->functions);
   rtl_list_add_tail(&context->struct_declarations, &struct_declaration->link);
 
   tea_token_t* name = node->token;
   rtl_log_dbg("Declare struct '%s'", name ? name->buffer : "");
+
+  return true;
+}
+
+static tea_struct_declaration_t* tea_find_struct_declaration(
+  const tea_context_t* context, const char* name)
+{
+  rtl_list_entry_t* entry;
+  rtl_list_for_each(entry, &context->struct_declarations)
+  {
+    tea_struct_declaration_t* declaration = rtl_list_record(entry, tea_struct_declaration_t, link);
+    assert(declaration);
+    assert(declaration->node);
+    const tea_token_t* declaration_token = declaration->node->token;
+    if (declaration_token) {
+      if (!strcmp(declaration_token->buffer, name)) {
+        return declaration;
+      }
+    }
+  }
+
+  return NULL;
+}
+
+static bool tea_interpret_impl_block(tea_context_t* context, const tea_ast_node_t* node)
+{
+  const tea_token_t* block_name = node->token;
+  rtl_assert(block_name, "Block name is not set!");
+
+  tea_struct_declaration_t* struct_declaration =
+    tea_find_struct_declaration(context, block_name->buffer);
+  rtl_assert(
+    struct_declaration, "You can't impl function for non declared struct %s!", block_name->buffer);
+
+  rtl_list_entry_t* entry;
+  rtl_list_for_each(entry, &node->children)
+  {
+    const tea_ast_node_t* child = rtl_list_record(entry, tea_ast_node_t, link);
+    rtl_assert(child->type == TEA_AST_NODE_IMPL_ITEM, "Impl block must contain only impl items!");
+    const rtl_list_entry_t* function_entry = rtl_list_first(&child->children);
+    rtl_assert(function_entry, "Impl item contains no children!");
+    const tea_ast_node_t* function_node = rtl_list_record(function_entry, tea_ast_node_t, link);
+    rtl_assert(function_node && function_node->type == TEA_AST_NODE_FUNCTION,
+      "There's no function in impl item!");
+
+    const bool result = tea_declare_function(function_node, &struct_declaration->functions);
+    if (!result) {
+      return false;
+    }
+  }
 
   return true;
 }
@@ -577,7 +642,7 @@ bool tea_interpret_execute(tea_context_t* context, tea_scope_t* scope, const tea
     case TEA_AST_NODE_WHILE:
       return tea_interpret_execute_while(context, scope, node, return_context);
     case TEA_AST_NODE_FUNCTION:
-      return tea_interpret_execute_function_declaration(context, node);
+      return tea_interpret_function_declaration(context, node);
     case TEA_AST_NODE_RETURN:
       return tea_interpret_execute_return(context, scope, node, return_context);
     case TEA_AST_NODE_BREAK:
@@ -589,6 +654,8 @@ bool tea_interpret_execute(tea_context_t* context, tea_scope_t* scope, const tea
       return true;
     case TEA_AST_NODE_STRUCT:
       return tea_interpret_struct_declaration(context, node);
+    case TEA_AST_NODE_IMPL_BLOCK:
+      return tea_interpret_impl_block(context, node);
     case TEA_AST_NODE_PROGRAM:
     case TEA_AST_NODE_STMT:
     case TEA_AST_NODE_FUNCTION_CALL_ARGS:
@@ -966,26 +1033,6 @@ static tea_value_t tea_interpret_evaluate_function_call(
   }
 
   return tea_value_none();
-}
-
-static tea_struct_declaration_t* tea_find_struct_declaration(
-  const tea_context_t* context, const char* name)
-{
-  rtl_list_entry_t* entry;
-  rtl_list_for_each(entry, &context->struct_declarations)
-  {
-    tea_struct_declaration_t* declaration = rtl_list_record(entry, tea_struct_declaration_t, link);
-    assert(declaration);
-    assert(declaration->node);
-    const tea_token_t* declaration_token = declaration->node->token;
-    if (declaration_token) {
-      if (!strcmp(declaration_token->buffer, name)) {
-        return declaration;
-      }
-    }
-  }
-
-  return NULL;
 }
 
 static tea_value_t tea_interpret_evaluate_new(

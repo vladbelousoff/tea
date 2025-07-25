@@ -145,7 +145,8 @@ struct_field(field_node) ::= IDENT(field_name) COLON IDENT(field_type) SEMICOLON
 impl_block(impl_block_node) ::= IMPL IDENT(struct_name) LBRACE impl_method_list_opt(methods) RBRACE. {
     impl_block_node = tea_ast_node_create(TEA_AST_NODE_IMPL_BLOCK, struct_name);
     if (methods) {
-        tea_ast_node_add_child(impl_block_node, methods);
+        tea_ast_node_add_children(impl_block_node, &methods->children);
+        tea_ast_node_free(methods);
     }
 }
 
@@ -170,9 +171,9 @@ impl_method(method_node) ::= function_header(header) function_body(body). {
     method_node = tea_ast_node_create(TEA_AST_NODE_IMPL_ITEM, NULL);
     if (header) {
         tea_ast_node_add_child(method_node, header);
-    }
-    if (body) {
-        tea_ast_node_add_child(method_node, body);
+        if (body) {
+            tea_ast_node_add_child(header, body);
+        }
     }
 }
 
