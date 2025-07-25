@@ -185,43 +185,36 @@ static tea_variable_t* tea_context_find_variable(const tea_scope_t* scope, const
   return NULL;
 }
 
-static bool tea_declare_variable(tea_context_t* context, tea_scope_t* scope,
-  const tea_token_t* name, const bool is_mutable, const tea_ast_node_t* type,
-  const tea_ast_node_t* initial_value)
+static bool tea_declare_variable(tea_context_t* context, tea_scope_t* scope, const char* name,
+  const bool is_mutable, const tea_ast_node_t* type, const tea_ast_node_t* initial_value)
 {
-  if (!name) {
-    rtl_log_err("Invalid name");
-    return false;
-  }
-
-  tea_variable_t* variable = tea_context_find_variable_this_scope_only(scope, name->buffer);
+  tea_variable_t* variable = tea_context_find_variable_this_scope_only(scope, name);
   if (variable) {
-    rtl_log_err("Variable %s is already declared (line: %d, col: %d)", name->buffer, name->line,
-      name->column);
+    rtl_log_err("Variable %s is already declared", variable->name);
     return false;
   }
 
   variable = tea_allocate_variable(context);
   if (!variable) {
-    rtl_log_err("Failed to allocate memory for variable %.*s", name->buffer_size, name->buffer);
+    rtl_log_err("Failed to allocate memory for variable %s", name);
     return false;
   }
 
-  variable->name = name->buffer;
+  variable->name = name;
   variable->is_mutable = is_mutable;
   variable->value = tea_interpret_evaluate_expression(context, scope, initial_value);
 
   switch (variable->value.type) {
     case TEA_VALUE_I32:
-      rtl_log_dbg("Declare variable %s : %s = %d", name->buffer,
+      rtl_log_dbg("Declare variable %s : %s = %d", name,
         tea_value_get_type_string(variable->value.type), variable->value.i32);
       break;
     case TEA_VALUE_F32:
-      rtl_log_dbg("Declare variable %s : %s = %f", name->buffer,
+      rtl_log_dbg("Declare variable %s : %s = %f", name,
         tea_value_get_type_string(variable->value.type), variable->value.f32);
       break;
     case TEA_VALUE_STRING:
-      rtl_log_dbg("Declare variable %s : %s = '%s'", name->buffer,
+      rtl_log_dbg("Declare variable %s : %s = '%s'", name,
         tea_value_get_type_string(variable->value.type), variable->value.string);
     default:
       break;
@@ -258,7 +251,7 @@ static bool tea_interpret_execute_let(
     }
   }
 
-  return tea_declare_variable(context, scope, name, is_mutable, type, expr);
+  return tea_declare_variable(context, scope, name->buffer, is_mutable, type, expr);
 }
 
 static tea_value_t* tea_field_access(
@@ -866,10 +859,10 @@ static tea_value_t tea_interpret_evaluate_string(const tea_ast_node_t* node)
 }
 
 static const tea_native_function_t* tea_context_find_native_function(
-  const tea_context_t* context, const char* name)
+  const rtl_list_entry_t* functions, const char* name)
 {
   rtl_list_entry_t* entry;
-  rtl_list_for_each(entry, &context->native_functions)
+  rtl_list_for_each(entry, functions)
   {
     const tea_native_function_t* function = rtl_list_record(entry, tea_native_function_t, link);
     if (!strcmp(function->name, name)) {
@@ -881,10 +874,10 @@ static const tea_native_function_t* tea_context_find_native_function(
 }
 
 static const tea_function_t* tea_context_find_function(
-  const tea_context_t* context, const char* name)
+  const rtl_list_entry_t* functions, const char* name)
 {
   rtl_list_entry_t* entry;
-  rtl_list_for_each(entry, &context->functions)
+  rtl_list_for_each(entry, functions)
   {
     const tea_function_t* function = rtl_list_record(entry, tea_function_t, link);
     const tea_token_t* function_name = function->name;
@@ -924,13 +917,8 @@ static tea_value_t tea_interpret_evaluate_native_function_call(tea_context_t* co
 static tea_value_t tea_interpret_evaluate_function_call(
   tea_context_t* context, tea_scope_t* scope, const tea_ast_node_t* node)
 {
-  const tea_token_t* token = node->token;
-  if (!token) {
-    rtl_log_err("Impossible to evaluate ident token");
-    exit(1);
-  }
-
   const tea_ast_node_t* function_call_args = NULL;
+  const tea_ast_node_t* field_access = NULL;
 
   rtl_list_entry_t* entry;
   rtl_list_for_each(entry, &node->children)
@@ -940,29 +928,69 @@ static tea_value_t tea_interpret_evaluate_function_call(
       case TEA_AST_NODE_FUNCTION_CALL_ARGS:
         function_call_args = child;
         break;
+      case TEA_AST_NODE_FIELD_ACCESS:
+        field_access = child;
       default:
         break;
     }
   }
 
-  const tea_native_function_t* native_function =
-    tea_context_find_native_function(context, token->buffer);
-  if (native_function) {
-    return tea_interpret_evaluate_native_function_call(
-      context, scope, native_function, function_call_args);
-  }
-
-  const tea_function_t* function = tea_context_find_function(context, token->buffer);
-  if (!function) {
-    rtl_log_err("Can't find function %s", token->buffer);
-    exit(1);
-  }
+  const tea_function_t* function = NULL;
+  const char* function_name = NULL;
 
   tea_return_context_t return_context = { 0 };
   return_context.is_set = false;
 
   tea_scope_t inner_scope;
   tea_scope_init(&inner_scope, scope);
+
+  if (field_access) {
+    const tea_ast_node_t* object_node = field_access->field_access.object;
+    const tea_ast_node_t* field_node = field_access->field_access.field;
+    rtl_assert(field_node && object_node, "These fields can't be null");
+
+    const tea_token_t* object_token = object_node->token;
+    const tea_token_t* field_token = field_node->token;
+    rtl_assert(field_token && object_token, "These fields can't be null");
+
+    tea_variable_t* variable = tea_context_find_variable(scope, object_token->buffer);
+    if (!variable) {
+      rtl_log_err("Can't find variable %s", object_token->buffer);
+      exit(1);
+    }
+
+    rtl_assert(
+      variable->value.type == TEA_VALUE_INSTANCE, "Method can be called only from an object");
+
+    tea_struct_declaration_t* struct_declaration =
+      tea_find_struct_declaration(context, variable->value.object->type);
+    rtl_assert(
+      struct_declaration, "Can't find struct declaration %s", variable->value.object->type);
+
+    // declare 'self' for the scope
+    tea_declare_variable(context, &inner_scope, "self", false, NULL, object_node);
+
+    function_name = field_token->buffer;
+    function = tea_context_find_function(&struct_declaration->functions, function_name);
+  } else {
+    const tea_token_t* token = node->token;
+    if (token) {
+      const tea_native_function_t* native_function =
+        tea_context_find_native_function(&context->native_functions, token->buffer);
+      if (native_function) {
+        return tea_interpret_evaluate_native_function_call(
+          context, scope, native_function, function_call_args);
+      }
+
+      function_name = token->buffer;
+      function = tea_context_find_function(&context->functions, token->buffer);
+    }
+  }
+
+  if (!function) {
+    rtl_log_err("Can't find function %s", function_name);
+    exit(1);
+  }
 
   const tea_ast_node_t* function_params = function->params;
   if (function_params && function_call_args) {

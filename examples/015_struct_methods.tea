@@ -1,27 +1,27 @@
 // Struct definition with fields only
 struct Point {
-    x: float;
-    y: float;
+    x: f32;
+    y: f32;
 }
 
 // Impl block for Point struct
 impl Point {
-    fn distance_to(other: Point) -> float {
+    fn distance_to(other: Point) -> f32 {
         let dx = self.x - other.x;
         let dy = self.y - other.y;
         return dx * dx + dy * dy;
     }
 
-    fn move(dx: float, dy: float) {
+    fn move(dx: f32, dy: f32) {
         self.x = self.x + dx;
         self.y = self.y + dy;
     }
 
-    fn get_x() -> float {
+    fn get_x() -> f32 {
         return self.x;
     }
 
-    fn get_y() -> float {
+    fn get_y() -> f32 {
         return self.y;
     }
 }
@@ -70,6 +70,6 @@ impl Person {
     }
 }
 
-let p1 = new Point {x: 10, y: 30};
-let p2 = new Point {x: 13, y: 30};
-// let result = p1.distance_to(p2);
+let p1 = new Point {x: 1.0, y: 2.0};
+let p2 = new Point {x: 3.0, y: 4.0};
+let result = p1.distance_to(p2);
