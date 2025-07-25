@@ -73,3 +73,20 @@ impl Person {
 let p1 = new Point {x: 1.0, y: 2.0};
 let p2 = new Point {x: 3.0, y: 4.0};
 let result = p1.distance_to(p2);
+
+struct Vec3 {
+    x: f32;
+    y: f32;
+    z: f32;
+}
+
+impl Vec3 {
+    fn dot(other: Vec3) -> f32 {
+        return self.x * other.x + self.y * other.y + self.z * other.z;
+    }
+}
+
+let v1 = new Vec3 { x: 1.2, y: -22.3, z: 33.1 };
+let v2 = new Vec3 { x: 7.9, y: 104.5, z: -1.0 };
+
+print(v1.dot(v2), '\n');
