@@ -31,6 +31,8 @@
 %left ASSIGN.
 %left PLUS MINUS.
 %left STAR SLASH.
+%left DOT.
+%left LPAREN.
 
 program(program_node) ::= item_list(items). {
     program_node = tea_ast_node_create(TEA_AST_NODE_PROGRAM, NULL);
@@ -262,6 +264,9 @@ arg_list(arg_list_node) ::= expression(single_arg). {
     }
 }
 
+arg_list_opt(arg_list_node) ::= arg_list(args). { arg_list_node = args; }
+arg_list_opt(arg_list_node) ::= . { arg_list_node = NULL; }
+
 stmt_list(stmt_list_node) ::= stmt_list(existing_stmts) statement(new_stmt). {
     stmt_list_node = existing_stmts ? existing_stmts : tea_ast_node_create(TEA_AST_NODE_STMT, NULL);
     if (new_stmt) {
@@ -416,11 +421,7 @@ primary_expr(primary_expr_node) ::= IDENT(ident_name). {
     primary_expr_node = tea_ast_node_create(TEA_AST_NODE_IDENT, ident_name);
 }
 
-primary_expr(primary_expr_node) ::= IDENT(func_name) LPAREN RPAREN. {
-    primary_expr_node = tea_ast_node_create(TEA_AST_NODE_FUNCTION_CALL, func_name);
-}
-
-primary_expr(primary_expr_node) ::= IDENT(func_name) LPAREN arg_list(args) RPAREN. {
+primary_expr(primary_expr_node) ::= IDENT(func_name) LPAREN arg_list_opt(args) RPAREN. {
     primary_expr_node = tea_ast_node_create(TEA_AST_NODE_FUNCTION_CALL, func_name);
     if (args) {
         tea_ast_node_add_child(primary_expr_node, args);
@@ -447,16 +448,34 @@ primary_expr(primary_expr_node) ::= STRING(string_value). {
     primary_expr_node = tea_ast_node_create(TEA_AST_NODE_STRING, string_value);
 }
 
+primary_expr(primary_expr_node) ::= primary_expr(object_expr) DOT IDENT(method_name) LPAREN arg_list_opt(args) RPAREN. {
+    // Create a method call represented as a function call with field access
+    primary_expr_node = tea_ast_node_create(TEA_AST_NODE_FUNCTION_CALL, NULL);
+    
+    // Create field access for object.method
+    tea_ast_node_t* method_access = tea_ast_node_create(TEA_AST_NODE_FIELD_ACCESS, NULL);
+    tea_ast_node_t* method_node = tea_ast_node_create(TEA_AST_NODE_IDENT, method_name);
+    tea_ast_node_set_field_access_children(method_access, object_expr, method_node);
+    
+    // Add the method access as the first child
+    tea_ast_node_add_child(primary_expr_node, method_access);
+    
+    // Add arguments if present
+    if (args) {
+        tea_ast_node_add_child(primary_expr_node, args);
+    }
+}
+
+primary_expr(primary_expr_node) ::= field_access(field_access_node). {
+    primary_expr_node = field_access_node;
+}
+
 field_access(field_access_node) ::= primary_expr(object_expr) DOT IDENT(field_name). {
     field_access_node = tea_ast_node_create(TEA_AST_NODE_FIELD_ACCESS, NULL);
     if (object_expr) {
         tea_ast_node_t* field_node = tea_ast_node_create(TEA_AST_NODE_IDENT, field_name);
         tea_ast_node_set_field_access_children(field_access_node, object_expr, field_node);
     }
-}
-
-primary_expr(primary_expr_node) ::= field_access(field_access_node). {
-    primary_expr_node = field_access_node;
 }
 
 %syntax_error {
