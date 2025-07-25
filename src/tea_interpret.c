@@ -204,15 +204,15 @@ static bool tea_declare_variable(tea_context_t* context, tea_scope_t* scope,
   switch (variable->value.type) {
     case TEA_VALUE_I32:
       rtl_log_dbg("Declare variable %s : %s = %d", name->buffer,
-        tea_value_get_type_string(variable->value.type), variable->value.val_i32);
+        tea_value_get_type_string(variable->value.type), variable->value.i32);
       break;
     case TEA_VALUE_F32:
       rtl_log_dbg("Declare variable %s : %s = %f", name->buffer,
-        tea_value_get_type_string(variable->value.type), variable->value.val_f32);
+        tea_value_get_type_string(variable->value.type), variable->value.f32);
       break;
     case TEA_VALUE_STRING:
       rtl_log_dbg("Declare variable %s : %s = '%s'", name->buffer,
-        tea_value_get_type_string(variable->value.type), variable->value.val_str);
+        tea_value_get_type_string(variable->value.type), variable->value.string);
     default:
       break;
   }
@@ -315,15 +315,15 @@ static bool tea_interpret_execute_assign(
   switch (variable->value.type) {
     case TEA_VALUE_I32:
       rtl_log_dbg("New value for variable %s : %s = %d", name->buffer,
-        tea_value_get_type_string(variable->value.type), variable->value.val_i32);
+        tea_value_get_type_string(variable->value.type), variable->value.i32);
       break;
     case TEA_VALUE_F32:
       rtl_log_dbg("New value for variable %s : %s = %f", name->buffer,
-        tea_value_get_type_string(variable->value.type), variable->value.val_f32);
+        tea_value_get_type_string(variable->value.type), variable->value.f32);
       break;
     case TEA_VALUE_STRING:
       rtl_log_dbg("New value for variable %s : %s = '%s'", name->buffer,
-        tea_value_get_type_string(variable->value.type), variable->value.val_str);
+        tea_value_get_type_string(variable->value.type), variable->value.string);
       break;
     default:
       break;
@@ -363,7 +363,7 @@ static bool tea_interpret_execute_if(tea_context_t* context, tea_scope_t* scope,
   const tea_value_t cond_val = tea_interpret_evaluate_expression(context, &inner_scope, condition);
 
   bool result = true;
-  if (cond_val.val_i32 != 0) {
+  if (cond_val.i32 != 0) {
     result = tea_interpret_execute(context, &inner_scope, then_node, return_context, loop_context);
   } else if (else_node) {
     result = tea_interpret_execute(context, &inner_scope, else_node, return_context, loop_context);
@@ -405,7 +405,7 @@ static bool tea_interpret_execute_while(tea_context_t* context, tea_scope_t* sco
 
   while (true) {
     const tea_value_t cond_val = tea_interpret_evaluate_expression(context, scope, while_cond);
-    if (cond_val.val_i32 == 0) {
+    if (cond_val.i32 == 0) {
       break;
     }
 
@@ -618,7 +618,7 @@ static tea_value_t tea_interpret_evaluate_integer_number(tea_token_t* token)
 {
   tea_value_t value;
   value.type = TEA_VALUE_I32;
-  value.val_i32 = *(int*)&token->buffer;
+  value.i32 = *(int*)&token->buffer;
 
   return value;
 }
@@ -627,7 +627,7 @@ static tea_value_t tea_interpret_evaluate_float_number(tea_token_t* token)
 {
   tea_value_t value;
   value.type = TEA_VALUE_F32;
-  value.val_f32 = *(float*)&token->buffer;
+  value.f32 = *(float*)&token->buffer;
 
   return value;
 }
@@ -682,10 +682,10 @@ static tea_value_t tea_value_binop(
 
   switch (op->type) {
     case TEA_TOKEN_OR:
-      result.val_i32 = lhs_val.val_i32 || rhs_val.val_i32;
+      result.i32 = lhs_val.i32 || rhs_val.i32;
       return result;
     case TEA_TOKEN_AND:
-      result.val_i32 = lhs_val.val_i32 && rhs_val.val_i32;
+      result.i32 = lhs_val.i32 && rhs_val.i32;
       return result;
     default:
       break;
@@ -694,12 +694,12 @@ static tea_value_t tea_value_binop(
   if (lhs_val.type == TEA_VALUE_I32) {
     if (rhs_val.type == TEA_VALUE_I32) {
       result.type = TEA_VALUE_I32;
-      TEA_APPLY_BINOP(lhs_val.val_i32, rhs_val.val_i32, op->type, result.val_i32);
+      TEA_APPLY_BINOP(lhs_val.i32, rhs_val.i32, op->type, result.i32);
       return result;
     }
     if (rhs_val.type == TEA_VALUE_F32) {
       result.type = TEA_VALUE_F32;
-      TEA_APPLY_BINOP(lhs_val.val_i32, rhs_val.val_f32, op->type, result.val_f32);
+      TEA_APPLY_BINOP(lhs_val.i32, rhs_val.f32, op->type, result.f32);
       return result;
     }
   }
@@ -707,12 +707,12 @@ static tea_value_t tea_value_binop(
   if (lhs_val.type == TEA_VALUE_F32) {
     if (rhs_val.type == TEA_VALUE_I32) {
       result.type = TEA_VALUE_F32;
-      TEA_APPLY_BINOP(lhs_val.val_f32, rhs_val.val_i32, op->type, result.val_f32);
+      TEA_APPLY_BINOP(lhs_val.f32, rhs_val.i32, op->type, result.f32);
       return result;
     }
     if (rhs_val.type == TEA_VALUE_F32) {
       result.type = TEA_VALUE_F32;
-      TEA_APPLY_BINOP(lhs_val.val_f32, rhs_val.val_f32, op->type, result.val_f32);
+      TEA_APPLY_BINOP(lhs_val.f32, rhs_val.f32, op->type, result.f32);
       return result;
     }
   }
@@ -747,10 +747,10 @@ static tea_value_t tea_interpret_evaluate_unary(
     case TEA_TOKEN_MINUS:
       switch (operand_val.type) {
         case TEA_VALUE_I32:
-          operand_val.val_i32 = -operand_val.val_i32;
+          operand_val.i32 = -operand_val.i32;
           break;
         case TEA_VALUE_F32:
-          operand_val.val_f32 = -operand_val.val_f32;
+          operand_val.f32 = -operand_val.f32;
           break;
         default:
           break;
@@ -793,7 +793,7 @@ static tea_value_t tea_interpret_evaluate_string(const tea_ast_node_t* node)
 
   tea_value_t result;
   result.type = TEA_VALUE_STRING;
-  result.val_str = token->buffer;
+  result.string = token->buffer;
 
   return result;
 }
@@ -936,15 +936,15 @@ static tea_value_t tea_interpret_evaluate_function_call(
       switch (variable->value.type) {
         case TEA_VALUE_I32:
           rtl_log_dbg("Declare param %s : %s = %d", param_name_token->buffer,
-            tea_value_get_type_string(variable->value.type), variable->value.val_i32);
+            tea_value_get_type_string(variable->value.type), variable->value.i32);
           break;
         case TEA_VALUE_F32:
           rtl_log_dbg("Declare param %s : %s = %f", param_name_token->buffer,
-            tea_value_get_type_string(variable->value.type), variable->value.val_f32);
+            tea_value_get_type_string(variable->value.type), variable->value.f32);
           break;
         case TEA_VALUE_STRING:
           rtl_log_dbg("Declare param %s : %s = '%s'", param_name_token->buffer,
-            tea_value_get_type_string(variable->value.type), variable->value.val_str);
+            tea_value_get_type_string(variable->value.type), variable->value.string);
         default:
           break;
       }

@@ -2,6 +2,8 @@
 
 #include "tea_ast.h"
 
+#include <stdint.h>
+
 typedef enum
 {
   TEA_VALUE_NONE,
@@ -26,9 +28,9 @@ typedef struct
 
   union
   {
-    int val_i32;
-    float val_f32;
-    const char* val_str;
+    float f32;
+    int32_t i32;
+    const char* string;
     tea_instance_t* object;
   };
 } tea_value_t;
