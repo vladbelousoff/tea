@@ -240,6 +240,9 @@ static bool scan_operator(tea_lexer_t *self, const char *input)
     case '.':
       token_type = TEA_TOKEN_DOT;
       break;
+    case '?':
+      token_type = TEA_TOKEN_QUESTION_MARK;
+      break;
     default:
       return false;
   }

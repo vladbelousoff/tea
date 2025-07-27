@@ -27,6 +27,7 @@
 %token IMPL.
 %token NEW.
 %token DOT.
+%token QUESTION_MARK.
 
 %left ASSIGN.
 %left PLUS MINUS.
