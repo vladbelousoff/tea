@@ -41,7 +41,7 @@ typedef enum
   TEA_AST_NODE_STRING,
   TEA_AST_NODE_FIELD_ACCESS,
   TEA_AST_NODE_OPTIONAL,
-  TEA_AST_NODE_NONE,
+  TEA_AST_NODE_NULL,
 } tea_ast_node_type_t;
 
 typedef struct tea_ast_node

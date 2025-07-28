@@ -23,8 +23,8 @@ const char* tea_value_get_type_string(const tea_value_type_t type)
       return "string";
     case TEA_VALUE_INSTANCE:
       return "object";
-    case TEA_VALUE_NONE:
-      return "none";
+    case TEA_VALUE_NULL:
+      return "null";
   }
 
   return "UNKNOWN";
@@ -48,9 +48,9 @@ tea_value_t tea_value_invalid()
   return result;
 }
 
-tea_value_t tea_value_none()
+tea_value_t tea_value_null()
 {
-  static tea_value_t result = { TEA_VALUE_NONE };
+  static tea_value_t result = { TEA_VALUE_NULL };
   return result;
 }
 
@@ -221,7 +221,7 @@ static bool tea_declare_variable(tea_context_t* context, tea_scope_t* scope, con
 
   variable->name = name;
   variable->flags = flags;
-  // TODO: Convert 'none' into the needed type
+  // TODO: Convert 'null' into the needed type
   variable->value = tea_interpret_evaluate_expression(context, scope, initial_value);
 
   switch (variable->value.type) {
@@ -236,9 +236,9 @@ static bool tea_declare_variable(tea_context_t* context, tea_scope_t* scope, con
     case TEA_VALUE_STRING:
       rtl_log_dbg("Declare variable %s : %s = '%s'", name,
         tea_value_get_type_string(variable->value.type), variable->value.string);
-    case TEA_VALUE_NONE:
+    case TEA_VALUE_NULL:
       rtl_log_dbg(
-        "Declare variable %s : %s = none", name, tea_value_get_type_string(variable->value.type));
+        "Declare variable %s : %s = null", name, tea_value_get_type_string(variable->value.type));
     default:
       break;
   }
@@ -1270,8 +1270,8 @@ tea_value_t tea_interpret_evaluate_expression(
       return tea_interpret_evaluate_new(context, scope, node);
     case TEA_AST_NODE_FIELD_ACCESS:
       return tea_interpret_field_access(context, scope, node);
-    case TEA_AST_NODE_NONE:
-      return tea_value_none();
+    case TEA_AST_NODE_NULL:
+      return tea_value_null();
     default: {
       tea_token_t* token = node->token;
       if (token) {

@@ -7,7 +7,7 @@
 typedef enum
 {
   TEA_VALUE_INVALID,
-  TEA_VALUE_NONE,
+  TEA_VALUE_NULL,
   TEA_VALUE_I32,
   TEA_VALUE_F32,
   TEA_VALUE_STRING,
@@ -52,7 +52,7 @@ typedef struct
 } tea_context_t;
 
 #define TEA_VARIABLE_OPTIONAL 1 << 0
-#define TEA_VARIABLE_NONE     1 << 1
+#define TEA_VARIABLE_NULL     1 << 1
 #define TEA_VARIABLE_MUTABLE  1 << 2
 
 typedef struct
@@ -112,7 +112,7 @@ typedef struct
 } tea_struct_declaration_t;
 
 tea_value_t tea_value_invalid();
-tea_value_t tea_value_none();
+tea_value_t tea_value_null();
 
 void tea_scope_init(tea_scope_t* scope, tea_scope_t* parent_scope);
 void tea_scope_cleanup(tea_context_t* context, const tea_scope_t* scope);

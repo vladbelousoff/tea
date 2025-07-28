@@ -26,8 +26,8 @@ static tea_value_t tea_print(tea_context_t *context, const tea_function_args_t *
 
     const tea_value_t value = arg->value;
     switch (value.type) {
-      case TEA_VALUE_NONE:
-        printf("none");
+      case TEA_VALUE_NULL:
+        printf("null");
       case TEA_VALUE_I32:
         printf("%d", value.i32);
         break;
