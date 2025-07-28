@@ -30,6 +30,26 @@ const char* tea_value_get_type_string(const tea_value_type_t type)
   return "UNKNOWN";
 }
 
+typedef struct
+{
+  const char* name;
+  tea_value_type_t type;
+} tea_type_string_id;
+
+tea_value_type_t tea_value_get_type_by_string(const char* name)
+{
+  static tea_type_string_id ids[] = { { "i32", TEA_VALUE_I32 }, { "f32", TEA_VALUE_F32 },
+    { "string", TEA_VALUE_STRING }, { NULL, TEA_VALUE_INVALID } };
+
+  for (int i = 0; ids[i].name; ++i) {
+    if (!strcmp(name, ids[i].name)) {
+      return ids[i].type;
+    }
+  }
+
+  return TEA_VALUE_INVALID;
+}
+
 tea_variable_t* tea_function_args_pop(const tea_function_args_t* args)
 {
   rtl_list_entry_t* first = rtl_list_first(&args->list_head);
@@ -205,7 +225,7 @@ static tea_variable_t* tea_context_find_variable(const tea_scope_t* scope, const
 }
 
 static bool tea_declare_variable(tea_context_t* context, tea_scope_t* scope, const char* name,
-  const unsigned int flags, const tea_ast_node_t* type, const tea_ast_node_t* initial_value)
+  const unsigned int flags, const char* type, const tea_ast_node_t* initial_value)
 {
   tea_variable_t* variable = tea_context_find_variable_this_scope_only(scope, name);
   if (variable) {
@@ -221,8 +241,18 @@ static bool tea_declare_variable(tea_context_t* context, tea_scope_t* scope, con
 
   variable->name = name;
   variable->flags = flags;
-  // TODO: Convert 'null' into the needed type
-  variable->value = tea_interpret_evaluate_expression(context, scope, initial_value);
+  tea_value_t value = tea_interpret_evaluate_expression(context, scope, initial_value);
+  if (type) {
+    const tea_value_type_t set_type = tea_value_get_type_by_string(type);
+    rtl_assert(set_type != TEA_VALUE_INVALID, "Can't find type '%s'", type);
+    if (value.type == TEA_VALUE_NULL) {
+      value.type = set_type;
+      variable->flags |= TEA_VARIABLE_OPTIONAL;
+    } else {
+      rtl_assert(value.type == set_type, "Type mismatch");
+    }
+  }
+  variable->value = value;
 
   switch (variable->value.type) {
     case TEA_VALUE_I32:
@@ -277,7 +307,9 @@ static bool tea_interpret_let(
     }
   }
 
-  return tea_declare_variable(context, scope, name->buffer, flags, type, expr);
+  const tea_token_t* type_token = type ? type->token : NULL;
+  const char* type_name = type_token ? type_token->buffer : NULL;
+  return tea_declare_variable(context, scope, name->buffer, flags, type_name, expr);
 }
 
 static tea_value_t* tea_field_access(

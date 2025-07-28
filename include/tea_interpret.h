@@ -15,6 +15,7 @@ typedef enum
 } tea_value_type_t;
 
 const char* tea_value_get_type_string(tea_value_type_t type);
+tea_value_type_t tea_value_get_type_by_string(const char* name);
 
 typedef struct
 {
