@@ -48,6 +48,13 @@ static tea_value_t tea_print(tea_context_t *context, const tea_function_args_t *
   return tea_value_invalid();
 }
 
+static tea_value_t tea_println(tea_context_t *context, const tea_function_args_t *args)
+{
+  const tea_value_t value = tea_print(context, args);
+  printf("\n");
+  return value;
+}
+
 int main(const int argc, char *argv[])
 {
   const char *filename = NULL;
@@ -107,6 +114,7 @@ int main(const int argc, char *argv[])
     tea_interpret_init(&context, filename);
 
     tea_bind_native_function(&context, "print", tea_print);
+    tea_bind_native_function(&context, "println", tea_println);
 
     tea_scope_t global_scope;
     tea_scope_init(&global_scope, NULL);
