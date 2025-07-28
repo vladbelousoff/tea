@@ -197,7 +197,7 @@ static tea_variable_t* tea_context_find_variable(const tea_scope_t* scope, const
 }
 
 static bool tea_declare_variable(tea_context_t* context, tea_scope_t* scope, const char* name,
-  const bool is_mutable, const tea_ast_node_t* type, const tea_ast_node_t* initial_value)
+  const unsigned int flags, const tea_ast_node_t* type, const tea_ast_node_t* initial_value)
 {
   tea_variable_t* variable = tea_context_find_variable_this_scope_only(scope, name);
   if (variable) {
@@ -212,7 +212,7 @@ static bool tea_declare_variable(tea_context_t* context, tea_scope_t* scope, con
   }
 
   variable->name = name;
-  variable->is_mutable = is_mutable;
+  variable->flags = flags;
   variable->value = tea_interpret_evaluate_expression(context, scope, initial_value);
 
   switch (variable->value.type) {
@@ -236,12 +236,12 @@ static bool tea_declare_variable(tea_context_t* context, tea_scope_t* scope, con
   return true;
 }
 
-static bool tea_interpret_execute_let(
+static bool tea_interpret_let(
   tea_context_t* context, tea_scope_t* scope, const tea_ast_node_t* node)
 {
   const tea_token_t* name = node->token;
 
-  bool is_mutable = false;
+  unsigned int flags = 0;
   const tea_ast_node_t* type = NULL;
   const tea_ast_node_t* expr = NULL;
 
@@ -251,7 +251,10 @@ static bool tea_interpret_execute_let(
     const tea_ast_node_t* child = rtl_list_record(entry, tea_ast_node_t, link);
     switch (child->type) {
       case TEA_AST_NODE_MUT:
-        is_mutable = true;
+        flags |= TEA_VARIABLE_MUTABLE;
+        break;
+      case TEA_AST_NODE_OPTIONAL:
+        flags |= TEA_VARIABLE_OPTIONAL;
         break;
       case TEA_AST_NODE_TYPE_ANNOT:
         type = child;
@@ -262,7 +265,7 @@ static bool tea_interpret_execute_let(
     }
   }
 
-  return tea_declare_variable(context, scope, name->buffer, is_mutable, type, expr);
+  return tea_declare_variable(context, scope, name->buffer, flags, type, expr);
 }
 
 static tea_value_t* tea_field_access(
@@ -306,7 +309,7 @@ static bool tea_interpret_execute_assign(
     exit(1);
   }
 
-  if (!variable->is_mutable) {
+  if (!(variable->flags & TEA_VARIABLE_MUTABLE)) {
     rtl_log_err("Variable '%s' is not mutable, so cannot be modified", name->buffer);
     exit(1);
   }
@@ -569,7 +572,7 @@ static tea_struct_declaration_t* tea_find_struct_declaration(
   return NULL;
 }
 
-static bool tea_interpret_impl_block(tea_context_t* context, const tea_ast_node_t* node)
+static bool tea_interpret_impl_block(const tea_context_t* context, const tea_ast_node_t* node)
 {
   const tea_token_t* block_name = node->token;
   rtl_assert(block_name, "Block name is not set!");
@@ -638,7 +641,7 @@ bool tea_interpret_execute(tea_context_t* context, tea_scope_t* scope, const tea
 
   switch (node->type) {
     case TEA_AST_NODE_LET:
-      return tea_interpret_execute_let(context, scope, node);
+      return tea_interpret_let(context, scope, node);
     case TEA_AST_NODE_ASSIGN:
       return tea_interpret_execute_assign(context, scope, node);
     case TEA_AST_NODE_IF:
@@ -690,6 +693,7 @@ static tea_value_t tea_interpret_evaluate_integer_number(tea_token_t* token)
   tea_value_t value;
   value.type = TEA_VALUE_I32;
   value.i32 = *(int*)&token->buffer;
+  value.is_optional = false;
 
   return value;
 }
@@ -699,6 +703,7 @@ static tea_value_t tea_interpret_evaluate_float_number(tea_token_t* token)
   tea_value_t value;
   value.type = TEA_VALUE_F32;
   value.f32 = *(float*)&token->buffer;
+  value.is_optional = false;
 
   return value;
 }
@@ -865,6 +870,7 @@ static tea_value_t tea_interpret_evaluate_string(const tea_ast_node_t* node)
   tea_value_t result;
   result.type = TEA_VALUE_STRING;
   result.string = token->buffer;
+  result.is_optional = false;
 
   return result;
 }
@@ -917,8 +923,8 @@ static tea_value_t tea_interpret_evaluate_native_function_call(tea_context_t* co
     tea_variable_t* arg = tea_allocate_variable(context);
     rtl_assert(arg, "Failed to allocate variable!");
     arg->value = tea_interpret_evaluate_expression(context, scope, arg_expr);
-    // TODO: Check mutability
-    arg->is_mutable = false;
+    // TODO: Check mutability and optionality
+    arg->flags = 0;
     // TODO: Set the proper arg name
     arg->name = "unknown";
 
@@ -993,7 +999,7 @@ static tea_value_t tea_interpret_evaluate_function_call(
       struct_declaration, "Can't find struct declaration %s", variable->value.object->type);
 
     // declare 'self' for the scope
-    tea_declare_variable(context, &inner_scope, "self", false, NULL, object_node);
+    tea_declare_variable(context, &inner_scope, "self", 0, NULL, object_node);
 
     function_name = field_token->buffer;
     function = tea_context_find_function(&struct_declaration->functions, function_name);
@@ -1049,8 +1055,7 @@ static tea_value_t tea_interpret_evaluate_function_call(
       variable->name = param_name_token->buffer;
       /* TODO: Currently all function arguments are not mutable by default and I don't check the
        * types */
-      const bool is_mutable = false;
-      variable->is_mutable = is_mutable;
+      variable->flags = 0;
       variable->value = tea_interpret_evaluate_expression(context, scope, param_expr);
 
       switch (variable->value.type) {
@@ -1165,6 +1170,7 @@ static tea_value_t tea_interpret_evaluate_new(
   tea_value_t result;
   result.type = TEA_VALUE_INSTANCE;
   result.object = object;
+  result.is_optional = false;
 
   return result;
 }
@@ -1193,7 +1199,7 @@ static tea_value_t* tea_field_access(
 
   const tea_instance_t* object = variable->value.object;
   rtl_assert(variable->value.type == TEA_VALUE_INSTANCE,
-    "Variable '%s' has type %s but expected object type (line %d, col %d)", object_name->buffer,
+    "Variable '%s' has type '%s' but expected object type (line %d, col %d)", object_name->buffer,
     tea_value_get_type_string(variable->value.type), object_name->line, object_name->column);
 
   // Find the struct declaration for this object type
@@ -1285,5 +1291,4 @@ void tea_bind_native_function(
   }
 }
 
-#undef TEA_NATIVE_FUNCTION_MAX_ARG_COUNT
 #undef TEA_VARIABLE_POOL_ENABLED

@@ -291,10 +291,16 @@ statement(stmt_node) ::= if_stmt(if_stmt_node). { stmt_node = if_stmt_node; }
 statement(stmt_node) ::= while_stmt(while_stmt_node). { stmt_node = while_stmt_node; }
 statement(stmt_node) ::= expression(expr_node) SEMICOLON. { stmt_node = expr_node; }
 
-let_stmt(let_stmt_node) ::= LET mut_opt(mut) IDENT(var_name) type_annotation_opt(type_annot) ASSIGN expression(init_expr) SEMICOLON. {
+quest_mark_opt(node) ::= QUESTION_MARK. { node = tea_ast_node_create(TEA_AST_NODE_OPTIONAL, NULL); }
+quest_mark_opt(node) ::= . { node = NULL; }
+
+let_stmt(let_stmt_node) ::= LET mut_opt(mut) IDENT(var_name) quest_mark_opt(opt) type_annotation_opt(type_annot) ASSIGN expression(init_expr) SEMICOLON. {
     let_stmt_node = tea_ast_node_create(TEA_AST_NODE_LET, var_name);
     if (mut) {
         tea_ast_node_add_child(let_stmt_node, mut);
+    }
+    if (opt) {
+        tea_ast_node_add_child(let_stmt_node, opt);
     }
     if (type_annot) {
         tea_ast_node_add_child(let_stmt_node, type_annot);

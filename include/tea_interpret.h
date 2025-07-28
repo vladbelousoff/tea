@@ -25,6 +25,7 @@ typedef struct
 typedef struct
 {
   tea_value_type_t type;
+  unsigned char is_optional : 1;
 
   union
   {
@@ -50,12 +51,15 @@ typedef struct
   rtl_list_entry_t variable_pool;
 } tea_context_t;
 
+#define TEA_VARIABLE_OPTIONAL 1 << 0
+#define TEA_VARIABLE_MUTABLE  1 << 1
+
 typedef struct
 {
   rtl_list_entry_t link;
   const char* name;
   tea_value_t value;
-  unsigned char is_mutable : 1;
+  unsigned int flags;
 } tea_variable_t;
 
 typedef struct

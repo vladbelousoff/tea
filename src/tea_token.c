@@ -115,6 +115,8 @@ const char *tea_token_get_name(const int token_type)
       return "STRING";
     case TEA_TOKEN_DOT:
       return "DOT";
+    case TEA_TOKEN_QUESTION_MARK:
+      return "QUESTION_MARK";
     default:
       return NULL;
   }
