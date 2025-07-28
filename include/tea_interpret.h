@@ -27,6 +27,7 @@ typedef struct
 typedef struct
 {
   tea_value_type_t type;
+  unsigned char null : 1;
 
   union
   {
@@ -53,8 +54,7 @@ typedef struct
 } tea_context_t;
 
 #define TEA_VARIABLE_OPTIONAL 1 << 0
-#define TEA_VARIABLE_NULL     1 << 1
-#define TEA_VARIABLE_MUTABLE  1 << 2
+#define TEA_VARIABLE_MUTABLE  1 << 1
 
 typedef struct
 {
@@ -71,7 +71,7 @@ typedef struct
   const tea_token_t* return_type;
   const tea_ast_node_t* body;
   const tea_ast_node_t* params;
-  unsigned char is_mutable : 1;
+  unsigned char mut : 1;
 } tea_function_t;
 
 typedef struct

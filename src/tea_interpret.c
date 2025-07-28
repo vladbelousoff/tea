@@ -64,7 +64,7 @@ tea_variable_t* tea_function_args_pop(const tea_function_args_t* args)
 
 tea_value_t tea_value_invalid()
 {
-  static tea_value_t result = { 0 };
+  static tea_value_t result = { TEA_VALUE_INVALID };
   return result;
 }
 
@@ -243,13 +243,13 @@ static bool tea_declare_variable(tea_context_t* context, tea_scope_t* scope, con
   variable->flags = flags;
   tea_value_t value = tea_interpret_evaluate_expression(context, scope, initial_value);
   if (type) {
-    const tea_value_type_t set_type = tea_value_get_type_by_string(type);
-    rtl_assert(set_type != TEA_VALUE_INVALID, "Can't find type '%s'", type);
+    const tea_value_type_t defined_type = tea_value_get_type_by_string(type);
+    rtl_assert(defined_type != TEA_VALUE_INVALID, "Can't find type '%s'", type);
     if (value.type == TEA_VALUE_NULL) {
-      value.type = set_type;
-      variable->flags |= TEA_VARIABLE_OPTIONAL;
+      value.type = defined_type;
+      value.null = true;
     } else {
-      rtl_assert(value.type == set_type, "Type mismatch");
+      rtl_assert(value.type == defined_type, "Type mismatch");
     }
   }
   variable->value = value;
@@ -535,7 +535,7 @@ static bool tea_declare_function(const tea_ast_node_t* node, rtl_list_entry_t* f
 
   fn->name = fn_name;
   fn->body = fn_body;
-  fn->is_mutable = is_mutable;
+  fn->mut = is_mutable;
   fn->params = fn_params;
   if (fn_return_type) {
     fn->return_type = fn_return_type->token;
@@ -737,6 +737,7 @@ static tea_value_t tea_interpret_evaluate_integer_number(tea_token_t* token)
   tea_value_t value;
   value.type = TEA_VALUE_I32;
   value.i32 = *(int*)&token->buffer;
+  value.null = false;
 
   return value;
 }
@@ -746,6 +747,7 @@ static tea_value_t tea_interpret_evaluate_float_number(tea_token_t* token)
   tea_value_t value;
   value.type = TEA_VALUE_F32;
   value.f32 = *(float*)&token->buffer;
+  value.null = false;
 
   return value;
 }
@@ -912,6 +914,7 @@ static tea_value_t tea_interpret_evaluate_string(const tea_ast_node_t* node)
   tea_value_t result;
   result.type = TEA_VALUE_STRING;
   result.string = token->buffer;
+  result.null = false;
 
   return result;
 }
@@ -1211,6 +1214,7 @@ static tea_value_t tea_interpret_evaluate_new(
   tea_value_t result;
   result.type = TEA_VALUE_INSTANCE;
   result.object = object;
+  result.null = false;
 
   return result;
 }
