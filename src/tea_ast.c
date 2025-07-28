@@ -32,11 +32,9 @@ tea_ast_node_t *_tea_ast_node_create(
 
 void tea_ast_node_add_child(tea_ast_node_t *parent, tea_ast_node_t *child)
 {
-  if (!parent || !child) {
-    return;
+  if (parent && child) {
+    rtl_list_add_tail(&parent->children, &child->link);
   }
-
-  rtl_list_add_tail(&parent->children, &child->link);
 }
 
 void tea_ast_node_add_children(tea_ast_node_t *parent, const rtl_list_entry_t *children)
