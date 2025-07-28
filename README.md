@@ -28,14 +28,18 @@ Tea brings Rust's safety concepts to scripting:
 
 ### Variables
 
-Tea uses `let` for variable declarations with optional mutability:
+Tea uses `let` for variable declarations with optional mutability and optionality:
 
 ```tea
 let x = 42;              // Immutable variable
 let mut y = 10;          // Mutable variable
 let z: i32 = 100;        // Explicit type annotation
 let mut w: f32 = 3.14;   // Mutable with type
+let opt_var?: i32 = 5;   // Optional variable
+let mut opt_mut?: f32 = 2.0; // Optional mutable variable
 ```
+
+**Optional Variables**: Variables can be marked as optional using the `?` suffix. Optional variables can hold a value or be unset, providing safer handling of potentially absent values.
 
 ### Functions
 
@@ -214,6 +218,10 @@ fn main() {
     let initial_area = rect.area();
     rect.scale(2.0);
     let scaled_area = rect.area();
+    
+    // Example with optional variables
+    let optional_width?: f32 = 15.0;
+    let mut optional_height?: f32 = 8.0;
 }
 ```
 
@@ -227,47 +235,68 @@ functionality, I/O operations, and performance-critical code written in C.
 Native functions in C must follow this signature:
 
 ```c
-tea_value_t your_function_name(const tea_value_t* args, int arg_count)
+tea_value_t your_function_name(tea_context_t* context, const tea_function_args_t* args)
 ```
 
-The function receives an array of `tea_value_t` arguments and must return a `tea_value_t`. Here's an example:
+The function receives a context and a list of arguments, and must return a `tea_value_t`. Arguments are accessed by calling `tea_function_args_pop()` in a loop. Here's an example:
 
 ```c
+// Native function to print values (similar to built-in print)
+static tea_value_t tea_print_values(tea_context_t* context, const tea_function_args_t* args) {
+    for (;;) {
+        tea_variable_t* arg = tea_function_args_pop(args);
+        if (!arg) {
+            break; // No more arguments
+        }
+        
+        const tea_value_t value = arg->value;
+        switch (value.type) {
+            case TEA_VALUE_I32:
+                printf("%d ", value.i32);
+                break;
+            case TEA_VALUE_F32:
+                printf("%f ", value.f32);
+                break;
+            case TEA_VALUE_STRING:
+                printf("%s ", value.string);
+                break;
+            case TEA_VALUE_INSTANCE:
+            case TEA_VALUE_INVALID:
+                break;
+        }
+        
+        tea_free_variable(context, arg);
+    }
+    printf("\n");
+    
+    return tea_value_invalid();
+}
+
 // Native function to add two numbers
-static tea_value_t tea_add_numbers(const tea_value_t* args, const int arg_count) {
-    if (arg_count != 2) {
-        // Handle error case
-        return tea_value_unset();
+static tea_value_t tea_add_numbers(tea_context_t* context, const tea_function_args_t* args) {
+    tea_variable_t* arg1 = tea_function_args_pop(args);
+    tea_variable_t* arg2 = tea_function_args_pop(args);
+    
+    if (!arg1 || !arg2) {
+        // Handle error case - not enough arguments
+        if (arg1) tea_free_variable(context, arg1);
+        if (arg2) tea_free_variable(context, arg2);
+        return tea_value_invalid();
     }
     
-    if (args[0].type == TEA_VALUE_I32 && args[1].type == TEA_VALUE_I32) {
+    if (arg1->value.type == TEA_VALUE_I32 && arg2->value.type == TEA_VALUE_I32) {
         tea_value_t result = {0};
         result.type = TEA_VALUE_I32;
-        result.i32_value = args[0].i32_value + args[1].i32_value;
+        result.i32 = arg1->value.i32 + arg2->value.i32;
+        
+        tea_free_variable(context, arg1);
+        tea_free_variable(context, arg2);
         return result;
     }
     
-    return tea_value_unset();
-}
-
-// Native function for file operations
-static tea_value_t tea_read_file(const tea_value_t* args, const int arg_count) {
-    if (arg_count != 1 || args[0].type != TEA_VALUE_STRING) {
-        return tea_value_unset();
-    }
-    
-    FILE* file = fopen(args[0].string_value, "r");
-    if (!file) {
-        return tea_value_unset();
-    }
-    
-    // Read file content...
-    // (implementation details omitted for brevity)
-    
-    tea_value_t result = {0};
-    result.type = TEA_VALUE_STRING;
-    result.string_value = file_content; // allocated string
-    return result;
+    tea_free_variable(context, arg1);
+    tea_free_variable(context, arg2);
+    return tea_value_invalid();
 }
 ```
 
@@ -283,7 +312,7 @@ int main() {
     // Bind native functions
     tea_bind_native_function(&context, "print", tea_print);
     tea_bind_native_function(&context, "add_numbers", tea_add_numbers);
-    tea_bind_native_function(&context, "read_file", tea_read_file);
+    tea_bind_native_function(&context, "print_values", tea_print_values);
     
     // Execute Tea code...
     
@@ -304,9 +333,8 @@ print('Hello from Tea!');
 let sum = add_numbers(10, 20);
 print(sum);
 
-// File operations
-let content = read_file('data.txt');
-print(content);
+// Print multiple values at once
+print_values('Result:', sum, 'Done');
 ```
 
 ### Tea Value Types
@@ -316,15 +344,20 @@ Native functions work with the `tea_value_t` type system:
 - `TEA_VALUE_I32` - 32-bit signed integers
 - `TEA_VALUE_F32` - 32-bit floating-point numbers
 - `TEA_VALUE_STRING` - Null-terminated strings
-- `TEA_VALUE_OBJECT` - Complex objects (structs)
-- `TEA_VALUE_UNSET` - Uninitialized or error state
+- `TEA_VALUE_INSTANCE` - Complex objects (structs)
+- `TEA_VALUE_INVALID` - Uninitialized or error state
+
+Values also support an optional flag (`is_optional`) for handling optional variables.
 
 ### Best Practices
 
-1. **Always validate arguments**: Check argument count and types
-2. **Handle errors gracefully**: Return `tea_value_unset()` if there is nothing to return
-3. **Memory management**: Strings returned from native functions should be allocated with `rtl_malloc`
+1. **Always validate arguments**: Use `tea_function_args_pop()` to safely access arguments and check for NULL
+2. **Handle errors gracefully**: Return `tea_value_invalid()` for error conditions
+3. **Memory management**: 
+   - Always call `tea_free_variable(context, arg)` for each argument you pop
+   - Strings returned from native functions should be allocated with `rtl_malloc`
 4. **Performance**: Use native functions for computationally intensive operations
+5. **Argument handling**: Process arguments in the order they were passed by calling `tea_function_args_pop()` sequentially
 
 ## Building
 
@@ -362,6 +395,7 @@ make -j$(nproc)
 Tea is currently in development. The core language features are implemented including:
 
 - ✅ Variable declarations and assignments
+- ✅ Optional variables with `?` syntax
 - ✅ Function definitions and calls
 - ✅ Struct definitions and instantiation
 - ✅ Method definitions with impl blocks
