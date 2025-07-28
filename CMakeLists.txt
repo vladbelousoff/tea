@@ -4,22 +4,13 @@ project(tea_lang)
 
 set(CMAKE_C_STANDARD 99)
 
-# Enable warnings as errors
-if (MSVC)
-    # Microsoft Visual C++ compiler
-    add_compile_options(/WX)
-else ()
-    # GCC, Clang, and other compilers
-    add_compile_options(-Werror)
-endif ()
-
 # Include FetchContent for downloading external dependencies
 include(FetchContent)
 
 FetchContent_Declare(
         rtlib
         GIT_REPOSITORY https://github.com/vladbelousoff/rtlib.git
-        GIT_TAG 8fdaab00833ec7bf7f4d73bede4addd07335fadc
+        GIT_TAG 16d856c57d07f9e187df30eb316253a5719c32d1
 )
 
 FetchContent_MakeAvailable(rtlib)

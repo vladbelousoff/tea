@@ -59,7 +59,7 @@ int main(const int argc, char *argv[])
 {
   const char *filename = NULL;
 
-  rtl_init();
+  rtl_init(NULL, NULL);
 
   // Parse command line arguments
   for (int i = 1; i < argc; i++) {
