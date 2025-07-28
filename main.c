@@ -16,24 +16,31 @@ void print_usage(const char *program_name)
   rtl_log_inf("  %s example.tea", program_name);
 }
 
-static tea_value_t tea_print(const tea_value_t *args, const int arg_count)
+static tea_value_t tea_print(tea_context_t *context, const tea_function_args_t *args)
 {
-  for (int i = 0; i < arg_count; i++) {
-    const tea_value_t arg = args[i];
-    switch (arg.type) {
+  for (;;) {
+    tea_variable_t *arg = tea_function_args_pop(args);
+    if (!arg) {
+      break;
+    }
+
+    const tea_value_t value = arg->value;
+    switch (value.type) {
       case TEA_VALUE_I32:
-        printf("%d", arg.i32);
+        printf("%d", value.i32);
         break;
       case TEA_VALUE_F32:
-        printf("%f", arg.f32);
+        printf("%f", value.f32);
         break;
       case TEA_VALUE_STRING:
-        printf("%s", arg.string);
+        printf("%s", value.string);
         break;
       case TEA_VALUE_INSTANCE:
       case TEA_VALUE_INVALID:
         break;
     }
+
+    tea_free_variable(context, arg);
   }
 
   return tea_value_invalid();

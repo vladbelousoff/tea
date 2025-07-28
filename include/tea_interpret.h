@@ -68,7 +68,16 @@ typedef struct
   unsigned char is_mutable : 1;
 } tea_function_t;
 
-typedef tea_value_t (*tea_native_function_cb_t)(const tea_value_t* args, int arg_count);
+typedef struct
+{
+  rtl_list_entry_t list_head;
+} tea_function_args_t;
+
+typedef tea_value_t (*tea_native_function_cb_t)(
+  tea_context_t* context, const tea_function_args_t* args);
+
+tea_variable_t* tea_function_args_pop(const tea_function_args_t* args);
+void tea_free_variable(tea_context_t* context, tea_variable_t* variable);
 
 typedef struct
 {

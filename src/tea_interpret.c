@@ -8,8 +8,7 @@
 #include "rtl_memory.h"
 #include "tea.h"
 
-#define TEA_NATIVE_FUNCTION_MAX_ARG_COUNT 6
-#define TEA_VARIABLE_POOL_ENABLED         1
+#define TEA_VARIABLE_POOL_ENABLED 1
 
 const char* tea_value_get_type_string(const tea_value_type_t type)
 {
@@ -27,6 +26,18 @@ const char* tea_value_get_type_string(const tea_value_type_t type)
   }
 
   return "UNKNOWN";
+}
+
+tea_variable_t* tea_function_args_pop(const tea_function_args_t* args)
+{
+  rtl_list_entry_t* first = rtl_list_first(&args->list_head);
+  if (first) {
+    tea_variable_t* arg = rtl_list_record(first, tea_variable_t, link);
+    rtl_list_remove(first);
+    return arg;
+  }
+
+  return NULL;
 }
 
 tea_value_t tea_value_invalid()
@@ -51,7 +62,7 @@ static tea_variable_t* tea_allocate_variable(const tea_context_t* context)
   return rtl_malloc(sizeof(tea_variable_t));
 }
 
-static void tea_free_variable(tea_context_t* context, tea_variable_t* variable)
+void tea_free_variable(tea_context_t* context, tea_variable_t* variable)
 {
 #if TEA_VARIABLE_POOL_ENABLED
   if (variable) {
@@ -896,22 +907,36 @@ static tea_value_t tea_interpret_evaluate_native_function_call(tea_context_t* co
   tea_scope_t* scope, const tea_native_function_t* native_function,
   const tea_ast_node_t* function_call_args)
 {
-  tea_value_t args[TEA_NATIVE_FUNCTION_MAX_ARG_COUNT];
+  tea_function_args_t function_args;
+  rtl_list_init(&function_args.list_head);
 
-  int arg_count = 0;
   rtl_list_entry_t* entry;
   rtl_list_for_each(entry, &function_call_args->children)
   {
-    if (arg_count >= TEA_NATIVE_FUNCTION_MAX_ARG_COUNT) {
-      rtl_log_err("Too many arguments for function call '%s'", native_function->name);
-      exit(1);
-    }
-
     const tea_ast_node_t* arg_expr = rtl_list_record(entry, tea_ast_node_t, link);
-    args[arg_count++] = tea_interpret_evaluate_expression(context, scope, arg_expr);
+    tea_variable_t* arg = tea_allocate_variable(context);
+    rtl_assert(arg, "Failed to allocate variable!");
+    arg->value = tea_interpret_evaluate_expression(context, scope, arg_expr);
+    // TODO: Check mutability
+    arg->is_mutable = false;
+    // TODO: Set the proper arg name
+    arg->name = "unknown";
+
+    rtl_list_add_tail(&function_args.list_head, &arg->link);
   }
 
-  return native_function->cb(arg_count > 0 ? args : NULL, arg_count);
+  const tea_value_t result = native_function->cb(context, &function_args);
+
+  // Deallocate all the args
+  rtl_list_entry_t* safe;
+  rtl_list_for_each_safe(entry, safe, &function_args.list_head)
+  {
+    tea_variable_t* arg = rtl_list_record(entry, tea_variable_t, link);
+    rtl_list_remove(entry);
+    tea_free_variable(context, arg);
+  }
+
+  return result;
 }
 
 static tea_value_t tea_interpret_evaluate_function_call(
