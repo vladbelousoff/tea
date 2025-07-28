@@ -156,6 +156,8 @@ const char *tea_ast_node_get_type_name(const tea_ast_node_type_t type)
       return "IMPL_BLOCK";
     case TEA_AST_NODE_OPTIONAL:
       return "OPTIONAL";
+    case TEA_AST_NODE_NONE:
+      return "NONE";
     default:
       return "UNKNOWN";
   }

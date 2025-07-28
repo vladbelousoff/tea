@@ -28,6 +28,7 @@
 %token NEW.
 %token DOT.
 %token QUESTION_MARK.
+%token NONE.
 
 %left ASSIGN.
 %left PLUS MINUS.
@@ -373,6 +374,10 @@ primary_expr(primary_expr_node) ::= NEW IDENT(struct_type) LBRACE struct_field_i
 
 primary_expr(primary_expr_node) ::= STRING(string_value). {
     primary_expr_node = tea_ast_node_create(TEA_AST_NODE_STRING, string_value);
+}
+
+primary_expr(primary_expr_node) ::= NONE. {
+    primary_expr_node = tea_ast_node_create(TEA_AST_NODE_NONE, NULL);
 }
 
 primary_expr(primary_expr_node) ::= primary_expr(object_expr) DOT IDENT(method_name) LPAREN arg_list_opt(args) RPAREN. {

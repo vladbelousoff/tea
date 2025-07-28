@@ -23,6 +23,8 @@ const char* tea_value_get_type_string(const tea_value_type_t type)
       return "string";
     case TEA_VALUE_INSTANCE:
       return "object";
+    case TEA_VALUE_NONE:
+      return "none";
   }
 
   return "UNKNOWN";
@@ -43,6 +45,12 @@ tea_variable_t* tea_function_args_pop(const tea_function_args_t* args)
 tea_value_t tea_value_invalid()
 {
   static tea_value_t result = { 0 };
+  return result;
+}
+
+tea_value_t tea_value_none()
+{
+  static tea_value_t result = { TEA_VALUE_NONE };
   return result;
 }
 
@@ -213,6 +221,7 @@ static bool tea_declare_variable(tea_context_t* context, tea_scope_t* scope, con
 
   variable->name = name;
   variable->flags = flags;
+  // TODO: Convert 'none' into the needed type
   variable->value = tea_interpret_evaluate_expression(context, scope, initial_value);
 
   switch (variable->value.type) {
@@ -227,6 +236,9 @@ static bool tea_declare_variable(tea_context_t* context, tea_scope_t* scope, con
     case TEA_VALUE_STRING:
       rtl_log_dbg("Declare variable %s : %s = '%s'", name,
         tea_value_get_type_string(variable->value.type), variable->value.string);
+    case TEA_VALUE_NONE:
+      rtl_log_dbg(
+        "Declare variable %s : %s = none", name, tea_value_get_type_string(variable->value.type));
     default:
       break;
   }
@@ -693,7 +705,6 @@ static tea_value_t tea_interpret_evaluate_integer_number(tea_token_t* token)
   tea_value_t value;
   value.type = TEA_VALUE_I32;
   value.i32 = *(int*)&token->buffer;
-  value.is_optional = false;
 
   return value;
 }
@@ -703,7 +714,6 @@ static tea_value_t tea_interpret_evaluate_float_number(tea_token_t* token)
   tea_value_t value;
   value.type = TEA_VALUE_F32;
   value.f32 = *(float*)&token->buffer;
-  value.is_optional = false;
 
   return value;
 }
@@ -870,7 +880,6 @@ static tea_value_t tea_interpret_evaluate_string(const tea_ast_node_t* node)
   tea_value_t result;
   result.type = TEA_VALUE_STRING;
   result.string = token->buffer;
-  result.is_optional = false;
 
   return result;
 }
@@ -1170,7 +1179,6 @@ static tea_value_t tea_interpret_evaluate_new(
   tea_value_t result;
   result.type = TEA_VALUE_INSTANCE;
   result.object = object;
-  result.is_optional = false;
 
   return result;
 }
@@ -1241,10 +1249,7 @@ static tea_value_t tea_interpret_field_access(
 tea_value_t tea_interpret_evaluate_expression(
   tea_context_t* context, tea_scope_t* scope, const tea_ast_node_t* node)
 {
-  if (!node) {
-    rtl_log_err("Node is null!");
-    exit(1);
-  }
+  rtl_assert(node, "Node can't be null");
 
   switch (node->type) {
     case TEA_AST_NODE_INTEGER_NUMBER:
@@ -1265,6 +1270,8 @@ tea_value_t tea_interpret_evaluate_expression(
       return tea_interpret_evaluate_new(context, scope, node);
     case TEA_AST_NODE_FIELD_ACCESS:
       return tea_interpret_field_access(context, scope, node);
+    case TEA_AST_NODE_NONE:
+      return tea_value_none();
     default: {
       tea_token_t* token = node->token;
       if (token) {
