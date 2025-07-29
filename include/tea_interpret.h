@@ -27,7 +27,6 @@ typedef struct
 typedef struct
 {
   tea_value_type_t type;
-  unsigned char null : 1;
 
   union
   {
@@ -35,6 +34,9 @@ typedef struct
     int32_t i32;
     const char* string;
     tea_instance_t* object;
+    // if the type is TEA_VALUE_NULL,
+    // we need to know the exact type of the null
+    tea_value_type_t null_type;
   };
 } tea_value_t;
 

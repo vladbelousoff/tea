@@ -64,13 +64,14 @@ tea_variable_t* tea_function_args_pop(const tea_function_args_t* args)
 
 tea_value_t tea_value_invalid()
 {
-  static tea_value_t result = { TEA_VALUE_INVALID };
+  static tea_value_t result = { .type = TEA_VALUE_INVALID };
   return result;
 }
 
 tea_value_t tea_value_null()
 {
-  static tea_value_t result = { TEA_VALUE_NULL };
+  // For the keyword 'null' we don't know the exact type, so let it be just null
+  static tea_value_t result = { .type = TEA_VALUE_NULL, .null_type = TEA_VALUE_NULL };
   return result;
 }
 
@@ -247,7 +248,6 @@ static bool tea_declare_variable(tea_context_t* context, tea_scope_t* scope, con
     rtl_assert(defined_type != TEA_VALUE_INVALID, "Can't find type '%s'", type);
     if (value.type == TEA_VALUE_NULL) {
       value.type = defined_type;
-      value.null = true;
     } else {
       rtl_assert(value.type == defined_type, "Type mismatch");
     }
@@ -737,7 +737,6 @@ static tea_value_t tea_interpret_evaluate_integer_number(tea_token_t* token)
   tea_value_t value;
   value.type = TEA_VALUE_I32;
   value.i32 = *(int*)&token->buffer;
-  value.null = false;
 
   return value;
 }
@@ -747,7 +746,6 @@ static tea_value_t tea_interpret_evaluate_float_number(tea_token_t* token)
   tea_value_t value;
   value.type = TEA_VALUE_F32;
   value.f32 = *(float*)&token->buffer;
-  value.null = false;
 
   return value;
 }
@@ -914,7 +912,6 @@ static tea_value_t tea_interpret_evaluate_string(const tea_ast_node_t* node)
   tea_value_t result;
   result.type = TEA_VALUE_STRING;
   result.string = token->buffer;
-  result.null = false;
 
   return result;
 }
@@ -1214,7 +1211,6 @@ static tea_value_t tea_interpret_evaluate_new(
   tea_value_t result;
   result.type = TEA_VALUE_INSTANCE;
   result.object = object;
-  result.null = false;
 
   return result;
 }
