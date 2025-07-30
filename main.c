@@ -1,10 +1,13 @@
+#include <rtl.h>
 #include <rtl_log.h>
+
 #include <string.h>
 
-#include "rtl.h"
 #include "tea_ast.h"
+#include "tea_function.h"
 #include "tea_interpret.h"
 #include "tea_parser.h"
+#include "tea_statement.h"
 
 void print_usage(const char *program_name)
 {

@@ -1,13 +1,14 @@
 #include "tea_lexer.h"
 
-#include "rtl_log.h"
-#include "rtl_memory.h"
 #include "tea.h"
 #include "tea_token.h"
 
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include <rtl_log.h>
+#include <rtl_memory.h>
 
 #define EOL        '\n'
 #define TAB        '\t'

@@ -78,6 +78,12 @@ set(TEA_HEADER_FILES
         include/tea_ast.h
         include/tea_parser.h
         include/tea_interpret.h
+        include/tea_value.h
+        include/tea_scope.h
+        include/tea_expression.h
+        include/tea_statement.h
+        include/tea_function.h
+        include/tea_struct.h
 )
 
 set(TEA_SOURCE_FILES
@@ -86,6 +92,12 @@ set(TEA_SOURCE_FILES
         src/tea_ast.c
         src/tea_parser.c
         src/tea_interpret.c
+        src/tea_value.c
+        src/tea_scope.c
+        src/tea_expression.c
+        src/tea_statement.c
+        src/tea_function.c
+        src/tea_struct.c
 )
 
 add_library(tea_lang
