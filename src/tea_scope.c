@@ -94,26 +94,40 @@ bool tea_declare_variable(tea_context_t* context, tea_scope_t* scope, const char
 {
   tea_variable_t* variable = tea_scope_find_variable_local(scope, name);
   if (variable) {
-    rtl_log_err("Variable '%s' is already declared in current scope", variable->name);
+    rtl_log_err(
+      "Runtime error: Variable '%s' is already declared in current scope - redeclaration not "
+      "allowed",
+      variable->name);
     return false;
   }
 
   variable = tea_allocate_variable(context);
   if (!variable) {
-    rtl_log_err("Failed to allocate memory for variable '%s'", name);
+    rtl_log_err("Memory error: Failed to allocate memory for variable '%s'", name);
     return false;
   }
 
   variable->name = name;
   variable->flags = flags;
   tea_value_t value = tea_interpret_evaluate_expression(context, scope, initial_value);
+  if (value.type == TEA_VALUE_INVALID) {
+    tea_free_variable(context, variable);
+    return false;
+  }
   if (type) {
     const tea_value_type_t predefined_type = tea_value_get_type_by_string(type);
-    rtl_assert(predefined_type != TEA_VALUE_INVALID, "Can't find type '%s'", type);
+    if (predefined_type == TEA_VALUE_INVALID) {
+      rtl_log_err("Runtime error: Unknown type '%s' specified in variable declaration", type);
+      tea_free_variable(context, variable);
+      return false;
+    }
     if (value.type == TEA_VALUE_NULL) {
       value.null_type = predefined_type;
-    } else {
-      rtl_assert(value.type == predefined_type, "Type mismatch");
+    } else if (value.type != predefined_type) {
+      rtl_log_err(
+        "Runtime error: Type mismatch - value type does not match declared variable type");
+      tea_free_variable(context, variable);
+      return false;
     }
   }
   variable->value = value;

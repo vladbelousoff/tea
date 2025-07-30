@@ -7,7 +7,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <rtl.h>
 #include <rtl_log.h>
 #include <rtl_memory.h>
 
@@ -134,8 +133,31 @@ tea_value_t tea_interpret_evaluate_native_function_call(tea_context_t* context, 
   {
     const tea_ast_node_t* arg_expr = rtl_list_record(entry, tea_ast_node_t, link);
     tea_variable_t* arg = tea_allocate_variable(context);
-    rtl_assert(arg, "Failed to allocate variable!");
+    if (!arg) {
+      rtl_log_err("Memory error: Failed to allocate variable for function argument");
+      // Clean up any previously allocated args
+      rtl_list_entry_t* cleanup_safe;
+      rtl_list_for_each_safe(entry, cleanup_safe, &function_args.list_head)
+      {
+        tea_variable_t* cleanup_arg = rtl_list_record(entry, tea_variable_t, link);
+        rtl_list_remove(entry);
+        tea_free_variable(context, cleanup_arg);
+      }
+      return tea_value_invalid();
+    }
     arg->value = tea_interpret_evaluate_expression(context, scope, arg_expr);
+    if (arg->value.type == TEA_VALUE_INVALID) {
+      tea_free_variable(context, arg);
+      // Clean up any previously allocated args
+      rtl_list_entry_t* cleanup_safe;
+      rtl_list_for_each_safe(entry, cleanup_safe, &function_args.list_head)
+      {
+        tea_variable_t* cleanup_arg = rtl_list_record(entry, tea_variable_t, link);
+        rtl_list_remove(entry);
+        tea_free_variable(context, cleanup_arg);
+      }
+      return tea_value_invalid();
+    }
     // TODO: Check mutability and optionality
     arg->flags = 0;
     // TODO: Set the proper arg name
@@ -191,26 +213,46 @@ tea_value_t tea_interpret_evaluate_function_call(
   if (field_access) {
     const tea_ast_node_t* object_node = field_access->field_access.object;
     const tea_ast_node_t* field_node = field_access->field_access.field;
-    rtl_assert(field_node && object_node, "These fields can't be null");
+    if (!field_node || !object_node) {
+      rtl_log_err(
+        "Internal error: Missing field or object node in method call - AST structure corrupted");
+      tea_scope_cleanup(context, &inner_scope);
+      return tea_value_invalid();
+    }
 
     const tea_token_t* object_token = object_node->token;
     const tea_token_t* field_token = field_node->token;
-    rtl_assert(field_token && object_token, "These fields can't be null");
+    if (!field_token || !object_token) {
+      rtl_log_err(
+        "Internal error: Missing field or object token in method call - AST structure corrupted");
+      tea_scope_cleanup(context, &inner_scope);
+      return tea_value_invalid();
+    }
 
     tea_variable_t* variable = tea_scope_find_variable(scope, object_token->buffer);
     if (!variable) {
-      rtl_log_err("Undefined variable '%s' for method call at line %d, column %d",
+      rtl_log_err(
+        "Runtime error: Undefined variable '%s' used in method call at line %d, column %d",
         object_token->buffer, object_token->line, object_token->column);
-      exit(1);
+      tea_scope_cleanup(context, &inner_scope);
+      return tea_value_invalid();
     }
 
-    rtl_assert(
-      variable->value.type == TEA_VALUE_INSTANCE, "Method can be called only from an object");
+    if (variable->value.type != TEA_VALUE_INSTANCE) {
+      rtl_log_err(
+        "Runtime error: Methods can only be called on object instances, not on primitive types");
+      tea_scope_cleanup(context, &inner_scope);
+      return tea_value_invalid();
+    }
 
     tea_struct_declaration_t* struct_declaration =
       tea_find_struct_declaration(context, variable->value.object->type);
-    rtl_assert(
-      struct_declaration, "Can't find struct declaration %s", variable->value.object->type);
+    if (!struct_declaration) {
+      rtl_log_err("Runtime error: Cannot find struct declaration for type '%s' when calling method",
+        variable->value.object->type);
+      tea_scope_cleanup(context, &inner_scope);
+      return tea_value_invalid();
+    }
 
     // declare 'self' for the scope
     tea_declare_variable(context, &inner_scope, "self", 0, NULL, object_node);
@@ -235,15 +277,17 @@ tea_value_t tea_interpret_evaluate_function_call(
   if (!function) {
     if (field_access) {
       const tea_token_t* field_token = field_access->field_access.field->token;
-      rtl_log_err("Undefined method '%s' at line %d, column %d", function_name, field_token->line,
-        field_token->column);
+      rtl_log_err("Runtime error: Undefined method '%s' called at line %d, column %d",
+        function_name, field_token->line, field_token->column);
     } else {
       const tea_token_t* token = node->token;
       if (token) {
-        rtl_log_err("Undefined function '%s' at line %d, column %d", function_name, token->line,
-          token->column);
+        rtl_log_err("Runtime error: Undefined function '%s' called at line %d, column %d",
+          function_name, token->line, token->column);
       } else {
-        rtl_log_err("Undefined function '%s'", function_name);
+        rtl_log_err(
+          "Runtime error: Undefined function '%s' called (no position information available)",
+          function_name);
       }
     }
     exit(1);
@@ -273,7 +317,9 @@ tea_value_t tea_interpret_evaluate_function_call(
 
       tea_variable_t* variable = tea_allocate_variable(context);
       if (!variable) {
-        rtl_log_err("Failed to allocate memory for parameter '%.*s' at line %d, column %d",
+        rtl_log_err(
+          "Memory error: Failed to allocate memory for function parameter '%.*s' at line %d, "
+          "column %d",
           param_name_token->buffer_size, param_name_token->buffer, param_name_token->line,
           param_name_token->column);
         exit(1);

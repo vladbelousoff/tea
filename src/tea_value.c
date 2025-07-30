@@ -75,8 +75,9 @@ tea_value_t tea_value_null()
         break;                                                                                     \
       case TEA_TOKEN_SLASH:                                                                        \
         if (b == 0) {                                                                              \
-          rtl_log_err("Division by zero at line %d, column %d", op->line, op->column);             \
-          exit(1);                                                                                 \
+          rtl_log_err(                                                                             \
+            "Runtime error: Division by zero at line %d, column %d", op->line, op->column);        \
+          return tea_value_invalid();                                                              \
         }                                                                                          \
         result = a / b;                                                                            \
         break;                                                                                     \
@@ -146,10 +147,12 @@ tea_value_t tea_value_binop(
     }
   }
 
-  rtl_log_err("Unsupported binary operation '%s' between types %s and %s at line %d, column %d",
+  rtl_log_err(
+    "Runtime error: Unsupported binary operation '%s' between types %s and %s at line %d, column "
+    "%d",
     tea_token_get_name(op->type), tea_value_get_type_string(lhs_val.type),
     tea_value_get_type_string(rhs_val.type), op->line, op->column);
-  exit(1);
+  return tea_value_invalid();
 }
 
 #undef TEA_APPLY_BINOP

@@ -61,8 +61,8 @@ tea_value_t tea_interpret_evaluate_unary(
       }
       break;
     default:
-      rtl_log_err("Invalid unary operator '%s' at line %d, column %d", token->buffer, token->line,
-        token->column);
+      rtl_log_err("Expression evaluation error: Invalid unary operator '%s' at line %d, column %d",
+        token->buffer, token->line, token->column);
       break;
   }
 
@@ -73,13 +73,16 @@ tea_value_t tea_interpret_evaluate_unary(
 tea_value_t tea_interpret_evaluate_ident(const tea_scope_t* scope, const tea_ast_node_t* node)
 {
   const tea_token_t* token = node->token;
-  rtl_assert(token, "Missing token for identifier node");
+  if (!token) {
+    rtl_log_err("Internal error: Missing token for identifier node during expression evaluation");
+    return tea_value_invalid();
+  }
 
   const tea_variable_t* variable = tea_scope_find_variable(scope, token->buffer);
   if (!variable) {
-    rtl_log_err(
-      "Undefined variable '%s' at line %d, column %d", token->buffer, token->line, token->column);
-    exit(1);
+    rtl_log_err("Runtime error: Undefined variable '%s' referenced at line %d, column %d",
+      token->buffer, token->line, token->column);
+    return tea_value_invalid();
   }
 
   return variable->value;
@@ -88,7 +91,11 @@ tea_value_t tea_interpret_evaluate_ident(const tea_scope_t* scope, const tea_ast
 tea_value_t tea_interpret_evaluate_string(const tea_ast_node_t* node)
 {
   const tea_token_t* token = node->token;
-  rtl_assert(token, "Missing token for string literal node");
+  if (!token) {
+    rtl_log_err(
+      "Internal error: Missing token for string literal node during expression evaluation");
+    return tea_value_invalid();
+  }
 
   tea_value_t result;
   result.type = TEA_VALUE_STRING;
@@ -100,7 +107,10 @@ tea_value_t tea_interpret_evaluate_string(const tea_ast_node_t* node)
 tea_value_t tea_interpret_evaluate_expression(
   tea_context_t* context, tea_scope_t* scope, const tea_ast_node_t* node)
 {
-  rtl_assert(node, "Node can't be null");
+  if (!node) {
+    rtl_log_err("Internal error: Null AST node passed to expression evaluator");
+    return tea_value_invalid();
+  }
 
   switch (node->type) {
     case TEA_AST_NODE_INTEGER_NUMBER:
@@ -126,11 +136,14 @@ tea_value_t tea_interpret_evaluate_expression(
     default: {
       tea_token_t* token = node->token;
       if (token) {
-        rtl_log_err("Failed to evaluate node <%s>, token: <%s> %.*s (line %d, col %d)",
+        rtl_log_err(
+          "Expression evaluation error: Unsupported node type <%s> with token <%s> '%.*s' at line "
+          "%d, column %d",
           tea_ast_node_get_type_name(node->type), tea_token_get_name(token->type),
           token->buffer_size, token->buffer, token->line, token->column);
       } else {
-        rtl_log_err("Failed to evaluate node <%s>", tea_ast_node_get_type_name(node->type));
+        rtl_log_err("Expression evaluation error: Unsupported node type <%s> (no token available)",
+          tea_ast_node_get_type_name(node->type));
       }
     } break;
   }

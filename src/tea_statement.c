@@ -64,12 +64,14 @@ bool tea_interpret_assign(tea_context_t* context, tea_scope_t* scope, const tea_
     // Probably if the name is null, then it's a field access
     rtl_list_entry_t* field_entry = rtl_list_first(&node->children);
     if (!field_entry) {
-      exit(1);
+      rtl_log_err("Runtime error: Missing field entry in field assignment expression");
+      return false;
     }
 
     const tea_ast_node_t* field_node = rtl_list_record(field_entry, tea_ast_node_t, link);
     if (!field_node) {
-      exit(1);
+      rtl_log_err("Runtime error: Missing field node in field assignment expression");
+      return false;
     }
 
     tea_value_t* value = tea_get_field_pointer(context, scope, field_node);
@@ -81,6 +83,9 @@ bool tea_interpret_assign(tea_context_t* context, tea_scope_t* scope, const tea_
     const tea_ast_node_t* rhs =
       rtl_list_record(rtl_list_first(&node->children), tea_ast_node_t, link);
     const tea_value_t new_value = tea_interpret_evaluate_expression(context, scope, rhs);
+    if (new_value.type == TEA_VALUE_INVALID) {
+      return false;
+    }
 
     // TODO: Make it clearer with checking mutability
     *value = new_value;
@@ -90,30 +95,34 @@ bool tea_interpret_assign(tea_context_t* context, tea_scope_t* scope, const tea_
 
   tea_variable_t* variable = tea_scope_find_variable(scope, name->buffer);
   if (!variable) {
-    rtl_log_err("Undefined variable '%s' in assignment at line %d, column %d", name->buffer,
-      name->line, name->column);
-    exit(1);
+    rtl_log_err("Runtime error: Undefined variable '%s' used in assignment at line %d, column %d",
+      name->buffer, name->line, name->column);
+    return false;
   }
 
   if (!(variable->flags & TEA_VARIABLE_MUTABLE)) {
-    rtl_log_err("Cannot modify immutable variable '%s' at line %d, column %d", name->buffer,
-      name->line, name->column);
-    exit(1);
+    rtl_log_err("Runtime error: Cannot modify immutable variable '%s' at line %d, column %d",
+      name->buffer, name->line, name->column);
+    return false;
   }
 
   // First child is the value on the right
   const tea_ast_node_t* rhs =
     rtl_list_record(rtl_list_first(&node->children), tea_ast_node_t, link);
   const tea_value_t new_value = tea_interpret_evaluate_expression(context, scope, rhs);
+  if (new_value.type == TEA_VALUE_INVALID) {
+    return false;
+  }
 
   if (new_value.type == variable->value.type) {
     variable->value = new_value;
   } else {
     rtl_log_err(
-      "Type mismatch in assignment to variable '%s' at line %d, column %d: cannot assign %s to %s",
+      "Runtime error: Type mismatch in assignment to variable '%s' at line %d, column %d: cannot "
+      "assign %s value to %s variable",
       name->buffer, name->line, name->column, tea_value_get_type_string(new_value.type),
       tea_value_get_type_string(variable->value.type));
-    exit(1);
+    return false;
   }
 
   switch (variable->value.type) {
@@ -165,6 +174,10 @@ bool tea_interpret_execute_if(tea_context_t* context, tea_scope_t* scope,
   tea_scope_init(&inner_scope, scope);
 
   const tea_value_t cond_val = tea_interpret_evaluate_expression(context, &inner_scope, condition);
+  if (cond_val.type == TEA_VALUE_INVALID) {
+    tea_scope_cleanup(context, &inner_scope);
+    return false;
+  }
 
   bool result = true;
   if (cond_val.i32 != 0) {
@@ -209,6 +222,9 @@ bool tea_interpret_execute_while(tea_context_t* context, tea_scope_t* scope,
 
   while (true) {
     const tea_value_t cond_val = tea_interpret_evaluate_expression(context, scope, while_cond);
+    if (cond_val.type == TEA_VALUE_INVALID) {
+      return false;
+    }
     if (cond_val.i32 == 0) {
       break;
     }
@@ -246,6 +262,9 @@ bool tea_interpret_execute_return(tea_context_t* context, tea_scope_t* scope,
     const tea_ast_node_t* expr = rtl_list_record(entry, tea_ast_node_t, link);
     if (expr && return_context) {
       return_context->returned_value = tea_interpret_evaluate_expression(context, scope, expr);
+      if (return_context->returned_value.type == TEA_VALUE_INVALID) {
+        return false;
+      }
       return_context->is_set = true;
     }
   }
@@ -260,7 +279,7 @@ bool tea_interpret_execute_break(tea_loop_context_t* loop_context)
     return true;
   }
 
-  rtl_log_err("Break cannot be used outside of loops");
+  rtl_log_err("Runtime error: 'break' statement can only be used inside loops");
   return false;
 }
 
@@ -271,7 +290,7 @@ bool tea_interpret_execute_continue(tea_loop_context_t* loop_context)
     return true;
   }
 
-  rtl_log_err("Continue cannot be used outside of loops");
+  rtl_log_err("Runtime error: 'continue' statement can only be used inside loops");
   return false;
 }
 
@@ -325,13 +344,15 @@ bool tea_interpret_execute(tea_context_t* context, tea_scope_t* scope, const tea
     default: {
       const tea_token_t* token = node->token;
       if (token) {
-        rtl_log_err("Not implemented node <%s> in file %s, token: <%s> '%.*s' (line %d, col %d)",
+        rtl_log_err(
+          "Interpreter error: Unimplemented statement type <%s> in file %s, token: <%s> '%.*s' "
+          "(line %d, col %d)",
           tea_ast_node_get_type_name(node->type), context->filename,
           tea_token_get_name(token->type), token->buffer_size, token->buffer, token->line,
           token->column);
       } else {
-        rtl_log_err("Not implemented node <%s> in file %s", tea_ast_node_get_type_name(node->type),
-          context->filename);
+        rtl_log_err("Interpreter error: Unimplemented statement type <%s> in file %s",
+          tea_ast_node_get_type_name(node->type), context->filename);
       }
     } break;
   }

@@ -296,8 +296,10 @@ static bool scan_number(tea_lexer_t *self, const char *input)
     if (length < 32) {
       strncpy(tmp_buffer, buffer, length);
     } else {
-      rtl_log_err("The number is too big! Line %d, col %d", self->line, self->column);
-      return true;
+      rtl_log_err(
+        "Lexer error: Number literal too large (exceeds 32 characters) at line %d, column %d",
+        self->line, self->column);
+      return false;
     }
 
     char *end;
@@ -306,18 +308,18 @@ static bool scan_number(tea_lexer_t *self, const char *input)
       if (*end == 0) {
         create_token(self, TEA_TOKEN_FLOAT_NUMBER, (char *)&value, sizeof(value));
       } else {
-        rtl_log_err(
-          "Invalid float literal '%s' at line %d, column %d", tmp_buffer, self->line, self->column);
-        exit(1);
+        rtl_log_err("Lexer error: Invalid float literal '%s' at line %d, column %d", tmp_buffer,
+          self->line, self->column);
+        return false;
       }
     } else {
       int value = (int)strtol(tmp_buffer, &end, 10);
       if (*end == 0) {
         create_token(self, TEA_TOKEN_INTEGER_NUMBER, (char *)&value, sizeof(value));
       } else {
-        rtl_log_err("Invalid integer literal '%s' at line %d, column %d", tmp_buffer, self->line,
-          self->column);
-        exit(1);
+        rtl_log_err("Lexer error: Invalid integer literal '%s' at line %d, column %d", tmp_buffer,
+          self->line, self->column);
+        return false;
       }
     }
 
@@ -346,8 +348,9 @@ static bool scan_string(tea_lexer_t *self, const char *input)
       const char c = input[current_position];
 
       if (c == EOS) {
-        rtl_log_err("Unterminated string literal at line %d, column %d", self->line, self->column);
-        exit(1);
+        rtl_log_err("Lexer error: Unterminated string literal at line %d, column %d", self->line,
+          self->column);
+        return false;
       }
 
       if (c == '\'') {
@@ -355,8 +358,10 @@ static bool scan_string(tea_lexer_t *self, const char *input)
       }
 
       if (c == EOL) {
-        rtl_log_err("Cannot process strings with \\n, line: %d, col: %d", self->line, self->column);
-        exit(1);
+        rtl_log_err(
+          "Lexer error: String literals cannot contain newline characters at line %d, column %d",
+          self->line, self->column);
+        return false;
       }
 
       int shift;
@@ -437,11 +442,12 @@ static void unknown_character(const tea_lexer_t *self, const char *input)
   const char c = input[self->position];
   if (c != EOS) {
     if (c != EOL) {
-      rtl_log_err("Unknown character: %c, line: %d, column: %d, position: %d", c, self->line,
-        self->column, self->position);
+      rtl_log_err("Lexer error: Unknown character '%c' at line %d, column %d, position %d", c,
+        self->line, self->column, self->position);
     } else {
-      rtl_log_err("Unknown character: <EOL>, line: %d, column: %d, position: %d", self->line,
-        self->column, self->position);
+      rtl_log_err(
+        "Lexer error: Unexpected end of line character at line %d, column %d, position %d",
+        self->line, self->column, self->position);
     }
     exit(1);
   }

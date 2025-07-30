@@ -35,8 +35,14 @@ tea_struct_declaration_t* tea_find_struct_declaration(
   rtl_list_for_each(entry, &context->struct_declarations)
   {
     tea_struct_declaration_t* declaration = rtl_list_record(entry, tea_struct_declaration_t, link);
-    rtl_assert(declaration, "declaration not found");
-    rtl_assert(declaration->node, "declaration node not found");
+    if (!declaration) {
+      rtl_log_err("Internal error: Struct declaration list contains null entry");
+      continue;
+    }
+    if (!declaration->node) {
+      rtl_log_err("Internal error: Struct declaration has null AST node");
+      continue;
+    }
     const tea_token_t* declaration_token = declaration->node->token;
     if (declaration_token) {
       if (!strcmp(declaration_token->buffer, name)) {
@@ -51,23 +57,39 @@ tea_struct_declaration_t* tea_find_struct_declaration(
 bool tea_interpret_impl_block(const tea_context_t* context, const tea_ast_node_t* node)
 {
   const tea_token_t* block_name = node->token;
-  rtl_assert(block_name, "Block name is not set!");
+  if (!block_name) {
+    rtl_log_err("Runtime error: Implementation block must have a struct name");
+    return false;
+  }
 
   tea_struct_declaration_t* struct_declaration =
     tea_find_struct_declaration(context, block_name->buffer);
-  rtl_assert(
-    struct_declaration, "You can't impl function for non declared struct %s!", block_name->buffer);
+  if (!struct_declaration) {
+    rtl_log_err(
+      "Runtime error: Cannot implement methods for undeclared struct '%s'", block_name->buffer);
+    return false;
+  }
 
   rtl_list_entry_t* entry;
   rtl_list_for_each(entry, &node->children)
   {
     const tea_ast_node_t* child = rtl_list_record(entry, tea_ast_node_t, link);
-    rtl_assert(child->type == TEA_AST_NODE_IMPL_ITEM, "Impl block must contain only impl items!");
+    if (child->type != TEA_AST_NODE_IMPL_ITEM) {
+      rtl_log_err(
+        "Runtime error: Implementation block contains invalid item - only method implementations "
+        "are allowed");
+      return false;
+    }
     const rtl_list_entry_t* function_entry = rtl_list_first(&child->children);
-    rtl_assert(function_entry, "Impl item contains no children!");
+    if (!function_entry) {
+      rtl_log_err("Runtime error: Implementation item is empty - method definition required");
+      return false;
+    }
     const tea_ast_node_t* function_node = rtl_list_record(function_entry, tea_ast_node_t, link);
-    rtl_assert(function_node && function_node->type == TEA_AST_NODE_FUNCTION,
-      "There's no function in impl item!");
+    if (!function_node || function_node->type != TEA_AST_NODE_FUNCTION) {
+      rtl_log_err("Runtime error: Implementation item must contain a method definition");
+      return false;
+    }
 
     const bool result = tea_declare_function(function_node, &struct_declaration->functions);
     if (!result) {
@@ -82,7 +104,10 @@ tea_value_t tea_interpret_evaluate_new(
   tea_context_t* context, tea_scope_t* scope, const tea_ast_node_t* node)
 {
   const tea_token_t* struct_name = node->token;
-  rtl_assert(struct_name, "Missing struct name token for instantiation");
+  if (!struct_name) {
+    rtl_log_err("Runtime error: Struct instantiation missing type name");
+    return tea_value_invalid();
+  }
 
   const tea_struct_declaration_t* struct_declr =
     tea_find_struct_declaration(context, struct_name->buffer);
@@ -90,9 +115,10 @@ tea_value_t tea_interpret_evaluate_new(
   tea_instance_t* object =
     rtl_malloc(sizeof(tea_instance_t) + struct_declr->field_count * sizeof(tea_value_t));
   if (!object) {
-    rtl_log_err("Failed to allocate memory for struct '%s' instance at line %d, column %d",
+    rtl_log_err(
+      "Memory error: Failed to allocate memory for struct '%s' instance at line %d, column %d",
       struct_name->buffer, struct_name->line, struct_name->column);
-    exit(1);
+    return tea_value_invalid();
   }
 
   rtl_list_entry_t* field_entry = rtl_list_first(&struct_declr->node->children);
@@ -103,7 +129,11 @@ tea_value_t tea_interpret_evaluate_new(
   rtl_list_for_each(declr_entry, &node->children)
   {
     const tea_ast_node_t* declr_node = rtl_list_record(declr_entry, tea_ast_node_t, link);
-    rtl_assert(declr_node, "Invalid field declaration node during struct instantiation");
+    if (!declr_node) {
+      rtl_log_err("Runtime error: Invalid field declaration in struct instantiation");
+      rtl_free(object);
+      return tea_value_invalid();
+    }
 
     const tea_ast_node_t* field_node = rtl_list_record(field_entry, tea_ast_node_t, link);
 
@@ -118,22 +148,36 @@ tea_value_t tea_interpret_evaluate_new(
       value_node = declr_node;
     }
 
-    rtl_assert(value_node, "Invalid value node during struct instantiation");
+    if (!value_node) {
+      rtl_log_err("Runtime error: Invalid field value in struct instantiation");
+      rtl_free(object);
+      return tea_value_invalid();
+    }
 
     const tea_token_t* declr = declr_node->token;
     const tea_token_t* field = field_node->token;
 
-    rtl_assert(declr && field, "Missing field or declaration tokens during struct instantiation");
+    if (!declr || !field) {
+      rtl_log_err("Runtime error: Missing field name or value tokens during struct instantiation");
+      rtl_free(object);
+      return tea_value_invalid();
+    }
 
     if (declr->buffer_size != field->buffer_size ||
         strncmp(declr->buffer, field->buffer, field->buffer_size) != 0) {
       rtl_log_err(
-        "Field must be filled sequentially during struct init: %s (line: %d) and %s (line: %d)!",
+        "Runtime error: Struct fields must be initialized in declaration order: field '%s' (line: "
+        "%d) does not match expected field '%s' (line: %d)",
         declr->buffer, declr->line, field->buffer, field->line);
-      exit(1);
+      rtl_free(object);
+      return tea_value_invalid();
     }
 
     tea_value_t value_expr = tea_interpret_evaluate_expression(context, scope, value_node);
+    if (value_expr.type == TEA_VALUE_INVALID) {
+      rtl_free(object);
+      return tea_value_invalid();
+    }
     memcpy(&object->buffer[field_index++ * sizeof(tea_value_t)], &value_expr, sizeof(tea_value_t));
 
     field_entry = rtl_list_next(field_entry, &struct_declr->node->children);
@@ -153,33 +197,59 @@ tea_value_t* tea_get_field_pointer(
 {
   // Extract field information
   tea_ast_node_t* field_node = node->field_access.field;
-  rtl_assert(field_node, "Field access node missing field component in AST node");
+  if (!field_node) {
+    rtl_log_err("Internal error: Field access expression missing field component in AST");
+    return NULL;
+  }
 
   const tea_token_t* field_name = field_node->token;
-  rtl_assert(field_name, "Field AST node missing token information");
+  if (!field_name) {
+    rtl_log_err("Internal error: Field AST node missing token information");
+    return NULL;
+  }
 
   // Extract object information
   tea_ast_node_t* object_node = node->field_access.object;
-  rtl_assert(object_node, "Field access node missing object component in AST node");
+  if (!object_node) {
+    rtl_log_err("Internal error: Field access expression missing object component in AST");
+    return NULL;
+  }
 
   const tea_token_t* object_name = object_node->token;
-  rtl_assert(object_name, "Object AST node missing token information");
+  if (!object_name) {
+    rtl_log_err("Internal error: Object AST node missing token information");
+    return NULL;
+  }
 
   // Get the variable containing the object
   const tea_variable_t* variable = tea_scope_find_variable(scope, object_name->buffer);
-  rtl_assert(variable, "Variable '%s' not found in current scope (line %d, col %d)",
-    object_name->buffer, object_name->line, object_name->column);
+  if (!variable) {
+    rtl_log_err(
+      "Runtime error: Variable '%s' not found in current scope when accessing field (line %d, col "
+      "%d)",
+      object_name->buffer, object_name->line, object_name->column);
+    return NULL;
+  }
 
+  if (variable->value.type != TEA_VALUE_INSTANCE) {
+    rtl_log_err(
+      "Runtime error: Variable '%s' has type '%s' but field access requires an object instance "
+      "(line %d, col %d)",
+      object_name->buffer, tea_value_get_type_string(variable->value.type), object_name->line,
+      object_name->column);
+    return NULL;
+  }
   const tea_instance_t* object = variable->value.object;
-  rtl_assert(variable->value.type == TEA_VALUE_INSTANCE,
-    "Variable '%s' has type '%s' but expected object type (line %d, col %d)", object_name->buffer,
-    tea_value_get_type_string(variable->value.type), object_name->line, object_name->column);
 
   // Find the struct declaration for this object type
   const tea_struct_declaration_t* struct_declr = tea_find_struct_declaration(context, object->type);
-  rtl_assert(struct_declr,
-    "Struct declaration not found for type '%s' when accessing field '%s' (line %d, col %d)",
-    object->type, field_name->buffer, field_name->line, field_name->column);
+  if (!struct_declr) {
+    rtl_log_err(
+      "Runtime error: Cannot find struct declaration for type '%s' when accessing field '%s' (line "
+      "%d, col %d)",
+      object->type, field_name->buffer, field_name->line, field_name->column);
+    return NULL;
+  }
 
   // Find the field by name and return its value
   unsigned long field_index = 0;
@@ -187,10 +257,16 @@ tea_value_t* tea_get_field_pointer(
 
   rtl_list_for_each_indexed(field_index, field_entry, &struct_declr->node->children)
   {
-    rtl_assert(field_index < struct_declr->field_count, "Field index out of range!");
+    if (field_index >= struct_declr->field_count) {
+      rtl_log_err("Internal error: Field index exceeds struct field count during field access");
+      return NULL;
+    }
 
     const tea_ast_node_t* field_decl_node = rtl_list_record(field_entry, tea_ast_node_t, link);
-    rtl_assert(field_decl_node && field_decl_node->token, "Invalid field declaration node!");
+    if (!field_decl_node || !field_decl_node->token) {
+      rtl_log_err("Internal error: Invalid field declaration node in struct definition");
+      return NULL;
+    }
 
     if (!strcmp(field_decl_node->token->buffer, field_name->buffer)) {
       return (tea_value_t*)&object->buffer[field_index * sizeof(tea_value_t)];
