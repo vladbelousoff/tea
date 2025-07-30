@@ -63,7 +63,7 @@ tea_value_t tea_value_null()
 
 #define TEA_APPLY_BINOP(a, b, op, result)                                                          \
   do {                                                                                             \
-    switch (op) {                                                                                  \
+    switch (op->type) {                                                                            \
       case TEA_TOKEN_PLUS:                                                                         \
         result = a + b;                                                                            \
         break;                                                                                     \
@@ -75,7 +75,7 @@ tea_value_t tea_value_null()
         break;                                                                                     \
       case TEA_TOKEN_SLASH:                                                                        \
         if (b == 0) {                                                                              \
-          rtl_log_err("Can't divide by zero!");                                                    \
+          rtl_log_err("Division by zero at line %d, column %d", op->line, op->column);             \
           exit(1);                                                                                 \
         }                                                                                          \
         result = a / b;                                                                            \
@@ -123,12 +123,12 @@ tea_value_t tea_value_binop(
   if (lhs_val.type == TEA_VALUE_I32) {
     if (rhs_val.type == TEA_VALUE_I32) {
       result.type = TEA_VALUE_I32;
-      TEA_APPLY_BINOP(lhs_val.i32, rhs_val.i32, op->type, result.i32);
+      TEA_APPLY_BINOP(lhs_val.i32, rhs_val.i32, op, result.i32);
       return result;
     }
     if (rhs_val.type == TEA_VALUE_F32) {
       result.type = TEA_VALUE_F32;
-      TEA_APPLY_BINOP(lhs_val.i32, rhs_val.f32, op->type, result.f32);
+      TEA_APPLY_BINOP(lhs_val.i32, rhs_val.f32, op, result.f32);
       return result;
     }
   }
@@ -136,18 +136,19 @@ tea_value_t tea_value_binop(
   if (lhs_val.type == TEA_VALUE_F32) {
     if (rhs_val.type == TEA_VALUE_I32) {
       result.type = TEA_VALUE_F32;
-      TEA_APPLY_BINOP(lhs_val.f32, rhs_val.i32, op->type, result.f32);
+      TEA_APPLY_BINOP(lhs_val.f32, rhs_val.i32, op, result.f32);
       return result;
     }
     if (rhs_val.type == TEA_VALUE_F32) {
       result.type = TEA_VALUE_F32;
-      TEA_APPLY_BINOP(lhs_val.f32, rhs_val.f32, op->type, result.f32);
+      TEA_APPLY_BINOP(lhs_val.f32, rhs_val.f32, op, result.f32);
       return result;
     }
   }
 
-  rtl_log_err("Binary operations for type %s and type %s are not implemented!",
-    tea_value_get_type_string(lhs_val.type), tea_value_get_type_string(rhs_val.type));
+  rtl_log_err("Unsupported binary operation '%s' between types %s and %s at line %d, column %d",
+    tea_token_get_name(op->type), tea_value_get_type_string(lhs_val.type),
+    tea_value_get_type_string(rhs_val.type), op->line, op->column);
   exit(1);
 }
 

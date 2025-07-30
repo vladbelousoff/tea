@@ -199,7 +199,8 @@ tea_value_t tea_interpret_evaluate_function_call(
 
     tea_variable_t* variable = tea_scope_find_variable(scope, object_token->buffer);
     if (!variable) {
-      rtl_log_err("Can't find variable %s", object_token->buffer);
+      rtl_log_err("Undefined variable '%s' for method call at line %d, column %d",
+        object_token->buffer, object_token->line, object_token->column);
       exit(1);
     }
 
@@ -232,7 +233,19 @@ tea_value_t tea_interpret_evaluate_function_call(
   }
 
   if (!function) {
-    rtl_log_err("Can't find function %s", function_name);
+    if (field_access) {
+      const tea_token_t* field_token = field_access->field_access.field->token;
+      rtl_log_err("Undefined method '%s' at line %d, column %d", function_name, field_token->line,
+        field_token->column);
+    } else {
+      const tea_token_t* token = node->token;
+      if (token) {
+        rtl_log_err("Undefined function '%s' at line %d, column %d", function_name, token->line,
+          token->column);
+      } else {
+        rtl_log_err("Undefined function '%s'", function_name);
+      }
+    }
     exit(1);
   }
 
@@ -260,9 +273,10 @@ tea_value_t tea_interpret_evaluate_function_call(
 
       tea_variable_t* variable = tea_allocate_variable(context);
       if (!variable) {
-        rtl_log_err("Failed to allocate memory for variable %.*s", param_name_token->buffer_size,
-          param_name_token->buffer);
-        break;
+        rtl_log_err("Failed to allocate memory for parameter '%.*s' at line %d, column %d",
+          param_name_token->buffer_size, param_name_token->buffer, param_name_token->line,
+          param_name_token->column);
+        exit(1);
       }
 
       variable->name = param_name_token->buffer;

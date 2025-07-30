@@ -90,12 +90,14 @@ bool tea_interpret_assign(tea_context_t* context, tea_scope_t* scope, const tea_
 
   tea_variable_t* variable = tea_scope_find_variable(scope, name->buffer);
   if (!variable) {
-    rtl_log_err("Cannot find variable '%s'", name->buffer);
+    rtl_log_err("Undefined variable '%s' in assignment at line %d, column %d", name->buffer,
+      name->line, name->column);
     exit(1);
   }
 
   if (!(variable->flags & TEA_VARIABLE_MUTABLE)) {
-    rtl_log_err("Variable '%s' is not mutable, so cannot be modified", name->buffer);
+    rtl_log_err("Cannot modify immutable variable '%s' at line %d, column %d", name->buffer,
+      name->line, name->column);
     exit(1);
   }
 
@@ -108,9 +110,9 @@ bool tea_interpret_assign(tea_context_t* context, tea_scope_t* scope, const tea_
     variable->value = new_value;
   } else {
     rtl_log_err(
-      "Cannot assign variable '%s', because the original type is %s, but the new type is %s",
-      name->buffer, tea_value_get_type_string(variable->value.type),
-      tea_value_get_type_string(new_value.type));
+      "Type mismatch in assignment to variable '%s' at line %d, column %d: cannot assign %s to %s",
+      name->buffer, name->line, name->column, tea_value_get_type_string(new_value.type),
+      tea_value_get_type_string(variable->value.type));
     exit(1);
   }
 

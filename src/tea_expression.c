@@ -61,7 +61,8 @@ tea_value_t tea_interpret_evaluate_unary(
       }
       break;
     default:
-      rtl_log_err("Impossible to apply operator %s as unary", token->buffer);
+      rtl_log_err("Invalid unary operator '%s' at line %d, column %d", token->buffer, token->line,
+        token->column);
       break;
   }
 
@@ -72,14 +73,12 @@ tea_value_t tea_interpret_evaluate_unary(
 tea_value_t tea_interpret_evaluate_ident(const tea_scope_t* scope, const tea_ast_node_t* node)
 {
   const tea_token_t* token = node->token;
-  if (!token) {
-    rtl_log_err("Impossible to evaluate ident token");
-    exit(1);
-  }
+  rtl_assert(token, "Missing token for identifier node");
 
   const tea_variable_t* variable = tea_scope_find_variable(scope, token->buffer);
   if (!variable) {
-    rtl_log_err("Can't find variable %s", token->buffer);
+    rtl_log_err(
+      "Undefined variable '%s' at line %d, column %d", token->buffer, token->line, token->column);
     exit(1);
   }
 
@@ -89,10 +88,7 @@ tea_value_t tea_interpret_evaluate_ident(const tea_scope_t* scope, const tea_ast
 tea_value_t tea_interpret_evaluate_string(const tea_ast_node_t* node)
 {
   const tea_token_t* token = node->token;
-  if (!token) {
-    rtl_log_err("Impossible to evaluate string token");
-    exit(1);
-  }
+  rtl_assert(token, "Missing token for string literal node");
 
   tea_value_t result;
   result.type = TEA_VALUE_STRING;

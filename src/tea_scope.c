@@ -94,13 +94,13 @@ bool tea_declare_variable(tea_context_t* context, tea_scope_t* scope, const char
 {
   tea_variable_t* variable = tea_scope_find_variable_local(scope, name);
   if (variable) {
-    rtl_log_err("Variable %s is already declared", variable->name);
+    rtl_log_err("Variable '%s' is already declared in current scope", variable->name);
     return false;
   }
 
   variable = tea_allocate_variable(context);
   if (!variable) {
-    rtl_log_err("Failed to allocate memory for variable %s", name);
+    rtl_log_err("Failed to allocate memory for variable '%s'", name);
     return false;
   }
 

@@ -82,10 +82,7 @@ tea_value_t tea_interpret_evaluate_new(
   tea_context_t* context, tea_scope_t* scope, const tea_ast_node_t* node)
 {
   const tea_token_t* struct_name = node->token;
-  if (!struct_name) {
-    rtl_log_err("Invalid name!");
-    exit(1);
-  }
+  rtl_assert(struct_name, "Missing struct name token for instantiation");
 
   const tea_struct_declaration_t* struct_declr =
     tea_find_struct_declaration(context, struct_name->buffer);
@@ -93,7 +90,8 @@ tea_value_t tea_interpret_evaluate_new(
   tea_instance_t* object =
     rtl_malloc(sizeof(tea_instance_t) + struct_declr->field_count * sizeof(tea_value_t));
   if (!object) {
-    rtl_log_err("Failed to allocate memory for object!");
+    rtl_log_err("Failed to allocate memory for struct '%s' instance at line %d, column %d",
+      struct_name->buffer, struct_name->line, struct_name->column);
     exit(1);
   }
 
@@ -105,10 +103,7 @@ tea_value_t tea_interpret_evaluate_new(
   rtl_list_for_each(declr_entry, &node->children)
   {
     const tea_ast_node_t* declr_node = rtl_list_record(declr_entry, tea_ast_node_t, link);
-    if (!declr_node) {
-      rtl_log_err("Invalid declr_node!");
-      exit(1);
-    }
+    rtl_assert(declr_node, "Invalid field declaration node during struct instantiation");
 
     const tea_ast_node_t* field_node = rtl_list_record(field_entry, tea_ast_node_t, link);
 
@@ -123,18 +118,12 @@ tea_value_t tea_interpret_evaluate_new(
       value_node = declr_node;
     }
 
-    if (!value_node) {
-      rtl_log_err("Invalid value_node!");
-      exit(1);
-    }
+    rtl_assert(value_node, "Invalid value node during struct instantiation");
 
     const tea_token_t* declr = declr_node->token;
     const tea_token_t* field = field_node->token;
 
-    if (declr == NULL || field == NULL) {
-      rtl_log_err("Invalid declr or field!");
-      exit(1);
-    }
+    rtl_assert(declr && field, "Missing field or declaration tokens during struct instantiation");
 
     if (declr->buffer_size != field->buffer_size ||
         strncmp(declr->buffer, field->buffer, field->buffer_size) != 0) {
