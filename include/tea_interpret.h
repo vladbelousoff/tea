@@ -40,6 +40,15 @@ typedef struct
   };
 } tea_value_t;
 
+inline tea_value_type_t tea_value_get_type(const tea_value_t* value)
+{
+  if (value->type == TEA_VALUE_NULL) {
+    return value->null_type;
+  }
+
+  return value->type;
+}
+
 typedef struct tea_scope
 {
   struct tea_scope* parent_scope;

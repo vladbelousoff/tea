@@ -244,12 +244,12 @@ static bool tea_declare_variable(tea_context_t* context, tea_scope_t* scope, con
   variable->flags = flags;
   tea_value_t value = tea_interpret_evaluate_expression(context, scope, initial_value);
   if (type) {
-    const tea_value_type_t defined_type = tea_value_get_type_by_string(type);
-    rtl_assert(defined_type != TEA_VALUE_INVALID, "Can't find type '%s'", type);
+    const tea_value_type_t predefined_type = tea_value_get_type_by_string(type);
+    rtl_assert(predefined_type != TEA_VALUE_INVALID, "Can't find type '%s'", type);
     if (value.type == TEA_VALUE_NULL) {
-      value.type = defined_type;
+      value.null_type = predefined_type;
     } else {
-      rtl_assert(value.type == defined_type, "Type mismatch");
+      rtl_assert(value.type == predefined_type, "Type mismatch");
     }
   }
   variable->value = value;
