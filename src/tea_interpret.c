@@ -191,7 +191,7 @@ static bool tea_interpret_execute_stmt(tea_context_t* context, tea_scope_t* scop
   return true;
 }
 
-static tea_variable_t* tea_context_find_variable_this_scope_only(
+static tea_variable_t* tea_scope_find_variable_local(
   const tea_scope_t* scope, const char* name)
 {
   rtl_list_entry_t* entry;
@@ -210,11 +210,11 @@ static tea_variable_t* tea_context_find_variable_this_scope_only(
   return NULL;
 }
 
-static tea_variable_t* tea_context_find_variable(const tea_scope_t* scope, const char* name)
+static tea_variable_t* tea_scope_find_variable(const tea_scope_t* scope, const char* name)
 {
   const tea_scope_t* current_scope = scope;
   while (current_scope) {
-    tea_variable_t* variable = tea_context_find_variable_this_scope_only(current_scope, name);
+    tea_variable_t* variable = tea_scope_find_variable_local(current_scope, name);
     if (variable) {
       return variable;
     }
@@ -228,7 +228,7 @@ static tea_variable_t* tea_context_find_variable(const tea_scope_t* scope, const
 static bool tea_declare_variable(tea_context_t* context, tea_scope_t* scope, const char* name,
   const unsigned int flags, const char* type, const tea_ast_node_t* initial_value)
 {
-  tea_variable_t* variable = tea_context_find_variable_this_scope_only(scope, name);
+  tea_variable_t* variable = tea_scope_find_variable_local(scope, name);
   if (variable) {
     rtl_log_err("Variable %s is already declared", variable->name);
     return false;
@@ -312,7 +312,7 @@ static bool tea_interpret_let(
   return tea_declare_variable(context, scope, name->buffer, flags, type_name, expr);
 }
 
-static tea_value_t* tea_field_access(
+static tea_value_t* tea_get_field_pointer(
   const tea_context_t* context, const tea_scope_t* scope, const tea_ast_node_t* node);
 
 static bool tea_interpret_execute_assign(
@@ -331,7 +331,7 @@ static bool tea_interpret_execute_assign(
       exit(1);
     }
 
-    tea_value_t* value = tea_field_access(context, scope, field_node);
+    tea_value_t* value = tea_get_field_pointer(context, scope, field_node);
     if (!value) {
       return false;
     }
@@ -347,7 +347,7 @@ static bool tea_interpret_execute_assign(
     return true;
   }
 
-  tea_variable_t* variable = tea_context_find_variable(scope, name->buffer);
+  tea_variable_t* variable = tea_scope_find_variable(scope, name->buffer);
   if (!variable) {
     rtl_log_err("Cannot find variable '%s'", name->buffer);
     exit(1);
@@ -892,7 +892,7 @@ static tea_value_t tea_interpret_evaluate_ident(
     exit(1);
   }
 
-  const tea_variable_t* variable = tea_context_find_variable(scope, token->buffer);
+  const tea_variable_t* variable = tea_scope_find_variable(scope, token->buffer);
   if (!variable) {
     rtl_log_err("Can't find variable %s", token->buffer);
     exit(1);
@@ -1025,7 +1025,7 @@ static tea_value_t tea_interpret_evaluate_function_call(
     const tea_token_t* field_token = field_node->token;
     rtl_assert(field_token && object_token, "These fields can't be null");
 
-    tea_variable_t* variable = tea_context_find_variable(scope, object_token->buffer);
+    tea_variable_t* variable = tea_scope_find_variable(scope, object_token->buffer);
     if (!variable) {
       rtl_log_err("Can't find variable %s", object_token->buffer);
       exit(1);
@@ -1215,7 +1215,7 @@ static tea_value_t tea_interpret_evaluate_new(
   return result;
 }
 
-static tea_value_t* tea_field_access(
+static tea_value_t* tea_get_field_pointer(
   const tea_context_t* context, const tea_scope_t* scope, const tea_ast_node_t* node)
 {
   // Extract field information
@@ -1233,7 +1233,7 @@ static tea_value_t* tea_field_access(
   rtl_assert(object_name, "Object AST node missing token information");
 
   // Get the variable containing the object
-  const tea_variable_t* variable = tea_context_find_variable(scope, object_name->buffer);
+  const tea_variable_t* variable = tea_scope_find_variable(scope, object_name->buffer);
   rtl_assert(variable, "Variable '%s' not found in current scope (line %d, col %d)",
     object_name->buffer, object_name->line, object_name->column);
 
@@ -1270,7 +1270,7 @@ static tea_value_t* tea_field_access(
 static tea_value_t tea_interpret_field_access(
   const tea_context_t* context, const tea_scope_t* scope, const tea_ast_node_t* node)
 {
-  const tea_value_t* result = tea_field_access(context, scope, node);
+  const tea_value_t* result = tea_get_field_pointer(context, scope, node);
   if (result) {
     return *result;
   }
