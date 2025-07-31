@@ -35,11 +35,11 @@ let x = 42;              // Immutable variable
 let mut y = 10;          // Mutable variable
 let z: i32 = 100;        // Explicit type annotation
 let mut w: f32 = 3.14;   // Mutable with type
-let opt_var?: i32 = 5;   // Optional variable
-let mut opt_mut?: f32 = 2.0; // Optional mutable variable
+let opt_var: i32? = 5;   // Optional variable
+let mut opt_mut: f32? = 2.0; // Optional mutable variable
 ```
 
-**Optional Variables**: Variables can be marked as optional using the `?` suffix. Optional variables can hold a value or be unset, providing safer handling of potentially absent values.
+**Optional Types**: Types can be marked as optional using the `?` suffix. Optional types can hold a value or be null, providing safer handling of potentially absent values.
 
 ### Functions
 
@@ -395,7 +395,7 @@ make -j$(nproc)
 Tea is currently in development. The core language features are implemented including:
 
 - ✅ Variable declarations and assignments
-- ✅ Optional variables with `?` syntax
+- ✅ Optional types with `?` syntax
 - ✅ Function definitions and calls
 - ✅ Struct definitions and instantiation
 - ✅ Method definitions with impl blocks

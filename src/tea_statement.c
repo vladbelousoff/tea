@@ -24,12 +24,35 @@ bool tea_interpret_execute_stmt(tea_context_t* context, tea_scope_t* scope,
   return true;
 }
 
+static void tea_extract_type_info(
+  const tea_ast_node_t* type_annot, const char** type_name, bool* is_optional)
+{
+  *type_name = NULL;
+  *is_optional = false;
+
+  if (!type_annot || type_annot->type != TEA_AST_NODE_TYPE_ANNOT) {
+    return;
+  }
+
+  rtl_list_entry_t* entry = rtl_list_first(&type_annot->children);
+  if (!entry) {
+    return;
+  }
+
+  const tea_ast_node_t* type_spec = rtl_list_record(entry, tea_ast_node_t, link);
+  *type_name = type_spec->token ? type_spec->token->buffer : NULL;
+
+  if (type_spec->type == TEA_AST_NODE_OPTIONAL_TYPE) {
+    *is_optional = true;
+  }
+}
+
 bool tea_interpret_let(tea_context_t* context, tea_scope_t* scope, const tea_ast_node_t* node)
 {
   const tea_token_t* name = node->token;
 
   unsigned int flags = 0;
-  const tea_ast_node_t* type = NULL;
+  const tea_ast_node_t* type_annot = NULL;
   const tea_ast_node_t* expr = NULL;
 
   rtl_list_entry_t* entry;
@@ -40,11 +63,8 @@ bool tea_interpret_let(tea_context_t* context, tea_scope_t* scope, const tea_ast
       case TEA_AST_NODE_MUT:
         flags |= TEA_VARIABLE_MUTABLE;
         break;
-      case TEA_AST_NODE_OPTIONAL:
-        flags |= TEA_VARIABLE_OPTIONAL;
-        break;
       case TEA_AST_NODE_TYPE_ANNOT:
-        type = child;
+        type_annot = child;
         break;
       default:
         expr = child;
@@ -52,8 +72,14 @@ bool tea_interpret_let(tea_context_t* context, tea_scope_t* scope, const tea_ast
     }
   }
 
-  const tea_token_t* type_token = type ? type->token : NULL;
-  const char* type_name = type_token ? type_token->buffer : NULL;
+  const char* type_name;
+  bool is_optional;
+  tea_extract_type_info(type_annot, &type_name, &is_optional);
+
+  if (is_optional) {
+    flags |= TEA_VARIABLE_OPTIONAL;
+  }
+
   return tea_declare_variable(context, scope, name->buffer, flags, type_name, expr);
 }
 

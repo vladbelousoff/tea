@@ -121,9 +121,9 @@ struct_field_list(field_list_node) ::= struct_field(single_field). {
     tea_ast_node_add_child(field_list_node, single_field);
 }
 
-struct_field(field_node) ::= IDENT(field_name) COLON IDENT(field_type) SEMICOLON. {
+struct_field(field_node) ::= IDENT(field_name) COLON type_spec(field_type_node) SEMICOLON. {
     field_node = tea_ast_node_create(TEA_AST_NODE_STRUCT_FIELD, field_name);
-    tea_ast_node_add_child(field_node, tea_ast_node_create(TEA_AST_NODE_IDENT, field_type));
+    tea_ast_node_add_child(field_node, field_type_node);
 }
 
 impl_block(impl_block_node) ::= IMPL IDENT(struct_name) LBRACE impl_method_list_opt(methods) RBRACE. {
@@ -179,11 +179,19 @@ struct_field_init(field_init_node) ::= IDENT(field_name) COLON expression(value_
 param_list_opt(param_list_node) ::= param_list(params). { param_list_node = params; }
 param_list_opt(param_list_node) ::= . { param_list_node = NULL; }
 
-return_type_opt(return_type_node) ::= ARROW IDENT(type_name). { return_type_node = tea_ast_node_create(TEA_AST_NODE_RETURN_TYPE, type_name); }
+return_type_opt(return_type_node) ::= ARROW type_spec(type_node). { return_type_node = tea_ast_node_create(TEA_AST_NODE_RETURN_TYPE, NULL); tea_ast_node_add_child(return_type_node, type_node); }
 return_type_opt(return_type_node) ::= . { return_type_node = NULL; }
 
-type_annotation_opt(type_annotation_node) ::= COLON IDENT(type_name). { type_annotation_node = tea_ast_node_create(TEA_AST_NODE_TYPE_ANNOT, type_name); }
+type_annotation_opt(type_annotation_node) ::= COLON type_spec(type_node). { type_annotation_node = tea_ast_node_create(TEA_AST_NODE_TYPE_ANNOT, NULL); tea_ast_node_add_child(type_annotation_node, type_node); }
 type_annotation_opt(type_annotation_node) ::= . { type_annotation_node = NULL; }
+
+type_spec(type_spec_node) ::= IDENT(type_name) quest_mark_opt(opt). {
+    if (opt) {
+        type_spec_node = tea_ast_node_create(TEA_AST_NODE_OPTIONAL_TYPE, type_name);
+    } else {
+        type_spec_node = tea_ast_node_create(TEA_AST_NODE_IDENT, type_name);
+    }
+}
 
 stmt_list_opt(stmt_list_node) ::= stmt_list(stmts). { stmt_list_node = stmts; }
 stmt_list_opt(stmt_list_node) ::= . { stmt_list_node = NULL; }
@@ -205,9 +213,9 @@ param_list(param_list_node) ::= parameter(single_param). {
     tea_ast_node_add_child(param_list_node, single_param);
 }
 
-parameter(param_node) ::= IDENT(param_name) COLON IDENT(param_type). {
+parameter(param_node) ::= IDENT(param_name) COLON type_spec(type_node). {
     param_node = tea_ast_node_create(TEA_AST_NODE_PARAM, param_name);
-    tea_ast_node_add_child(param_node, tea_ast_node_create(TEA_AST_NODE_PARAM, param_type));
+    tea_ast_node_add_child(param_node, type_node);
 }
 
 arg_list(arg_list_node) ::= arg_list(existing_args) COMMA expression(new_arg). {
@@ -242,13 +250,12 @@ statement(stmt_node) ::= if_stmt(if_stmt_node). { stmt_node = if_stmt_node; }
 statement(stmt_node) ::= while_stmt(while_stmt_node). { stmt_node = while_stmt_node; }
 statement(stmt_node) ::= expression(expr_node) SEMICOLON. { stmt_node = expr_node; }
 
-quest_mark_opt(node) ::= QUESTION_MARK. { node = tea_ast_node_create(TEA_AST_NODE_OPTIONAL, NULL); }
+quest_mark_opt(node) ::= QUESTION_MARK. { node = tea_ast_node_create(TEA_AST_NODE_OPTIONAL_TYPE, NULL); }
 quest_mark_opt(node) ::= . { node = NULL; }
 
-let_stmt(let_stmt_node) ::= LET mut_opt(mut) IDENT(var_name) quest_mark_opt(opt) type_annotation_opt(type_annot) ASSIGN expression(init_expr) SEMICOLON. {
+let_stmt(let_stmt_node) ::= LET mut_opt(mut) IDENT(var_name) type_annotation_opt(type_annot) ASSIGN expression(init_expr) SEMICOLON. {
     let_stmt_node = tea_ast_node_create(TEA_AST_NODE_LET, var_name);
     tea_ast_node_add_child(let_stmt_node, mut);
-    tea_ast_node_add_child(let_stmt_node, opt);
     tea_ast_node_add_child(let_stmt_node, type_annot);
     tea_ast_node_add_child(let_stmt_node, init_expr);
 }
