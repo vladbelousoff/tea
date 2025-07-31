@@ -35,8 +35,8 @@ let x = 42;              // Immutable variable
 let mut y = 10;          // Mutable variable
 let z: i32 = 100;        // Explicit type annotation
 let mut w: f32 = 3.14;   // Mutable with type
-let opt_var: i32? = 5;   // Optional variable
-let mut opt_mut: f32? = 2.0; // Optional mutable variable
+let opt_var: i32? = 5;   // Optional type
+let mut opt_mut: f32? = 2.0; // Optional mutable type
 ```
 
 **Optional Types**: Types can be marked as optional using the `?` suffix. Optional types can hold a value or be null, providing safer handling of potentially absent values.
@@ -219,7 +219,7 @@ fn main() {
     rect.scale(2.0);
     let scaled_area = rect.area();
     
-    // Example with optional variables
+    // Example with optional types
     let optional_width?: f32 = 15.0;
     let mut optional_height?: f32 = 8.0;
 }
@@ -346,8 +346,6 @@ Native functions work with the `tea_value_t` type system:
 - `TEA_VALUE_STRING` - Null-terminated strings
 - `TEA_VALUE_INSTANCE` - Complex objects (structs)
 - `TEA_VALUE_INVALID` - Uninitialized or error state
-
-Values also support an optional flag (`is_optional`) for handling optional variables.
 
 ### Best Practices
 

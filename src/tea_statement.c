@@ -24,27 +24,19 @@ bool tea_interpret_execute_stmt(tea_context_t* context, tea_scope_t* scope,
   return true;
 }
 
-static void tea_extract_type_info(
-  const tea_ast_node_t* type_annot, const char** type_name, bool* is_optional)
+static const char* tea_extract_type_name(const tea_ast_node_t* type_annot)
 {
-  *type_name = NULL;
-  *is_optional = false;
-
   if (!type_annot || type_annot->type != TEA_AST_NODE_TYPE_ANNOT) {
-    return;
+    return NULL;
   }
 
   rtl_list_entry_t* entry = rtl_list_first(&type_annot->children);
   if (!entry) {
-    return;
+    return NULL;
   }
 
   const tea_ast_node_t* type_spec = rtl_list_record(entry, tea_ast_node_t, link);
-  *type_name = type_spec->token ? type_spec->token->buffer : NULL;
-
-  if (type_spec->type == TEA_AST_NODE_OPTIONAL_TYPE) {
-    *is_optional = true;
-  }
+  return type_spec->token ? type_spec->token->buffer : NULL;
 }
 
 bool tea_interpret_let(tea_context_t* context, tea_scope_t* scope, const tea_ast_node_t* node)
@@ -72,14 +64,7 @@ bool tea_interpret_let(tea_context_t* context, tea_scope_t* scope, const tea_ast
     }
   }
 
-  const char* type_name;
-  bool is_optional;
-  tea_extract_type_info(type_annot, &type_name, &is_optional);
-
-  if (is_optional) {
-    flags |= TEA_VARIABLE_OPTIONAL;
-  }
-
+  const char* type_name = tea_extract_type_name(type_annot);
   return tea_declare_variable(context, scope, name->buffer, flags, type_name, expr);
 }
 
@@ -244,7 +229,6 @@ bool tea_interpret_execute_while(tea_context_t* context, tea_scope_t* scope,
 
   tea_loop_context_t loop_context;
   loop_context.is_break_set = false;
-  loop_context.is_continue_set = false;
 
   while (true) {
     const tea_value_t cond_val = tea_interpret_evaluate_expression(context, scope, while_cond);
