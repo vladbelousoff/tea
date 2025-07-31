@@ -17,8 +17,6 @@ const char* tea_value_get_type_string(const tea_value_type_t type)
       return "i32";
     case TEA_VALUE_F32:
       return "f32";
-    case TEA_VALUE_STRING:
-      return "string";
     case TEA_VALUE_INSTANCE:
       return "object";
     case TEA_VALUE_NULL:
@@ -37,7 +35,7 @@ typedef struct
 tea_value_type_t tea_value_get_type_by_string(const char* name)
 {
   static tea_type_string_id ids[] = { { "i32", TEA_VALUE_I32 }, { "f32", TEA_VALUE_F32 },
-    { "string", TEA_VALUE_STRING }, { NULL, TEA_VALUE_INVALID } };
+    { NULL, TEA_VALUE_INVALID } };
 
   for (int i = 0; ids[i].name; ++i) {
     if (!strcmp(name, ids[i].name)) {

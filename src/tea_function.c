@@ -340,9 +340,6 @@ tea_value_t tea_interpret_evaluate_function_call(
           rtl_log_dbg("Declare param %s : %s = %f", param_name_token->buffer,
             tea_value_get_type_string(variable->value.type), variable->value.f32);
           break;
-        case TEA_VALUE_STRING:
-          rtl_log_dbg("Declare param %s : %s = '%s'", param_name_token->buffer,
-            tea_value_get_type_string(variable->value.type), variable->value.string);
         default:
           break;
       }

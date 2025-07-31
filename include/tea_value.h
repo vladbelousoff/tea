@@ -10,7 +10,6 @@ typedef enum
   TEA_VALUE_NULL,
   TEA_VALUE_I32,
   TEA_VALUE_F32,
-  TEA_VALUE_STRING,
   TEA_VALUE_INSTANCE,
 } tea_value_type_t;
 
@@ -29,7 +28,6 @@ typedef struct
   {
     float f32;
     int32_t i32;
-    const char* string;
     tea_instance_t* object;
     // if the type is TEA_VALUE_NULL,
     // we need to know the exact type of the null

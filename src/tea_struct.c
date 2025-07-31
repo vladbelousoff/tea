@@ -185,10 +185,7 @@ tea_value_t tea_interpret_evaluate_new(
 
   object->type = struct_name->buffer;
 
-  tea_value_t result;
-  result.type = TEA_VALUE_INSTANCE;
-  result.object = object;
-
+  const tea_value_t result = { .type = TEA_VALUE_INSTANCE, .object = object };
   return result;
 }
 

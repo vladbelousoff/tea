@@ -37,10 +37,11 @@ static tea_value_t tea_print(tea_context_t *context, const tea_function_args_t *
       case TEA_VALUE_F32:
         printf("%f", value.f32);
         break;
-      case TEA_VALUE_STRING:
-        printf("%s", value.string);
-        break;
       case TEA_VALUE_INSTANCE:
+        if (!strcmp(value.object->type, "string")) {
+          printf("%s", (char *)value.object->buffer);
+        }
+        break;
       case TEA_VALUE_INVALID:
         break;
     }

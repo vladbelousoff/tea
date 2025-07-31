@@ -145,10 +145,6 @@ bool tea_interpret_assign(tea_context_t* context, tea_scope_t* scope, const tea_
       rtl_log_dbg("New value for variable %s : %s = %f", name->buffer,
         tea_value_get_type_string(variable->value.type), variable->value.f32);
       break;
-    case TEA_VALUE_STRING:
-      rtl_log_dbg("New value for variable %s : %s = '%s'", name->buffer,
-        tea_value_get_type_string(variable->value.type), variable->value.string);
-      break;
     default:
       break;
   }

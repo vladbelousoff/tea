@@ -97,10 +97,18 @@ tea_value_t tea_interpret_evaluate_string(const tea_ast_node_t* node)
     return tea_value_invalid();
   }
 
-  tea_value_t result;
-  result.type = TEA_VALUE_STRING;
-  result.string = token->buffer;
+  tea_instance_t* object = rtl_malloc(sizeof(tea_instance_t) + token->buffer_size);
+  if (!object) {
+    rtl_log_err(
+      "Memory error: Failed to allocate memory for struct '%s' instance at line %d, column %d",
+      token->buffer, token->line, token->column);
+    return tea_value_invalid();
+  }
 
+  object->type = "string";
+  strcpy(object->buffer, token->buffer);
+
+  const tea_value_t result = { .type = TEA_VALUE_INSTANCE, .object = object };
   return result;
 }
 
