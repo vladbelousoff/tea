@@ -106,7 +106,7 @@ tea_value_t tea_interpret_evaluate_string(const tea_ast_node_t* node)
   }
 
   object->type = "string";
-  strcpy(object->buffer, token->buffer);
+  strncpy(object->buffer, token->buffer, token->buffer_size);
 
   const tea_value_t result = { .type = TEA_VALUE_INSTANCE, .object = object };
   return result;
