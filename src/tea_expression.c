@@ -97,7 +97,7 @@ tea_value_t tea_interpret_evaluate_string(const tea_ast_node_t* node)
     return tea_value_invalid();
   }
 
-  tea_instance_t* object = rtl_malloc(sizeof(tea_instance_t) + token->buffer_size);
+  tea_instance_t* object = rtl_malloc(sizeof(tea_instance_t) + token->buffer_size + 1);
   if (!object) {
     rtl_log_err(
       "Memory error: Failed to allocate memory for struct '%s' instance at line %d, column %d",
@@ -106,7 +106,7 @@ tea_value_t tea_interpret_evaluate_string(const tea_ast_node_t* node)
   }
 
   object->type = "string";
-  strncpy(object->buffer, token->buffer, token->buffer_size);
+  memcpy(object->buffer, token->buffer, token->buffer_size + 1);
 
   const tea_value_t result = { .type = TEA_VALUE_INSTANCE, .object = object };
   return result;
