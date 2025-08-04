@@ -11,7 +11,7 @@ the expressiveness and ease-of-use of scripting languages with Rust's key design
 - **Static Typing**: Type annotations with inference capabilities for safer scripts
 - **Structs and Methods**: Data structures with associated methods via `impl` blocks
 - **Control Flow**: Standard control structures (`if`/`else`, `while` loops)
-- **Traits (Planned)**: Define shared behavior across types with trait definitions
+- **Traits**: Define shared behavior across types with trait definitions
 
 ## Rust Influences
 
@@ -21,7 +21,7 @@ Tea brings Rust's safety concepts to scripting:
 - **Impl Blocks**: Methods are defined separately from struct definitions using `impl` blocks
 - **Type Annotations**: Optional but explicit type annotations with `:` for safer scripts
 - **Arrow Syntax**: Function return types specified with `->`
-- **Traits (Planned)**: Rust-style trait system for defining shared behavior
+- **Traits**: Rust-style trait system for defining shared behavior
 - **Memory Safety Focus**: Controlled mutability helps prevent common scripting errors
 
 ## Syntax Overview
@@ -142,7 +142,7 @@ let comparison = x > y && z <= w;
 let negation = -value;
 ```
 
-### Traits (Planned)
+### Traits
 
 Define shared behavior across types with traits:
 
@@ -401,9 +401,8 @@ Tea is currently in development. The core language features are implemented incl
 - ✅ Expression evaluation
 - ✅ Type system foundations
 - ✅ Native function binding
+- ✅ Trait system for shared behavior
 
 **Planned Features:**
-
-- 🔄 Trait system for shared behavior
 - 🔄 Advanced type inference
 - 🔄 Module system
