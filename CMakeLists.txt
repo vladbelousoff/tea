@@ -84,6 +84,7 @@ set(TEA_HEADER_FILES
         include/tea_statement.h
         include/tea_function.h
         include/tea_struct.h
+        include/tea_trait.h
 )
 
 set(TEA_SOURCE_FILES
@@ -98,6 +99,7 @@ set(TEA_SOURCE_FILES
         src/tea_statement.c
         src/tea_function.c
         src/tea_struct.c
+        src/tea_trait.c
 )
 
 add_library(tea_lang

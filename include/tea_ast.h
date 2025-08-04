@@ -42,6 +42,10 @@ typedef enum
   TEA_AST_NODE_FIELD_ACCESS,
   TEA_AST_NODE_OPTIONAL_TYPE,
   TEA_AST_NODE_NULL,
+  TEA_AST_NODE_TRAIT,
+  TEA_AST_NODE_TRAIT_METHOD,
+  TEA_AST_NODE_TRAIT_IMPL,
+  TEA_AST_NODE_TRAIT_IMPL_ITEM,
 } tea_ast_node_type_t;
 
 typedef struct tea_ast_node

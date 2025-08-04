@@ -2,6 +2,7 @@
 #include "tea_expression.h"
 #include "tea_function.h"
 #include "tea_struct.h"
+#include "tea_trait.h"
 
 #include <stdlib.h>
 
@@ -315,6 +316,11 @@ bool tea_interpret_execute(tea_context_t* context, tea_scope_t* scope, const tea
     return true;
   }
 
+  if (!node) {
+    rtl_log_err("Node is null");
+    return true;
+  }
+
   switch (node->type) {
     case TEA_AST_NODE_LET:
       return tea_interpret_let(context, scope, node);
@@ -339,6 +345,10 @@ bool tea_interpret_execute(tea_context_t* context, tea_scope_t* scope, const tea
       return tea_interpret_struct_declaration(context, node);
     case TEA_AST_NODE_IMPL_BLOCK:
       return tea_interpret_impl_block(context, node);
+    case TEA_AST_NODE_TRAIT:
+      return tea_interpret_trait_declaration(context, node);
+    case TEA_AST_NODE_TRAIT_IMPL:
+      return tea_interpret_trait_implementation(context, node);
     case TEA_AST_NODE_PROGRAM:
     case TEA_AST_NODE_STMT:
     case TEA_AST_NODE_FUNCTION_CALL_ARGS:

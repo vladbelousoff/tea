@@ -9,6 +9,8 @@ typedef struct
   rtl_list_entry_t functions;
   rtl_list_entry_t native_functions;
   rtl_list_entry_t struct_declarations;
+  rtl_list_entry_t trait_declarations;
+  rtl_list_entry_t trait_implementations;
   rtl_list_entry_t variable_pool;
 } tea_context_t;
 

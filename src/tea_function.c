@@ -3,6 +3,7 @@
 #include "tea_expression.h"
 #include "tea_statement.h"
 #include "tea_struct.h"
+#include "tea_trait.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -259,6 +260,11 @@ tea_value_t tea_interpret_evaluate_function_call(
 
     function_name = field_token->buffer;
     function = tea_context_find_function(&struct_declaration->functions, function_name);
+    
+    // If not found in struct methods, try trait methods
+    if (!function) {
+      function = tea_resolve_trait_method(context, variable->value.object->type, function_name);
+    }
   } else {
     const tea_token_t* token = node->token;
     if (token) {

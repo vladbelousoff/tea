@@ -12,6 +12,8 @@ void tea_interpret_init(tea_context_t* context, const char* filename)
   rtl_list_init(&context->functions);
   rtl_list_init(&context->native_functions);
   rtl_list_init(&context->struct_declarations);
+  rtl_list_init(&context->trait_declarations);
+  rtl_list_init(&context->trait_implementations);
   rtl_list_init(&context->variable_pool);
 }
 

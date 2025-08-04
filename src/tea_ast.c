@@ -158,6 +158,14 @@ const char *tea_ast_node_get_type_name(const tea_ast_node_type_t type)
       return "OPTIONAL_TYPE";
     case TEA_AST_NODE_NULL:
       return "NULL";
+    case TEA_AST_NODE_TRAIT:
+      return "TRAIT";
+    case TEA_AST_NODE_TRAIT_METHOD:
+      return "TRAIT_METHOD";
+    case TEA_AST_NODE_TRAIT_IMPL:
+      return "TRAIT_IMPL";
+    case TEA_AST_NODE_TRAIT_IMPL_ITEM:
+      return "TRAIT_IMPL_ITEM";
     default:
       return "UNKNOWN";
   }
