@@ -1,0 +1,91 @@
+// Function declarations and basic function calls
+
+// Simple function with no parameters and no return value
+fn greet() {
+    // Function body - just demonstrates syntax
+}
+
+// Function with parameters
+fn add_numbers(a: int, b: int) {
+    let sum = a + b;
+    // sum is calculated but not returned
+}
+
+// Function with return type and return statement
+fn multiply(x: int, y: int) -> int {
+    let result = x * y;
+    return result;
+}
+
+// Function with single parameter
+fn square(n: int) -> int {
+    return n * n;
+}
+
+// Function that returns a constant
+fn get_magic_number() -> int {
+    return 42;
+}
+
+// Function with floating-point parameters and return
+fn calculate_area(width: float, height: float) -> float {
+    return width * height;
+}
+
+// Function calls and using return values
+let number = get_magic_number();        // number = 42
+let squared = square(5);                // squared = 25
+let product = multiply(6, 7);           // product = 42
+let area = calculate_area(10.5, 8.0);   // area = 84.0
+
+// Function calls in expressions
+let complex_result = multiply(3, 4) + square(2);  // 12 + 4 = 16
+add_numbers(10, 20);                // Note: add_numbers doesn't return a value
+
+// Function with conditional logic
+fn absolute_value(x: int) -> int {
+    if x < 0 {
+        return -x;
+    } else {
+        return x;
+    }
+}
+
+// Function with loop
+fn factorial(n: int) -> int {
+    let mut result = 1;
+    let mut i = 1;
+    
+    while i <= n {
+        result = result * i;
+        i = i + 1;
+    }
+    
+    return result;
+}
+
+// Function that calls other functions
+fn calculate_perimeter(width: float, height: float) -> float {
+    let double_width = multiply(2, width);   // Note: multiply expects int, this may cause issues
+    let double_height = multiply(2, height); // Note: multiply expects int, this may cause issues
+    return double_width + double_height;
+}
+
+// Functions with different parameter counts
+fn no_params() -> int {
+    return 1;
+}
+
+fn one_param(x: int) -> int {
+    return x + 1;
+}
+
+fn three_params(a: int, b: int, c: int) -> int {
+    return a + b + c;
+}
+
+// Calling functions with variables
+let value1 = 10;
+let value2 = 20;
+let sum_result = multiply(value1, value2);    // Using variables as arguments
+let abs_result = absolute_value(-15);         // Using literal as argument

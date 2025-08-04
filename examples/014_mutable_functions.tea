@@ -1,0 +1,92 @@
+// Mutable functions using 'fn mut' syntax
+// These functions can modify variables in their enclosing scope
+
+// Global variables that can be modified by mutable functions
+let mut global_counter = 0;
+let mut global_total = 0;
+let immutable_value = 100;
+
+// Simple mutable function that modifies global state
+fn mut increment_counter() {
+    global_counter = global_counter + 1;
+}
+
+// Mutable function with parameters that still modifies global state
+fn mut add_to_total(amount: int) {
+    global_total = global_total + amount;
+}
+
+// Mutable function that performs complex modifications
+fn mut reset_and_increment() {
+    global_counter = 0;
+    global_total = 0;
+    global_counter = global_counter + 1;
+    global_total = global_total + 10;
+}
+
+// Regular function (non-mutable) for comparison
+fn get_current_state() -> int {
+    // This function can read global variables but cannot modify them
+    let current_sum = global_counter + global_total;
+    return current_sum;
+}
+
+// Mutable function with conditional modifications
+fn mut conditional_update(threshold: int) {
+    if global_counter < threshold {
+        global_counter = global_counter + 5;
+    } else {
+        global_total = global_total + global_counter;
+        global_counter = 0;
+    }
+}
+
+// Mutable function with loops
+fn mut batch_increment(times: int) {
+    let mut i = 0;
+    while i < times {
+        global_counter = global_counter + 1;
+        i = i + 1;
+    }
+}
+
+// Demonstration of mutable function usage
+increment_counter();                    // global_counter = 1
+add_to_total(50);                      // global_total = 50
+increment_counter();                    // global_counter = 2
+
+let current_state = get_current_state(); // current_state = 2 + 50 = 52
+
+conditional_update(5);                  // global_counter < 5, so global_counter = 7
+batch_increment(3);                     // global_counter = 10
+
+reset_and_increment();                  // global_counter = 1, global_total = 10
+
+// Mutable function that works with different data types
+let mut status_flag = 0;
+let mut error_count = 0;
+
+fn mut update_status(new_status: int, errors: int) {
+    status_flag = new_status;
+    error_count = error_count + errors;
+}
+
+// Mutable function with return value (can both modify and return)
+fn mut increment_and_get() -> int {
+    global_counter = global_counter + 1;
+    return global_counter;
+}
+
+// Using mutable function that returns a value
+let new_counter_value = increment_and_get();
+
+// Mutable function that demonstrates the difference from regular functions
+fn regular_attempt_modify() {
+    // This would be an error if we tried to modify global_counter
+    // global_counter = global_counter + 1;  // Error: cannot modify in non-mutable function
+    let local_copy = global_counter;  // Reading is allowed
+}
+
+fn mut successful_modify() {
+    global_counter = global_counter + 1;  // This works because function is mutable
+}

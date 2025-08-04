@@ -14,7 +14,8 @@ typedef struct
   rtl_list_entry_t variable_pool;
 } tea_context_t;
 
-#define TEA_VARIABLE_MUTABLE 1 << 0
+#define TEA_VARIABLE_MUTABLE  1 << 0
+#define TEA_VARIABLE_OPTIONAL 1 << 1
 
 typedef struct
 {

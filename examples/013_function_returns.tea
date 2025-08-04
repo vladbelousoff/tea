@@ -1,0 +1,120 @@
+// Advanced function features: return values, complex logic, and function composition
+
+// Function with multiple return points
+fn classify_number(n: int) -> int {
+    if n < 0 {
+        return -1;  // Negative
+    }
+    if n == 0 {
+        return 0;   // Zero
+    }
+    return 1;       // Positive
+}
+
+// Function with complex calculation
+fn fibonacci(n: int) -> int {
+    if n <= 1 {
+        return n;
+    }
+    
+    let mut a = 0;
+    let mut b = 1;
+    let mut i = 2;
+    
+    while i <= n {
+        let temp = a + b;
+        a = b;
+        b = temp;
+        i = i + 1;
+    }
+    
+    return b;
+}
+
+fn square(x: i32) -> i32 { return x * x; }
+
+// Function that uses other functions
+fn sum_of_squares(a: int, b: int) -> int {
+    let sq_a = square(a);      // Assumes square function from previous example
+    let sq_b = square(b);      // Assumes square function from previous example
+    return sq_a + sq_b;
+}
+
+// Function with string parameter and return
+fn create_greeting(name: string) -> string {
+    // Note: String concatenation might not be fully implemented
+    return 'Hello';  // Simplified return
+}
+
+// Function with optional type parameter
+fn safe_divide(a: int, b: int) -> int? {
+    if b == 0 {
+        return null;  // Cannot divide by zero
+    }
+    return a / b;
+}
+
+// Function that processes arrays/collections conceptually
+fn find_maximum(a: int, b: int, c: int) -> int {
+    let mut max_ab = 0;
+    
+    if a > b {
+        max_ab = a;
+    } else {
+        max_ab = b;
+    }
+    
+    if max_ab > c {
+        return max_ab;
+    } else {
+        return c;
+    }
+}
+
+// Function with accumulator pattern
+fn sum_range(start: int, end: int) -> int {
+    let mut sum = 0;
+    let mut current = start;
+    
+    while current <= end {
+        sum = sum + current;
+        current = current + 1;
+    }
+    
+    return sum;
+}
+
+// Nested function calls
+fn complex_calculation(x: int, y: int) -> int {
+    let step1 = multiply(x, 2);              // x * 2
+    let step2 = square(y);                   // y^2
+    let step3 = sum_of_squares(step1, step2); // (x*2)^2 + (y^2)^2
+    return step3;
+}
+
+// Function composition examples
+let number = 5;
+let result1 = fibonacci(10);                  // 10th Fibonacci number
+let result2 = classify_number(-42);           // -1 (negative)
+let result3 = find_maximum(15, 23, 8);        // 23
+let result4 = sum_range(1, 10);               // 55 (sum of 1 to 10)
+
+// Chained function calls
+let chained = classify_number(square(3));     // classify_number(9) = 1
+
+// Using function results in expressions
+let combined = fibonacci(5) + sum_range(1, 5);  // 5 + 15 = 20
+let comparison = find_maximum(10, 20, 15) > square(4);  // 20 > 16 = 1
+
+// Functions with early returns
+fn check_conditions(a: int, b: int, c: int) -> int {
+    if a <= 0 {
+        return 0;  // Early return for invalid input
+    }
+    
+    if b <= 0 {
+        return 0;  // Early return for invalid input
+    }
+    
+    return a + b + c;  // Normal calculation
+}

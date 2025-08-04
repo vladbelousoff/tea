@@ -1,0 +1,94 @@
+// Conditional statements with if and else
+
+// Simple if statement
+let age = 18;
+let mut status = 0;
+
+if age >= 18 {
+    status = 1;  // Set status to 1 if adult
+}
+
+// If-else statement
+let score = 85;
+let mut grade = 0;
+
+if score >= 90 {
+    grade = 4;  // A grade
+} else {
+    grade = 3;  // Not an A grade
+}
+
+// Nested if-else (multiple conditions)
+let temperature = 25;
+let mut comfort_level = 0;
+
+if temperature < 10 {
+    comfort_level = 1;  // Cold
+} else {
+    if temperature < 20 {
+        comfort_level = 2;  // Cool
+    } else {
+        if temperature < 30 {
+            comfort_level = 3;  // Comfortable
+        } else {
+            comfort_level = 4;  // Hot
+        }
+    }
+}
+
+// If statements with complex conditions
+let balance = 1000;
+let has_premium = 1;
+let withdrawal_amount = 500;
+let mut can_withdraw = 0;
+
+if balance >= withdrawal_amount && has_premium {
+    can_withdraw = 1;
+}
+
+// Multiple if statements (not else-if chain)
+let mut privileges = 0;
+let user_level = 5;
+
+if user_level >= 1 {
+    privileges = privileges + 1;  // Basic access
+}
+
+if user_level >= 3 {
+    privileges = privileges + 10; // Intermediate access
+}
+
+if user_level >= 5 {
+    privileges = privileges + 100; // Advanced access
+}
+
+// If-else with logical operations
+let hour = 14;
+let is_weekend = 0;
+let mut is_work_time = 0;
+
+if hour >= 9 && hour <= 17 && !is_weekend {
+    is_work_time = 1;
+} else {
+    is_work_time = 0;
+}
+
+// Conditional variable assignment pattern
+let value = 42;
+let mut result = 0;
+
+if value > 0 {
+    result = value * 2;
+} else {
+    result = 0;
+}
+
+// Using comparison results directly
+let x = 10;
+let y = 20;
+let is_x_larger = x > y;  // This is 0 (false)
+
+if is_x_larger {
+    // This block won't execute because is_x_larger is 0
+    x = x + 10;
+}

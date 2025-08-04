@@ -60,6 +60,15 @@ tea_value_t tea_interpret_evaluate_unary(
           break;
       }
       break;
+    case TEA_TOKEN_EXCLAMATION_MARK:
+      switch (operand_val.type) {
+        case TEA_VALUE_I32:
+          operand_val.i32 = !operand_val.i32;
+          break;
+        default:
+          break;
+      }
+      break;
     default:
       rtl_log_err("Expression evaluation error: Invalid unary operator '%s' at line %d, column %d",
         token->buffer, token->line, token->column);
@@ -156,5 +165,5 @@ tea_value_t tea_interpret_evaluate_expression(
     } break;
   }
 
-  exit(1);
+  return tea_value_invalid();
 }

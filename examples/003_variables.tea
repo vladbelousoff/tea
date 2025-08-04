@@ -1,0 +1,33 @@
+// Variable declarations use the 'let' keyword
+
+// Immutable variables (default)
+let x = 10;
+let name = 'Alice';
+let temperature = 23.5;
+
+// x = 20; // Error! Immutable variables cannot be reassigned
+
+// Mutable variables use the 'mut' keyword
+let mut counter = 0;
+let mut balance = 100.0;
+let mut current_user = 'Bob';
+
+// Mutable variables can be reassigned
+counter = 1;
+counter = counter + 1;
+balance = balance - 25.0;
+current_user = 'Charlie';
+
+// Type annotations are optional but can be explicit
+let age: i32 = 25;
+let mut score: f32 = 0.0;
+let mut status: string = 'active';
+
+// Variables can be initialized with expressions
+let sum = 10 + 20;
+let mut product = 5 * 3;
+let greeting = 'Hello, World!';
+
+// Variable shadowing is not demonstrated here but may be supported
+let value = 100;
+// let value = 200; // This would shadow the previous declaration

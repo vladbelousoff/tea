@@ -27,7 +27,7 @@
 %token IMPL.
 %token NEW.
 %token DOT.
-%token QUESTION_MARK.
+%token EXCLAMATION_MARK QUESTION_MARK.
 %token NULL.
 %token TRAIT.
 %token FOR.
@@ -402,7 +402,7 @@ mul_expr(mul_expr_node) ::= mul_expr(left_expr) STAR|SLASH(op) unary_expr(right_
 
 mul_expr(mul_expr_node) ::= unary_expr(unary_expr_node). { mul_expr_node = unary_expr_node; }
 
-unary_expr(unary_expr_node) ::= MINUS(op) unary_expr(operand). {
+unary_expr(unary_expr_node) ::= PLUS|MINUS|EXCLAMATION_MARK(op) unary_expr(operand). {
     unary_expr_node = tea_ast_node_create(TEA_AST_NODE_UNARY, op);
     tea_ast_node_add_child(unary_expr_node, operand);
 }

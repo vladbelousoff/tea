@@ -296,7 +296,8 @@ tea_value_t tea_interpret_evaluate_function_call(
           function_name);
       }
     }
-    exit(1);
+
+    return tea_value_invalid();
   }
 
   const tea_ast_node_t* function_params = function->params;

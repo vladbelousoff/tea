@@ -1,0 +1,120 @@
+// Break and continue statements in loops
+
+// Break statement - exits the loop immediately
+let mut i = 0;
+let mut found_value = 0;
+
+while i < 10 {
+    i = i + 1;
+    if i == 6 {
+        found_value = i;
+        break;  // Exit loop when i equals 6
+    }
+}
+// After loop: i = 6, found_value = 6
+
+// Continue statement - skips to next iteration
+let mut sum_odd = 0;
+let mut counter = 0;
+
+while counter < 10 {
+    counter = counter + 1;
+    
+    // Skip even numbers (using division/multiplication instead of modulo)
+    if counter / 2 * 2 == counter {
+        continue;  // Skip the rest of this iteration
+    }
+    
+    sum_odd = sum_odd + counter;
+}
+// Sums only odd numbers: 1 + 3 + 5 + 7 + 9 = 25
+
+// Break in nested loops (only breaks inner loop)
+let mut outer_count = 0;
+let mut total = 0;
+
+while outer_count < 3 {
+    let mut inner_count = 0;
+    
+    while inner_count < 5 {
+        inner_count = inner_count + 1;
+        
+        if inner_count == 3 {
+            break;  // Only breaks the inner loop
+        }
+        
+        total = total + inner_count;
+    }
+    
+    outer_count = outer_count + 1;
+}
+
+// Continue in nested loops
+let mut result = 0;
+let mut x = 0;
+
+while x < 4 {
+    let mut y = 0;
+    x = x + 1;
+    
+    while y < 4 {
+        y = y + 1;
+        
+        if y == 2 {
+            continue;  // Skip when y equals 2
+        }
+        
+        result = result + x * 10 + y;
+    }
+}
+
+// Complex break condition
+let mut search_complete = 0;
+let mut attempts = 0;
+let max_attempts = 20;
+
+while attempts < max_attempts {
+    attempts = attempts + 1;
+    
+    // Simulate some complex condition (check if divisible by 3)
+    if attempts > 15 && attempts / 3 * 3 == attempts {
+        search_complete = 1;
+        break;
+    }
+}
+
+// Multiple continue conditions
+let mut processed = 0;
+let mut item = 0;
+
+while item < 20 {
+    item = item + 1;
+    
+    // Skip multiples of 3 (using division/multiplication instead of modulo)
+    if item / 3 * 3 == item {
+        continue;
+    }
+    
+    // Skip numbers greater than 15
+    if item > 15 {
+        continue;
+    }
+    
+    processed = processed + item;
+}
+
+// Break with flag variable
+let mut keep_running = 1;
+let mut loop_count = 0;
+
+while keep_running {
+    loop_count = loop_count + 1;
+    
+    if loop_count >= 100 {
+        keep_running = 0;  // Alternative to break
+    }
+    
+    if loop_count == 50 {
+        break;  // This will execute first
+    }
+}

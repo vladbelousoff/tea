@@ -1,0 +1,35 @@
+// Tea supports null values and optional types
+
+// Regular variables cannot be null by default
+let name = 'Alice';
+let age = 30;
+
+// Optional types use the '?' suffix and can hold null
+let mut optional_number: i32? = 42;
+let mut optional_float: f32? = null;
+let mut optional_string: string? = 'Hello';
+
+// Assigning null to optional types
+optional_number = null;
+optional_string = null;
+
+// Assigning values to optional types
+optional_number = 100;
+optional_float = 3.14;
+optional_string = 'Updated value';
+
+// Optional types in variable declarations
+let maybe_value: i32? = null;
+let another_maybe: f32? = 2.5;
+
+// Using null in expressions and assignments
+let mut status: string? = null;
+if 1 {
+    status = 'initialized';
+} else {
+    status = null;
+}
+
+// Null represents the absence of a value
+let empty_result: i32? = null;
+let valid_result: i32? = 42;

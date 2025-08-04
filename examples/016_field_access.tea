@@ -1,0 +1,102 @@
+// Struct field access and modification using dot notation
+
+// Define structs for examples
+struct Point {
+    x: float;
+    y: float;
+}
+
+struct Person {
+    name: string;
+    age: int;
+    height: float;
+}
+
+struct Counter {
+    value: int;
+    max_value: int;
+}
+
+// Create struct instances
+let mut point = new Point { x: 5.0, y: 10.0 };
+let mut person = new Person { name: 'Alice', age: 25, height: 170.5 };
+let mut counter = new Counter { value: 0, max_value: 100 };
+
+// Reading struct fields using dot notation
+let point_x = point.x;        // 5.0
+let point_y = point.y;        // 10.0
+let person_name = person.name; // 'Alice'
+let person_age = person.age;   // 25
+let current_count = counter.value; // 0
+
+// Modifying struct fields (requires mutable struct instance)
+point.x = 15.0;
+point.y = 20.0;
+
+person.age = 26;              // Birthday!
+person.height = 171.0;        // Grew a bit
+println('person.height = ', person.height);
+
+counter.value = 10;
+counter.max_value = 200;
+
+// Using field values in expressions
+let distance_from_origin = point.x + point.y;  // 15.0 + 20.0 = 35.0
+let is_adult = person.age >= 18;               // 26 >= 18 = 1 (true)
+let counter_percentage = counter.value * 100 / counter.max_value; // 10 * 100 / 200 = 5
+
+// Field access in conditional statements
+if point.x > 10.0 {
+    point.y = point.y + 5.0;   // Modify based on condition
+}
+
+if person.age < 30 {
+    person.name = 'Young Alice';
+}
+
+// Field access in loops
+while counter.value < counter.max_value {
+    counter.value = counter.value + 10;
+    // println('counter.value = ', counter.value);
+    if 1 {
+        break;
+    }
+}
+
+// Copying field values between structs
+let point2 = new Point { x: 0.0, y: 0.0 };
+point2.x = point.x;           // Copy x coordinate
+point2.y = point.y;           // Copy y coordinate
+
+// Complex field access patterns
+let total_coordinates = point.x + point.y + point2.x + point2.y;
+
+// Field access with function calls (conceptual)
+fn get_point_info(p: Point) -> float {
+    return p.x + p.y;
+}
+
+let info = get_point_info(point);
+
+// Nested field access expressions
+let complex_calculation = (point.x * 2.0) + (point.y / 2.0);
+let age_in_months = person.age * 12;
+
+// Field modification in expressions
+counter.value = counter.value + (counter.max_value / 10);
+
+// Chained assignments (if the language supports it)
+let temp_x = point.x;
+point.x = point.y;
+point.y = temp_x;             // Swap x and y coordinates
+
+// Field access with comparison
+let points_equal = (point.x == point2.x) && (point.y == point2.y);
+
+// Using fields as function arguments
+fn calculate_area(width: float, height: float) -> float {
+    return width * height;
+}
+
+// Assuming we had width/height fields
+let area = calculate_area(point.x, point.y);  // Using point coordinates as dimensions

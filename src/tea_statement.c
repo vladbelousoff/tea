@@ -25,19 +25,30 @@ bool tea_interpret_execute_stmt(tea_context_t* context, tea_scope_t* scope,
   return true;
 }
 
-static const char* tea_extract_type_name(const tea_ast_node_t* type_annot)
+static void tea_extract_type_info(
+  const tea_ast_node_t* type_annot, const char** type_name, bool* is_optional)
 {
+  *type_name = NULL;
+  *is_optional = false;
+
   if (!type_annot || type_annot->type != TEA_AST_NODE_TYPE_ANNOT) {
-    return NULL;
+    return;
   }
 
   rtl_list_entry_t* entry = rtl_list_first(&type_annot->children);
   if (!entry) {
-    return NULL;
+    return;
   }
 
   const tea_ast_node_t* type_spec = rtl_list_record(entry, tea_ast_node_t, link);
-  return type_spec->token ? type_spec->token->buffer : NULL;
+
+  if (type_spec->token) {
+    *type_name = type_spec->token->buffer;
+  }
+
+  if (type_spec->type == TEA_AST_NODE_OPTIONAL_TYPE) {
+    *is_optional = true;
+  }
 }
 
 bool tea_interpret_let(tea_context_t* context, tea_scope_t* scope, const tea_ast_node_t* node)
@@ -65,7 +76,14 @@ bool tea_interpret_let(tea_context_t* context, tea_scope_t* scope, const tea_ast
     }
   }
 
-  const char* type_name = tea_extract_type_name(type_annot);
+  const char* type_name;
+  bool is_optional;
+  tea_extract_type_info(type_annot, &type_name, &is_optional);
+
+  if (is_optional) {
+    flags |= TEA_VARIABLE_OPTIONAL;
+  }
+
   return tea_declare_variable(context, scope, name->buffer, flags, type_name, expr);
 }
 
@@ -126,7 +144,18 @@ bool tea_interpret_assign(tea_context_t* context, tea_scope_t* scope, const tea_
     return false;
   }
 
-  if (new_value.type == variable->value.type) {
+  const bool is_variable_optional = variable->flags & TEA_VARIABLE_OPTIONAL;
+  if (is_variable_optional && new_value.type == TEA_VALUE_NULL) {
+    if (new_value.null_type == TEA_VALUE_NULL) {
+      variable->value.null_type = variable->value.type;
+      variable->value.type = TEA_VALUE_NULL;
+    } else {
+      variable->value = new_value;
+    }
+  } else if (new_value.type == variable->value.type) {
+    variable->value = new_value;
+  } else if (variable->value.type == TEA_VALUE_NULL &&
+             variable->value.null_type == new_value.type) {
     variable->value = new_value;
   } else {
     rtl_log_err(

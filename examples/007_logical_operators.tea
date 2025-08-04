@@ -1,0 +1,51 @@
+// Logical operators: AND (&&) and OR (||)
+
+// Basic logical AND (&&)
+// Returns 1 if both operands are true (non-zero), 0 otherwise
+let and1 = 1 && 1;           // true && true = 1
+let and2 = 1 && 0;           // true && false = 0
+let and3 = 0 && 1;           // false && true = 0
+let and4 = 0 && 0;           // false && false = 0
+
+// Basic logical OR (||)
+// Returns 1 if at least one operand is true (non-zero), 0 otherwise
+let or1 = 1 || 1;            // true || true = 1
+let or2 = 1 || 0;            // true || false = 1
+let or3 = 0 || 1;            // false || true = 1
+let or4 = 0 || 0;            // false || false = 0
+
+// Logical operators with comparison expressions
+let age = 25;
+let has_license = 1;
+let has_car = 0;
+
+let can_drive = age >= 18 && has_license;           // true && true = 1
+let has_transport = has_car || has_license;         // false || true = 1
+let is_adult_with_license = age >= 21 && has_license; // true && true = 1
+
+// Complex logical expressions
+let score = 85;
+let attendance = 90;
+let has_project = 1;
+
+let passes_course = score >= 70 && attendance >= 80;
+let gets_bonus = score >= 90 || has_project;
+let honor_student = score >= 95 && attendance >= 95 && has_project;
+
+// Logical operators with variables
+let a = 5;
+let b = 0;
+let c = 10;
+
+let result1 = a && c;        // 5 && 10 = 1 (both non-zero)
+let result2 = a && b;        // 5 && 0 = 0 (b is zero)
+let result3 = b || c;        // 0 || 10 = 1 (c is non-zero)
+let result4 = a || b || c;   // 5 || 0 || 10 = 1 (a is non-zero)
+
+// Combining multiple logical operations
+let x = 8;
+let y = 3;
+let z = 12;
+
+let complex1 = (x > 5) && (y < 10) || (z == 12);   // true && true || true = 1
+let complex2 = (x < 5) || (y > 10) && (z < 20);    // false || false && true = 0

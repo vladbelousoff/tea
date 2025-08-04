@@ -35,7 +35,7 @@ typedef struct
 tea_value_type_t tea_value_get_type_by_string(const char* name)
 {
   static tea_type_string_id ids[] = { { "i32", TEA_VALUE_I32 }, { "f32", TEA_VALUE_F32 },
-    { NULL, TEA_VALUE_INVALID } };
+    { "string", TEA_VALUE_INSTANCE }, { NULL, TEA_VALUE_INVALID } };
 
   for (int i = 0; ids[i].name; ++i) {
     if (!strcmp(name, ids[i].name)) {

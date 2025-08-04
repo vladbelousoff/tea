@@ -38,15 +38,6 @@ typedef struct
 const char* tea_value_get_type_string(tea_value_type_t type);
 tea_value_type_t tea_value_get_type_by_string(const char* name);
 
-inline tea_value_type_t tea_value_get_type(const tea_value_t* value)
-{
-  if (value->type == TEA_VALUE_NULL) {
-    return value->null_type;
-  }
-
-  return value->type;
-}
-
 tea_value_t tea_value_invalid();
 tea_value_t tea_value_null();
 

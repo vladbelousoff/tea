@@ -1,0 +1,106 @@
+// Struct definitions and instantiation
+
+// Simple struct with basic fields
+struct Point {
+    x: float;
+    y: float;
+}
+
+// Struct with mixed data types
+struct Person {
+    name: string;
+    age: int;
+    height: float;
+    is_student: int;  // Using int for boolean (1 = true, 0 = false)
+}
+
+// Struct with integer fields
+struct Rectangle {
+    width: int;
+    height: int;
+}
+
+// Empty struct (no fields)
+struct Empty {
+}
+
+// Struct with optional fields
+struct User {
+    id: int;
+    username: string;
+    email: string?;    // Optional email
+    score: float?;     // Optional score
+}
+
+// Creating struct instances using 'new' keyword
+let origin = new Point { x: 0.0, y: 0.0 };
+let my_point = new Point { x: 3.5, y: 7.2 };
+
+// Struct instantiation with all field types
+let person1 = new Person {
+    name: 'Alice',
+    age: 25,
+    height: 170.5,
+    is_student: 1
+};
+
+let person2 = new Person {
+    name: 'Bob',
+    age: 30,
+    height: 180.0,
+    is_student: 0
+};
+
+// Struct instantiation with trailing comma (allowed)
+let rect1 = new Rectangle {
+    width: 10,
+    height: 20,
+};
+
+// Struct instantiation in single line
+let rect2 = new Rectangle { width: 5, height: 8 };
+
+// Empty struct instantiation
+let empty_instance = new Empty {};
+
+// Struct with optional fields
+let user1 = new User {
+    id: 1,
+    username: 'alice123',
+    email: 'alice@example.com',
+    score: 95.5
+};
+
+let user2 = new User {
+    id: 2,
+    username: 'bob456',
+    email: null,        // Optional field set to null
+    score: null         // Optional field set to null
+};
+
+// Using struct instances in expressions and assignments
+let point_a = new Point { x: 1.0, y: 2.0 };
+let point_b = new Point { x: 4.0, y: 6.0 };
+
+// Struct instantiation with computed values
+let computed_x = 5.0 + 3.0;
+let computed_y = 2.0 * 4.0;
+let computed_point = new Point { x: computed_x, y: computed_y };
+
+// Struct instantiation in function calls (when we get to functions with struct params)
+fn create_default_person() -> Person {
+    return new Person {
+        name: 'Default',
+        age: 0,
+        height: 0.0,
+        is_student: 0
+    };
+}
+
+let default_person = create_default_person();
+
+// Multiple instances of the same struct
+let top_left = new Point { x: 0.0, y: 10.0 };
+let top_right = new Point { x: 10.0, y: 10.0 };
+let bottom_left = new Point { x: 0.0, y: 0.0 };
+let bottom_right = new Point { x: 10.0, y: 0.0 };

@@ -1,0 +1,159 @@
+// Struct methods using impl blocks
+// Methods are functions associated with a specific struct type
+
+// Define structs
+struct Point {
+    x: f32;
+    y: f32;
+}
+
+struct Rectangle {
+    width: f32;
+    height: f32;
+}
+
+struct Counter {
+    value: int;
+    max_value: int;
+}
+
+// Implement methods for Point
+impl Point {
+    // Method that calculates distance to another point
+    fn distance_to(other: Point) -> f32 {
+        let dx = self.x - other.x;
+        let dy = self.y - other.y;
+        return dx * dx + dy * dy;  // Squared distance (avoiding sqrt)
+    }
+    
+    // Method that modifies the point (moves it)
+    fn move_by(dx: f32, dy: f32) {
+        self.x = self.x + dx;
+        self.y = self.y + dy;
+    }
+    
+    // Method that returns a coordinate
+    fn get_x() -> f32 {
+        return self.x;
+    }
+    
+    fn get_y() -> f32 {
+        return self.y;
+    }
+    
+    // Method that checks if point is at origin
+    fn is_at_origin() -> f32 {
+        if self.x == 0.0 && self.y == 0.0 {
+            return 1.0;  // true
+        } else {
+            return 0.0;  // false
+        }
+    }
+}
+
+// Implement methods for Rectangle
+impl Rectangle {
+    // Calculate area
+    fn area() -> f32 {
+        return self.width * self.height;
+    }
+    
+    // Calculate perimeter
+    fn perimeter() -> f32 {
+        return 2.0 * (self.width + self.height);
+    }
+    
+    // Check if it's a square
+    fn is_square() -> f32 {
+        if self.width == self.height {
+            return 1.0;  // true
+        } else {
+            return 0.0;  // false
+        }
+    }
+    
+    // Scale the rectangle
+    fn scale(factor: f32) {
+        self.width = self.width * factor;
+        self.height = self.height * factor;
+    }
+}
+
+// Implement methods for Counter
+impl Counter {
+    // Increment counter
+    fn increment() {
+        if self.value < self.max_value {
+            self.value = self.value + 1;
+        }
+    }
+    
+    // Decrement counter
+    fn decrement() {
+        if self.value > 0 {
+            self.value = self.value - 1;
+        }
+    }
+    
+    // Reset counter
+    fn reset() {
+        self.value = 0;
+    }
+    
+    // Check if counter is at maximum
+    fn is_at_max() -> f32 {
+        if self.value == self.max_value {
+            return 1.0;  // true
+        } else {
+            return 0.0;  // false
+        }
+    }
+    
+    // Get percentage
+    fn percentage() -> f32 {
+        return self.value * 100.0 / self.max_value;
+    }
+}
+
+// Using struct methods
+let mut p1 = new Point { x: 1.0, y: 2.0 };
+let p2 = new Point { x: 4.0, y: 6.0 };
+
+// Call methods on structs
+let distance = p1.distance_to(p2);     // Calculate distance between points
+let x_coord = p1.get_x();              // Get x coordinate
+let is_origin = p1.is_at_origin();     // Check if at origin
+
+// Modify struct through methods
+p1.move_by(2.0, 3.0);                  // Move point by (2, 3)
+
+// Rectangle methods
+let mut rect = new Rectangle { width: 5.0, height: 10.0 };
+let area = rect.area();                // 50.0
+let perimeter = rect.perimeter();      // 30.0
+let is_square = rect.is_square();      // 0.0 (false)
+
+rect.scale(2.0);                       // Double the size
+let new_area = rect.area();            // 200.0
+
+// Counter methods
+let mut counter = new Counter { value: 0, max_value: 10 };
+counter.increment();                   // value = 1
+counter.increment();                   // value = 2
+let percentage = counter.percentage(); // 20.0
+
+counter.reset();                       // value = 0
+let at_max = counter.is_at_max();      // 0.0 (false)
+
+// Method calls in expressions
+let total_distance = p1.distance_to(p2) + p2.distance_to(p1);
+let combined_area = rect.area() + (rect.width * 2.0);
+
+// Method calls in conditionals
+if rect.is_square() > 0.0 {
+    rect.scale(0.5);
+}
+
+if counter.is_at_max() == 0.0 {
+    counter.increment();
+}

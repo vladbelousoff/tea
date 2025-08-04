@@ -178,7 +178,8 @@ static bool scan_operator(tea_lexer_t *self, const char *input)
         token_length = 2;
         break;
       }
-      return false;
+      token_type = TEA_TOKEN_EXCLAMATION_MARK;
+      break;
     case '-':
       if (input[self->position + 1] == '>') {
         token_type = TEA_TOKEN_ARROW;
