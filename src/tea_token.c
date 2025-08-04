@@ -9,8 +9,7 @@ static const tea_keyword_entry_t tea_keywords[] = { { "fn", TEA_TOKEN_FN },
   { "else", TEA_TOKEN_ELSE }, { "while", TEA_TOKEN_WHILE }, { "break", TEA_TOKEN_BREAK },
   { "continue", TEA_TOKEN_CONTINUE }, { "struct", TEA_TOKEN_STRUCT }, { "impl", TEA_TOKEN_IMPL },
   { "return", TEA_TOKEN_RETURN }, { "new", TEA_TOKEN_NEW }, { "null", TEA_TOKEN_NULL },
-  { "trait", TEA_TOKEN_TRAIT }, { "for", TEA_TOKEN_FOR },
-  { NULL, 0 } };
+  { "trait", TEA_TOKEN_TRAIT }, { "for", TEA_TOKEN_FOR }, { NULL, 0 } };
 
 static bool equals(const char *a, const char *b, const int n)
 {

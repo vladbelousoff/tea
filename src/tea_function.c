@@ -260,7 +260,7 @@ tea_value_t tea_interpret_evaluate_function_call(
 
     function_name = field_token->buffer;
     function = tea_context_find_function(&struct_declaration->functions, function_name);
-    
+
     // If not found in struct methods, try trait methods
     if (!function) {
       function = tea_resolve_trait_method(context, variable->value.object->type, function_name);
