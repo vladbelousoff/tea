@@ -38,15 +38,15 @@ impl Display for Point {
     }
     
     fn show() {
-        // In a real implementation, this would print the point
-        print('Showing point');
+        // In a real implementation, this would println the point
+        println('Showing point');
     }
 }
 
 // Implement Drawable trait for Point
 impl Drawable for Point {
     fn draw() {
-        print('Drawing point at coordinates');
+        println('Drawing point at coordinates');
     }
     
     fn area() -> f32 {
@@ -61,14 +61,14 @@ impl Display for Rectangle {
     }
     
     fn show() {
-        print('Showing rectangle');
+        println('Showing rectangle');
     }
 }
 
 // Implement Drawable trait for Rectangle
 impl Drawable for Rectangle {
     fn draw() {
-        print('Drawing rectangle');
+        println('Drawing rectangle');
     }
     
     fn area() -> f32 {
@@ -83,14 +83,14 @@ impl Display for Circle {
     }
     
     fn show() {
-        print('Showing circle');
+        println('Showing circle');
     }
 }
 
 // Implement Drawable trait for Circle
 impl Drawable for Circle {
     fn draw() {
-        print('Drawing circle');
+        println('Drawing circle');
     }
     
     fn area() -> f32 {
