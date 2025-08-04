@@ -8,7 +8,7 @@
 #include <rtl.h>
 #include <rtl_log.h>
 
-#include "tea.h"
+#include "tea_grammar.h"
 
 tea_value_t tea_interpret_evaluate_integer_number(tea_token_t* token)
 {

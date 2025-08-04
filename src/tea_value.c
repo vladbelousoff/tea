@@ -6,7 +6,7 @@
 #include <rtl.h>
 #include <rtl_log.h>
 
-#include "tea.h"
+#include "tea_grammar.h"
 
 const char* tea_value_get_type_string(const tea_value_type_t type)
 {

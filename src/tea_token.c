@@ -1,6 +1,6 @@
 #include "tea_token.h"
 
-#include "tea.h"
+#include "tea_grammar.h"
 
 #include <string.h>
 

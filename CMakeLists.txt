@@ -42,16 +42,16 @@ set(LEMON_TEMPLATE "${lemon_SOURCE_DIR}/lempar.c")
 
 add_custom_command(
         OUTPUT
-        "${CMAKE_CURRENT_BINARY_DIR}/tea.c"
-        "${CMAKE_CURRENT_BINARY_DIR}/tea.h"
+        "${CMAKE_CURRENT_BINARY_DIR}/tea_grammar.c"
+        "${CMAKE_CURRENT_BINARY_DIR}/tea_grammar.h"
         COMMAND
         ${LEMON_EXECUTABLE}
         -T${LEMON_TEMPLATE}
         -d${CMAKE_CURRENT_BINARY_DIR}
-        ${CMAKE_CURRENT_SOURCE_DIR}/tea.y
+        ${CMAKE_CURRENT_SOURCE_DIR}/tea_grammar.y
         DEPENDS
         lemon_exe
-        ${CMAKE_CURRENT_SOURCE_DIR}/tea.y
+        ${CMAKE_CURRENT_SOURCE_DIR}/tea_grammar.y
         ${LEMON_TEMPLATE}
         COMMENT "Generating TEA parser with Lemon"
         VERBATIM
@@ -59,8 +59,8 @@ add_custom_command(
 
 # Create a library for the generated parser
 add_library(tea_parser
-        "${CMAKE_CURRENT_BINARY_DIR}/tea.c"
-        "${CMAKE_CURRENT_BINARY_DIR}/tea.h"
+        "${CMAKE_CURRENT_BINARY_DIR}/tea_grammar.c"
+        "${CMAKE_CURRENT_BINARY_DIR}/tea_grammar.h"
 )
 
 # Include directories for the parser
@@ -131,8 +131,8 @@ target_link_libraries(tea PRIVATE
 # Make sure parser is generated before building tea_parser
 add_dependencies(tea_parser lemon_exe)
 
-message(STATUS "Grammar file: ${CMAKE_CURRENT_SOURCE_DIR}/tea.y")
-message(STATUS "Generated parser: ${CMAKE_CURRENT_BINARY_DIR}/tea.c")
+message(STATUS "Grammar file: ${CMAKE_CURRENT_SOURCE_DIR}/tea_grammar.y")
+message(STATUS "Generated parser: ${CMAKE_CURRENT_BINARY_DIR}/tea_grammar.c")
 
 # Testing executable (only built if this is the main project)
 if (CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR)

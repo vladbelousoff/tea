@@ -1,6 +1,6 @@
 #include "tea_lexer.h"
 
-#include "tea.h"
+#include "tea_grammar.h"
 #include "tea_token.h"
 
 #include <ctype.h>

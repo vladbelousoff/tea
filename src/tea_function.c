@@ -10,7 +10,7 @@
 #include <rtl_log.h>
 #include <rtl_memory.h>
 
-#include "tea.h"
+#include "tea_grammar.h"
 
 tea_variable_t* tea_function_args_pop(const tea_function_args_t* args)
 {
