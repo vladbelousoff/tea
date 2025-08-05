@@ -89,29 +89,15 @@ bool tea_interpret_let(tea_context_t* context, tea_scope_t* scope, const tea_ast
 
 bool tea_interpret_assign(tea_context_t* context, tea_scope_t* scope, const tea_ast_node_t* node)
 {
-  const tea_token_t* name = node->token;
-  if (!name) {
-    // Probably if the name is null, then it's a field access
-    rtl_list_entry_t* field_entry = rtl_list_first(&node->children);
-    if (!field_entry) {
-      rtl_log_err("Runtime error: Missing field entry in field assignment expression");
-      return false;
-    }
+  const tea_ast_node_t* lhs = node->binop.lhs;
+  const tea_ast_node_t* rhs = node->binop.rhs;
 
-    const tea_ast_node_t* field_node = rtl_list_record(field_entry, tea_ast_node_t, link);
-    if (!field_node) {
-      rtl_log_err("Runtime error: Missing field node in field assignment expression");
-      return false;
-    }
-
-    tea_value_t* value = tea_get_field_pointer(context, scope, field_node);
+  if (lhs->type != TEA_AST_NODE_IDENT) {
+    tea_value_t* value = tea_get_field_pointer(context, scope, lhs);
     if (!value) {
       return false;
     }
 
-    // First child is the value on the right
-    const tea_ast_node_t* rhs =
-      rtl_list_record(rtl_list_first(&node->children), tea_ast_node_t, link);
     const tea_value_t new_value = tea_interpret_evaluate_expression(context, scope, rhs);
     if (new_value.type == TEA_VALUE_INVALID) {
       return false;
@@ -123,6 +109,7 @@ bool tea_interpret_assign(tea_context_t* context, tea_scope_t* scope, const tea_
     return true;
   }
 
+  const tea_token_t* name = lhs->token;
   tea_variable_t* variable = tea_scope_find_variable(scope, name->buffer);
   if (!variable) {
     rtl_log_err("Runtime error: Undefined variable '%s' used in assignment at line %d, column %d",
@@ -136,9 +123,6 @@ bool tea_interpret_assign(tea_context_t* context, tea_scope_t* scope, const tea_
     return false;
   }
 
-  // First child is the value on the right
-  const tea_ast_node_t* rhs =
-    rtl_list_record(rtl_list_first(&node->children), tea_ast_node_t, link);
   const tea_value_t new_value = tea_interpret_evaluate_expression(context, scope, rhs);
   if (new_value.type == TEA_VALUE_INVALID) {
     return false;

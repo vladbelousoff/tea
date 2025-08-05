@@ -319,15 +319,15 @@ let_stmt(let_stmt_node) ::= LET mut_opt(mut) IDENT(var_name) type_annotation_opt
     tea_ast_node_add_child(let_stmt_node, init_expr);
 }
 
-assign_stmt(assign_stmt_node) ::= IDENT(var_name) ASSIGN expression(value_expr) SEMICOLON. {
-    assign_stmt_node = tea_ast_node_create(TEA_AST_NODE_ASSIGN, var_name);
-    tea_ast_node_add_child(assign_stmt_node, value_expr);
+assign_stmt(assign_stmt_node) ::= IDENT(ident) ASSIGN expression(rhs) SEMICOLON. {
+    assign_stmt_node = tea_ast_node_create(TEA_AST_NODE_ASSIGN, NULL);
+    tea_ast_node_t* lhs = tea_ast_node_create(TEA_AST_NODE_IDENT, ident);
+    tea_ast_node_set_binop_children(assign_stmt_node, lhs, rhs);
 }
 
-assign_stmt(assign_stmt_node) ::= field_access(field_expr) ASSIGN expression(value_expr) SEMICOLON. {
+assign_stmt(assign_stmt_node) ::= field_access(lhs) ASSIGN expression(rhs) SEMICOLON. {
     assign_stmt_node = tea_ast_node_create(TEA_AST_NODE_ASSIGN, NULL);
-    tea_ast_node_add_child(assign_stmt_node, field_expr);
-    tea_ast_node_add_child(assign_stmt_node, value_expr);
+    tea_ast_node_set_binop_children(assign_stmt_node, lhs, rhs);
 }
 
 return_stmt(return_stmt_node) ::= RETURN SEMICOLON. {

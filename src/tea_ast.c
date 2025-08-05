@@ -17,7 +17,7 @@ tea_ast_node_t *_tea_ast_node_create(
   node->type = type;
   node->token = token;
 
-  if (type == TEA_AST_NODE_BINOP) {
+  if (type == TEA_AST_NODE_BINOP || type == TEA_AST_NODE_ASSIGN) {
     node->binop.lhs = NULL;
     node->binop.rhs = NULL;
   } else if (type == TEA_AST_NODE_FIELD_ACCESS) {
@@ -55,7 +55,7 @@ void tea_ast_node_free(tea_ast_node_t *node)
     return;
   }
 
-  if (node->type == TEA_AST_NODE_BINOP) {
+  if (node->type == TEA_AST_NODE_BINOP || node->type == TEA_AST_NODE_ASSIGN) {
     if (node->binop.lhs) {
       tea_ast_node_free(node->binop.lhs);
     }
@@ -210,7 +210,7 @@ static void tea_ast_node_print_tree_recursive(tea_ast_node_t *node, const int de
 
   printf("\n");
 
-  if (node->type == TEA_AST_NODE_BINOP) {
+  if (node->type == TEA_AST_NODE_BINOP || node->type == TEA_AST_NODE_ASSIGN) {
     if (node->binop.lhs) {
       tea_ast_node_print_tree_recursive(node->binop.lhs, depth + 1);
     }
@@ -246,10 +246,6 @@ void tea_ast_node_print(tea_ast_node_t *node, const int depth)
 void tea_ast_node_set_binop_children(
   tea_ast_node_t *parent, tea_ast_node_t *lhs, tea_ast_node_t *rhs)
 {
-  if (!parent || parent->type != TEA_AST_NODE_BINOP) {
-    return;
-  }
-
   parent->binop.lhs = lhs;
   parent->binop.rhs = rhs;
 }
@@ -257,10 +253,6 @@ void tea_ast_node_set_binop_children(
 void tea_ast_node_set_field_access_children(
   tea_ast_node_t *parent, tea_ast_node_t *object, tea_ast_node_t *field)
 {
-  if (!parent || parent->type != TEA_AST_NODE_FIELD_ACCESS) {
-    return;
-  }
-
   parent->field_access.object = object;
   parent->field_access.field = field;
 }
