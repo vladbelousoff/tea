@@ -147,10 +147,10 @@ bool tea_interpret_assign(tea_context_t* context, tea_scope_t* scope, const tea_
     variable->value = new_value;
   } else {
     rtl_log_err(
-      "Runtime error: Type mismatch in assignment to variable '%s' at line %d, column %d: cannot "
+      "Runtime error: Type mismatch in assignment to variable '%s%s' at line %d, column %d: cannot "
       "assign %s value to %s variable",
-      name->buffer, name->line, name->column, tea_value_get_type_string(new_value.type),
-      tea_value_get_type_string(variable->value.type));
+      name->buffer, is_optional ? "?" : "", name->line, name->column,
+      tea_value_get_type_string(new_value.type), tea_value_get_type_string(variable->value.type));
     return false;
   }
 
