@@ -128,18 +128,22 @@ bool tea_interpret_assign(tea_context_t* context, tea_scope_t* scope, const tea_
     return false;
   }
 
-  const bool is_variable_optional = variable->flags & TEA_VARIABLE_OPTIONAL;
-  if (is_variable_optional && new_value.type == TEA_VALUE_NULL) {
+  const bool is_optional = variable->flags & TEA_VARIABLE_OPTIONAL;
+  const bool new_is_null = new_value.type == TEA_VALUE_NULL;
+  const bool types_match = new_value.type == variable->value.type;
+  const bool null_type_match =
+    variable->value.type == TEA_VALUE_NULL && variable->value.null_type == new_value.type;
+
+  if (is_optional && new_is_null) {
     if (new_value.null_type == TEA_VALUE_NULL) {
+      // Treat as a new null assignment, preserve original type
       variable->value.null_type = variable->value.type;
       variable->value.type = TEA_VALUE_NULL;
     } else {
+      // Set to specific null type
       variable->value = new_value;
     }
-  } else if (new_value.type == variable->value.type) {
-    variable->value = new_value;
-  } else if (variable->value.type == TEA_VALUE_NULL &&
-             variable->value.null_type == new_value.type) {
+  } else if (types_match || null_type_match) {
     variable->value = new_value;
   } else {
     rtl_log_err(
