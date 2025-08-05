@@ -87,26 +87,103 @@ bool tea_interpret_let(tea_context_t* context, tea_scope_t* scope, const tea_ast
   return tea_declare_variable(context, scope, name->buffer, flags, type_name, expr);
 }
 
+static bool tea_check_field_mutability(
+  const tea_scope_t* scope, const tea_ast_node_t* field_access_node)
+{
+  tea_ast_node_t* object_node = field_access_node->field_access.object;
+  if (!object_node || !object_node->token) {
+    rtl_log_err("Internal error: Field access expression missing object component in AST");
+    return false;
+  }
+
+  const tea_token_t* object_name = object_node->token;
+  const tea_variable_t* variable = tea_scope_find_variable(scope, object_name->buffer);
+  if (!variable) {
+    rtl_log_err(
+      "Runtime error: Variable '%s' not found in current scope when checking field mutability, "
+      "line: %d, column: %d",
+      object_name->buffer, object_name->line, object_name->column);
+    return false;
+  }
+
+  if (!(variable->flags & TEA_VARIABLE_MUTABLE)) {
+    rtl_log_err(
+      "Runtime error: Cannot modify field of immutable variable '%s' at line %d, column %d",
+      object_name->buffer, object_name->line, object_name->column);
+    return false;
+  }
+
+  return true;
+}
+
+static bool tea_perform_assignment(tea_value_t* target_value, const tea_value_t new_value,
+  const bool is_optional, const char* target_name, const tea_token_t* error_token)
+{
+  const bool new_is_null = new_value.type == TEA_VALUE_NULL;
+  const bool types_match = new_value.type == target_value->type;
+  const bool null_type_match =
+    target_value->type == TEA_VALUE_NULL && target_value->null_type == new_value.type;
+
+  if (is_optional && new_is_null) {
+    if (new_value.null_type == TEA_VALUE_NULL) {
+      target_value->null_type = target_value->type;
+      target_value->type = TEA_VALUE_NULL;
+    } else {
+      *target_value = new_value;
+    }
+  } else if (types_match || null_type_match) {
+    *target_value = new_value;
+  } else {
+    rtl_log_err(
+      "Runtime error: Type mismatch in assignment to '%s%s' at line %d, column %d: cannot "
+      "assign %s value to %s target",
+      target_name, is_optional ? "?" : "", error_token->line, error_token->column,
+      tea_value_get_type_string(new_value.type), tea_value_get_type_string(target_value->type));
+    return false;
+  }
+
+  switch (target_value->type) {
+    case TEA_VALUE_I32:
+      rtl_log_dbg("New value for %s : %s = %d", target_name,
+        tea_value_get_type_string(target_value->type), target_value->i32);
+      break;
+    case TEA_VALUE_F32:
+      rtl_log_dbg("New value for %s : %s = %f", target_name,
+        tea_value_get_type_string(target_value->type), target_value->f32);
+      break;
+    default:
+      break;
+  }
+
+  return true;
+}
+
 bool tea_interpret_assign(tea_context_t* context, tea_scope_t* scope, const tea_ast_node_t* node)
 {
   const tea_ast_node_t* lhs = node->binop.lhs;
   const tea_ast_node_t* rhs = node->binop.rhs;
 
+  const tea_value_t new_value = tea_interpret_evaluate_expression(context, scope, rhs);
+  if (new_value.type == TEA_VALUE_INVALID) {
+    rtl_log_err("Runtime error: Failed to evaluate right-hand side expression in assignment");
+    return false;
+  }
+
   if (lhs->type != TEA_AST_NODE_IDENT) {
-    tea_value_t* value = tea_get_field_pointer(context, scope, lhs);
-    if (!value) {
+    if (!tea_check_field_mutability(scope, lhs)) {
       return false;
     }
 
-    const tea_value_t new_value = tea_interpret_evaluate_expression(context, scope, rhs);
-    if (new_value.type == TEA_VALUE_INVALID) {
+    tea_value_t* field_value = tea_get_field_pointer(context, scope, lhs);
+    if (!field_value) {
       return false;
     }
 
-    // TODO: Make it clearer with checking mutability
-    *value = new_value;
+    const tea_ast_node_t* field_node = lhs->field_access.field;
+    const tea_token_t* field_token = field_node ? field_node->token : NULL;
+    const char* field_name = field_token ? field_token->buffer : "field";
 
-    return true;
+    return tea_perform_assignment(field_value, new_value, false, field_name, field_token);
   }
 
   const tea_token_t* name = lhs->token;
@@ -123,51 +200,8 @@ bool tea_interpret_assign(tea_context_t* context, tea_scope_t* scope, const tea_
     return false;
   }
 
-  const tea_value_t new_value = tea_interpret_evaluate_expression(context, scope, rhs);
-  if (new_value.type == TEA_VALUE_INVALID) {
-    return false;
-  }
-
   const bool is_optional = variable->flags & TEA_VARIABLE_OPTIONAL;
-  const bool new_is_null = new_value.type == TEA_VALUE_NULL;
-  const bool types_match = new_value.type == variable->value.type;
-  const bool null_type_match =
-    variable->value.type == TEA_VALUE_NULL && variable->value.null_type == new_value.type;
-
-  if (is_optional && new_is_null) {
-    if (new_value.null_type == TEA_VALUE_NULL) {
-      // Treat as a new null assignment, preserve original type
-      variable->value.null_type = variable->value.type;
-      variable->value.type = TEA_VALUE_NULL;
-    } else {
-      // Set to specific null type
-      variable->value = new_value;
-    }
-  } else if (types_match || null_type_match) {
-    variable->value = new_value;
-  } else {
-    rtl_log_err(
-      "Runtime error: Type mismatch in assignment to variable '%s%s' at line %d, column %d: cannot "
-      "assign %s value to %s variable",
-      name->buffer, is_optional ? "?" : "", name->line, name->column,
-      tea_value_get_type_string(new_value.type), tea_value_get_type_string(variable->value.type));
-    return false;
-  }
-
-  switch (variable->value.type) {
-    case TEA_VALUE_I32:
-      rtl_log_dbg("New value for variable %s : %s = %d", name->buffer,
-        tea_value_get_type_string(variable->value.type), variable->value.i32);
-      break;
-    case TEA_VALUE_F32:
-      rtl_log_dbg("New value for variable %s : %s = %f", name->buffer,
-        tea_value_get_type_string(variable->value.type), variable->value.f32);
-      break;
-    default:
-      break;
-  }
-
-  return true;
+  return tea_perform_assignment(&variable->value, new_value, is_optional, name->buffer, name);
 }
 
 bool tea_interpret_execute_if(tea_context_t* context, tea_scope_t* scope,
