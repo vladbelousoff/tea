@@ -247,6 +247,7 @@ type_annotation_opt(type_annotation_node) ::= . { type_annotation_node = NULL; }
 type_spec(type_spec_node) ::= IDENT(type_name) quest_mark_opt(opt). {
     if (opt) {
         type_spec_node = tea_ast_node_create(TEA_AST_NODE_OPTIONAL_TYPE, type_name);
+        tea_ast_node_add_child(type_spec_node, opt);
     } else {
         type_spec_node = tea_ast_node_create(TEA_AST_NODE_IDENT, type_name);
     }
@@ -309,7 +310,7 @@ statement(stmt_node) ::= if_stmt(if_stmt_node). { stmt_node = if_stmt_node; }
 statement(stmt_node) ::= while_stmt(while_stmt_node). { stmt_node = while_stmt_node; }
 statement(stmt_node) ::= expression(expr_node) SEMICOLON. { stmt_node = expr_node; }
 
-quest_mark_opt(node) ::= QUESTION_MARK. { node = tea_ast_node_create(TEA_AST_NODE_OPTIONAL_TYPE, NULL); }
+quest_mark_opt(node) ::= QUESTION_MARK. { node = tea_ast_node_create(TEA_AST_NODE_IDENT, NULL); }
 quest_mark_opt(node) ::= . { node = NULL; }
 
 let_stmt(let_stmt_node) ::= LET mut_opt(mut) IDENT(var_name) type_annotation_opt(type_annot) ASSIGN expression(init_expr) SEMICOLON. {
