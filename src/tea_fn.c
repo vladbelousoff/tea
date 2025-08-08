@@ -117,44 +117,46 @@ bool tea_decl_fn(const tea_node_t* node, rtl_list_entry_t* functions)
   return true;
 }
 
-bool tea_interp_fn_decl(tea_ctx_t* context, const tea_node_t* node)
+bool tea_interp_fn_decl(tea_ctx_t* ctx, const tea_node_t* node)
 {
-  return tea_decl_fn(node, &context->fns);
+  return tea_decl_fn(node, &ctx->fns);
 }
 
-tea_val_t tea_interpret_evaluate_native_function_call(tea_ctx_t* context, tea_scope_t* scope,
-  const tea_native_fn_t* native_function, const tea_node_t* function_call_args)
+tea_val_t tea_eval_native_fn_call(
+  tea_ctx_t* ctx, tea_scope_t* scp, const tea_native_fn_t* nat_fn, const tea_node_t* args)
 {
-  tea_fn_args_t function_args;
-  rtl_list_init(&function_args.head);
+  tea_fn_args_t fn_args;
+  rtl_list_init(&fn_args.head);
 
-  rtl_list_entry_t* entry;
-  rtl_list_for_each(entry, &function_call_args->children)
+  rtl_list_entry_t* arg_entry;
+  rtl_list_for_each(arg_entry, &args->children)
   {
-    const tea_node_t* arg_expr = rtl_list_record(entry, tea_node_t, link);
-    tea_var_t* arg = tea_alloc_var(context);
+    const tea_node_t* arg_expr = rtl_list_record(arg_entry, tea_node_t, link);
+    tea_var_t* arg = tea_alloc_var(ctx);
     if (!arg) {
       rtl_log_err("Memory error: Failed to allocate variable for function argument");
       // Clean up any previously allocated args
+      rtl_list_entry_t* cleanup_entry;
       rtl_list_entry_t* cleanup_safe;
-      rtl_list_for_each_safe(entry, cleanup_safe, &function_args.head)
+      rtl_list_for_each_safe(cleanup_entry, cleanup_safe, &fn_args.head)
       {
-        tea_var_t* cleanup_arg = rtl_list_record(entry, tea_var_t, link);
-        rtl_list_remove(entry);
-        tea_free_var(context, cleanup_arg);
+        tea_var_t* cleanup_arg = rtl_list_record(cleanup_entry, tea_var_t, link);
+        rtl_list_remove(cleanup_entry);
+        tea_free_var(ctx, cleanup_arg);
       }
       return tea_val_undef();
     }
-    arg->val = tea_eval_expr(context, scope, arg_expr);
+    arg->val = tea_eval_expr(ctx, scp, arg_expr);
     if (arg->val.type == TEA_V_UNDEF) {
-      tea_free_var(context, arg);
+      tea_free_var(ctx, arg);
       // Clean up any previously allocated args
+      rtl_list_entry_t* cleanup_entry;
       rtl_list_entry_t* cleanup_safe;
-      rtl_list_for_each_safe(entry, cleanup_safe, &function_args.head)
+      rtl_list_for_each_safe(cleanup_entry, cleanup_safe, &fn_args.head)
       {
-        tea_var_t* cleanup_arg = rtl_list_record(entry, tea_var_t, link);
-        rtl_list_remove(entry);
-        tea_free_var(context, cleanup_arg);
+        tea_var_t* cleanup_arg = rtl_list_record(cleanup_entry, tea_var_t, link);
+        rtl_list_remove(cleanup_entry);
+        tea_free_var(ctx, cleanup_arg);
       }
       return tea_val_undef();
     }
@@ -163,26 +165,27 @@ tea_val_t tea_interpret_evaluate_native_function_call(tea_ctx_t* context, tea_sc
     // TODO: Set the proper arg name
     arg->name = "unknown";
 
-    rtl_list_add_tail(&function_args.head, &arg->link);
+    rtl_list_add_tail(&fn_args.head, &arg->link);
   }
 
-  const tea_val_t result = native_function->cb(context, &function_args);
+  const tea_val_t result = nat_fn->cb(ctx, &fn_args);
 
   // Deallocate all the args
+  rtl_list_entry_t* cleanup_entry;
   rtl_list_entry_t* safe;
-  rtl_list_for_each_safe(entry, safe, &function_args.head)
+  rtl_list_for_each_safe(cleanup_entry, safe, &fn_args.head)
   {
-    tea_var_t* arg = rtl_list_record(entry, tea_var_t, link);
-    rtl_list_remove(entry);
-    tea_free_var(context, arg);
+    tea_var_t* arg = rtl_list_record(cleanup_entry, tea_var_t, link);
+    rtl_list_remove(cleanup_entry);
+    tea_free_var(ctx, arg);
   }
 
   return result;
 }
 
-tea_val_t tea_eval_fn_call(tea_ctx_t* context, tea_scope_t* scope, const tea_node_t* node)
+tea_val_t tea_eval_fn_call(tea_ctx_t* ctx, tea_scope_t* scp, const tea_node_t* node)
 {
-  const tea_node_t* function_call_args = NULL;
+  const tea_node_t* args = NULL;
   const tea_node_t* field_access = NULL;
 
   rtl_list_entry_t* entry;
@@ -191,7 +194,7 @@ tea_val_t tea_eval_fn_call(tea_ctx_t* context, tea_scope_t* scope, const tea_nod
     const tea_node_t* child = rtl_list_record(entry, tea_node_t, link);
     switch (child->type) {
       case TEA_N_FN_ARGS:
-        function_call_args = child;
+        args = child;
         break;
       case TEA_N_FIELD_ACC:
         field_access = child;
@@ -207,7 +210,7 @@ tea_val_t tea_eval_fn_call(tea_ctx_t* context, tea_scope_t* scope, const tea_nod
   return_context.is_set = false;
 
   tea_scope_t inner_scope;
-  tea_scope_init(&inner_scope, scope);
+  tea_scope_init(&inner_scope, scp);
 
   if (field_access) {
     const tea_node_t* object_node = field_access->field_acc.obj;
@@ -215,7 +218,7 @@ tea_val_t tea_eval_fn_call(tea_ctx_t* context, tea_scope_t* scope, const tea_nod
     if (!field_node || !object_node) {
       rtl_log_err(
         "Internal error: Missing field or object node in method call - AST structure corrupted");
-      tea_scope_cleanup(context, &inner_scope);
+      tea_scope_cleanup(ctx, &inner_scope);
       return tea_val_undef();
     }
 
@@ -224,55 +227,54 @@ tea_val_t tea_eval_fn_call(tea_ctx_t* context, tea_scope_t* scope, const tea_nod
     if (!field_token || !object_token) {
       rtl_log_err(
         "Internal error: Missing field or object token in method call - AST structure corrupted");
-      tea_scope_cleanup(context, &inner_scope);
+      tea_scope_cleanup(ctx, &inner_scope);
       return tea_val_undef();
     }
 
-    tea_var_t* variable = tea_scope_find(scope, object_token->buf);
+    tea_var_t* variable = tea_scope_find(scp, object_token->buf);
     if (!variable) {
       rtl_log_err(
         "Runtime error: Undefined variable '%s' used in method call at line %d, column %d",
         object_token->buf, object_token->line, object_token->col);
-      tea_scope_cleanup(context, &inner_scope);
+      tea_scope_cleanup(ctx, &inner_scope);
       return tea_val_undef();
     }
 
     if (variable->val.type != TEA_V_INST) {
       rtl_log_err(
         "Runtime error: Methods can only be called on object instances, not on primitive types");
-      tea_scope_cleanup(context, &inner_scope);
+      tea_scope_cleanup(ctx, &inner_scope);
       return tea_val_undef();
     }
 
-    tea_struct_decl_t* struct_declaration = tea_find_struct_decl(context, variable->val.obj->type);
+    tea_struct_decl_t* struct_declaration = tea_find_struct_decl(ctx, variable->val.obj->type);
     if (!struct_declaration) {
       rtl_log_err("Runtime error: Cannot find struct declaration for type '%s' when calling method",
         variable->val.obj->type);
-      tea_scope_cleanup(context, &inner_scope);
+      tea_scope_cleanup(ctx, &inner_scope);
       return tea_val_undef();
     }
 
     // declare 'self' for the scope
-    tea_decl_var(context, &inner_scope, "self", 0, NULL, object_node);
+    tea_decl_var(ctx, &inner_scope, "self", 0, NULL, object_node);
 
     function_name = field_token->buf;
     function = tea_ctx_find_fn(&struct_declaration->fns, function_name);
 
     // If not found in struct methods, try trait methods
     if (!function) {
-      function = tea_resolve_trait_method(context, variable->val.obj->type, function_name);
+      function = tea_resolve_trait_method(ctx, variable->val.obj->type, function_name);
     }
   } else {
     const tea_tok_t* token = node->tok;
     if (token) {
-      const tea_native_fn_t* native_function = tea_ctx_find_native_fn(&context->nfns, token->buf);
-      if (native_function) {
-        return tea_interpret_evaluate_native_function_call(
-          context, scope, native_function, function_call_args);
+      const tea_native_fn_t* nat_fn = tea_ctx_find_native_fn(&ctx->nfns, token->buf);
+      if (nat_fn) {
+        return tea_eval_native_fn_call(ctx, scp, nat_fn, args);
       }
 
       function_name = token->buf;
-      function = tea_ctx_find_fn(&context->fns, token->buf);
+      function = tea_ctx_find_fn(&ctx->fns, token->buf);
     }
   }
 
@@ -297,9 +299,9 @@ tea_val_t tea_eval_fn_call(tea_ctx_t* context, tea_scope_t* scope, const tea_nod
   }
 
   const tea_node_t* function_params = function->params;
-  if (function_params && function_call_args) {
+  if (function_params && args) {
     rtl_list_entry_t* param_name_entry = rtl_list_first(&function_params->children);
-    rtl_list_entry_t* param_expr_entry = rtl_list_first(&function_call_args->children);
+    rtl_list_entry_t* param_expr_entry = rtl_list_first(&args->children);
 
     while (param_name_entry && param_expr_entry) {
       const tea_node_t* param_name = rtl_list_record(param_name_entry, tea_node_t, link);
@@ -318,7 +320,7 @@ tea_val_t tea_eval_fn_call(tea_ctx_t* context, tea_scope_t* scope, const tea_nod
         break;
       }
 
-      tea_var_t* variable = tea_alloc_var(context);
+      tea_var_t* variable = tea_alloc_var(ctx);
       if (!variable) {
         rtl_log_err(
           "Memory error: Failed to allocate memory for function parameter '%.*s' at line %d, "
@@ -332,7 +334,7 @@ tea_val_t tea_eval_fn_call(tea_ctx_t* context, tea_scope_t* scope, const tea_nod
       /* TODO: Currently all function arguments are not mutable by default and I don't check the
        * types */
       variable->flags = 0;
-      variable->val = tea_eval_expr(context, scope, param_expr);
+      variable->val = tea_eval_expr(ctx, scp, param_expr);
 
       switch (variable->val.type) {
         case TEA_V_I32:
@@ -351,12 +353,12 @@ tea_val_t tea_eval_fn_call(tea_ctx_t* context, tea_scope_t* scope, const tea_nod
       rtl_list_add_tail(&inner_scope.vars, &variable->link);
 
       param_name_entry = rtl_list_next(param_name_entry, &function_params->children);
-      param_expr_entry = rtl_list_next(param_expr_entry, &function_call_args->children);
+      param_expr_entry = rtl_list_next(param_expr_entry, &args->children);
     }
   }
 
-  const bool result = tea_exec(context, &inner_scope, function->body, &return_context, NULL);
-  tea_scope_cleanup(context, &inner_scope);
+  const bool result = tea_exec(ctx, &inner_scope, function->body, &return_context, NULL);
+  tea_scope_cleanup(ctx, &inner_scope);
 
   if (result && return_context.is_set) {
     return return_context.ret_val;

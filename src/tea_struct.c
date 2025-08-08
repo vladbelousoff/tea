@@ -9,7 +9,7 @@
 #include <rtl_log.h>
 #include <rtl_memory.h>
 
-bool tea_interp_struct_decl(tea_ctx_t* context, const tea_node_t* node)
+bool tea_interp_struct_decl(tea_ctx_t* ctx, const tea_node_t* node)
 {
   tea_struct_decl_t* struct_declaration = rtl_malloc(sizeof(*struct_declaration));
   if (!struct_declaration) {
@@ -19,7 +19,7 @@ bool tea_interp_struct_decl(tea_ctx_t* context, const tea_node_t* node)
   struct_declaration->node = node;
   struct_declaration->field_cnt = rtl_list_length(&node->children);
   rtl_list_init(&struct_declaration->fns);
-  rtl_list_add_tail(&context->structs, &struct_declaration->link);
+  rtl_list_add_tail(&ctx->structs, &struct_declaration->link);
 
   tea_tok_t* name = node->tok;
   rtl_log_dbg("Declare struct '%s'", name ? name->buf : "");
@@ -27,24 +27,24 @@ bool tea_interp_struct_decl(tea_ctx_t* context, const tea_node_t* node)
   return true;
 }
 
-tea_struct_decl_t* tea_find_struct_decl(const tea_ctx_t* context, const char* name)
+tea_struct_decl_t* tea_find_struct_decl(const tea_ctx_t* ctx, const char* name)
 {
-  rtl_list_entry_t* entry;
-  rtl_list_for_each(entry, &context->structs)
+  rtl_list_entry_t* struct_entry;
+  rtl_list_for_each(struct_entry, &ctx->structs)
   {
-    tea_struct_decl_t* declaration = rtl_list_record(entry, tea_struct_decl_t, link);
-    if (!declaration) {
+    tea_struct_decl_t* decl = rtl_list_record(struct_entry, tea_struct_decl_t, link);
+    if (!decl) {
       rtl_log_err("Internal error: Struct declaration list contains null entry");
       continue;
     }
-    if (!declaration->node) {
+    if (!decl->node) {
       rtl_log_err("Internal error: Struct declaration has null AST node");
       continue;
     }
-    const tea_tok_t* declaration_token = declaration->node->tok;
-    if (declaration_token) {
-      if (!strcmp(declaration_token->buf, name)) {
-        return declaration;
+    const tea_tok_t* decl_token = decl->node->tok;
+    if (decl_token) {
+      if (!strcmp(decl_token->buf, name)) {
+        return decl;
       }
     }
   }
@@ -52,7 +52,7 @@ tea_struct_decl_t* tea_find_struct_decl(const tea_ctx_t* context, const char* na
   return NULL;
 }
 
-bool tea_interp_impl_blk(const tea_ctx_t* context, const tea_node_t* node)
+bool tea_interp_impl_blk(const tea_ctx_t* ctx, const tea_node_t* node)
 {
   const tea_tok_t* block_name = node->tok;
   if (!block_name) {
@@ -60,7 +60,7 @@ bool tea_interp_impl_blk(const tea_ctx_t* context, const tea_node_t* node)
     return false;
   }
 
-  tea_struct_decl_t* struct_declaration = tea_find_struct_decl(context, block_name->buf);
+  tea_struct_decl_t* struct_declaration = tea_find_struct_decl(ctx, block_name->buf);
   if (!struct_declaration) {
     rtl_log_err(
       "Runtime error: Cannot implement methods for undeclared struct '%s'", block_name->buf);
@@ -97,7 +97,7 @@ bool tea_interp_impl_blk(const tea_ctx_t* context, const tea_node_t* node)
   return true;
 }
 
-tea_val_t tea_eval_new(tea_ctx_t* context, tea_scope_t* scope, const tea_node_t* node)
+tea_val_t tea_eval_new(tea_ctx_t* ctx, tea_scope_t* scp, const tea_node_t* node)
 {
   const tea_tok_t* struct_name = node->tok;
   if (!struct_name) {
@@ -105,7 +105,7 @@ tea_val_t tea_eval_new(tea_ctx_t* context, tea_scope_t* scope, const tea_node_t*
     return tea_val_undef();
   }
 
-  const tea_struct_decl_t* struct_declr = tea_find_struct_decl(context, struct_name->buf);
+  const tea_struct_decl_t* struct_declr = tea_find_struct_decl(ctx, struct_name->buf);
 
   tea_inst_t* object = rtl_malloc(sizeof(tea_inst_t) + struct_declr->field_cnt * sizeof(tea_val_t));
   if (!object) {
@@ -166,7 +166,7 @@ tea_val_t tea_eval_new(tea_ctx_t* context, tea_scope_t* scope, const tea_node_t*
       return tea_val_undef();
     }
 
-    tea_val_t value_expr = tea_eval_expr(context, scope, value_node);
+    tea_val_t value_expr = tea_eval_expr(ctx, scp, value_node);
     if (value_expr.type == TEA_V_UNDEF) {
       rtl_free(object);
       return tea_val_undef();
@@ -182,8 +182,7 @@ tea_val_t tea_eval_new(tea_ctx_t* context, tea_scope_t* scope, const tea_node_t*
   return result;
 }
 
-tea_val_t* tea_get_field_ptr(
-  const tea_ctx_t* context, const tea_scope_t* scope, const tea_node_t* node)
+tea_val_t* tea_get_field_ptr(const tea_ctx_t* ctx, const tea_scope_t* scp, const tea_node_t* node)
 {
   // Extract field information
   tea_node_t* field_node = node->field_acc.field;
@@ -212,7 +211,7 @@ tea_val_t* tea_get_field_ptr(
   }
 
   // Get the variable containing the object
-  const tea_var_t* variable = tea_scope_find(scope, object_name->buf);
+  const tea_var_t* variable = tea_scope_find(scp, object_name->buf);
   if (!variable) {
     rtl_log_err(
       "Runtime error: Variable '%s' not found in current scope when accessing field (line %d, col "
@@ -231,7 +230,7 @@ tea_val_t* tea_get_field_ptr(
   const tea_inst_t* object = variable->val.obj;
 
   // Find the struct declaration for this object type
-  const tea_struct_decl_t* struct_declr = tea_find_struct_decl(context, object->type);
+  const tea_struct_decl_t* struct_declr = tea_find_struct_decl(ctx, object->type);
   if (!struct_declr) {
     rtl_log_err(
       "Runtime error: Cannot find struct declaration for type '%s' when accessing field '%s' (line "
@@ -265,10 +264,9 @@ tea_val_t* tea_get_field_ptr(
   return NULL;
 }
 
-tea_val_t tea_eval_field_acc(
-  const tea_ctx_t* context, const tea_scope_t* scope, const tea_node_t* node)
+tea_val_t tea_eval_field_acc(const tea_ctx_t* ctx, const tea_scope_t* scp, const tea_node_t* node)
 {
-  const tea_val_t* result = tea_get_field_ptr(context, scope, node);
+  const tea_val_t* result = tea_get_field_ptr(ctx, scp, node);
   if (result) {
     return *result;
   }
