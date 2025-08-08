@@ -115,7 +115,7 @@ bool tea_decl_var(tea_ctx_t* context, tea_scope_t* scope, const char* name,
     return false;
   }
   if (type) {
-    const tea_val_type_t predefined_type = tea_value_get_type_by_string(type);
+    const tea_val_type_t predefined_type = tea_val_type_by_str(type);
     if (predefined_type == TEA_V_UNDEF) {
       rtl_log_err("Runtime error: Unknown type '%s' specified in variable declaration", type);
       tea_free_var(context, variable);

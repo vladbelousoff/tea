@@ -32,7 +32,7 @@ typedef struct
   tea_val_type_t type;
 } tea_type_string_id;
 
-tea_val_type_t tea_value_get_type_by_string(const char* name)
+tea_val_type_t tea_val_type_by_str(const char* name)
 {
   static tea_type_string_id ids[] = { { "i32", TEA_V_I32 }, { "f32", TEA_V_F32 },
     { "string", TEA_V_INST }, { NULL, TEA_V_UNDEF } };

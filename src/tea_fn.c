@@ -57,7 +57,7 @@ const tea_fn_t* tea_ctx_find_fn(const rtl_list_entry_t* functions, const char* n
   return NULL;
 }
 
-bool tea_declare_function(const tea_node_t* node, rtl_list_entry_t* functions)
+bool tea_decl_fn(const tea_node_t* node, rtl_list_entry_t* functions)
 {
   const tea_tok_t* fn_name = node->tok;
   if (!fn_name) {
@@ -117,9 +117,9 @@ bool tea_declare_function(const tea_node_t* node, rtl_list_entry_t* functions)
   return true;
 }
 
-bool tea_interpret_function_declaration(tea_ctx_t* context, const tea_node_t* node)
+bool tea_interp_fn_decl(tea_ctx_t* context, const tea_node_t* node)
 {
-  return tea_declare_function(node, &context->fns);
+  return tea_decl_fn(node, &context->fns);
 }
 
 tea_val_t tea_interpret_evaluate_native_function_call(tea_ctx_t* context, tea_scope_t* scope,

@@ -6,11 +6,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <rtl.h>
 #include <rtl_log.h>
 #include <rtl_memory.h>
 
-bool tea_interpret_struct_declaration(tea_ctx_t* context, const tea_node_t* node)
+bool tea_interp_struct_decl(tea_ctx_t* context, const tea_node_t* node)
 {
   tea_struct_decl_t* struct_declaration = rtl_malloc(sizeof(*struct_declaration));
   if (!struct_declaration) {
@@ -53,7 +52,7 @@ tea_struct_decl_t* tea_find_struct_decl(const tea_ctx_t* context, const char* na
   return NULL;
 }
 
-bool tea_interpret_impl_block(const tea_ctx_t* context, const tea_node_t* node)
+bool tea_interp_impl_blk(const tea_ctx_t* context, const tea_node_t* node)
 {
   const tea_tok_t* block_name = node->tok;
   if (!block_name) {
@@ -89,7 +88,7 @@ bool tea_interpret_impl_block(const tea_ctx_t* context, const tea_node_t* node)
       return false;
     }
 
-    const bool result = tea_declare_function(function_node, &struct_declaration->fns);
+    const bool result = tea_decl_fn(function_node, &struct_declaration->fns);
     if (!result) {
       return false;
     }

@@ -9,7 +9,7 @@
 #include <rtl_log.h>
 #include <rtl_memory.h>
 
-bool tea_interpret_trait_declaration(tea_ctx_t* context, const tea_node_t* node)
+bool tea_interp_trait_decl(tea_ctx_t* context, const tea_node_t* node)
 {
   tea_trait_decl_t* trait_declaration = rtl_malloc(sizeof(*trait_declaration));
   if (!trait_declaration) {
@@ -34,7 +34,7 @@ bool tea_interpret_trait_declaration(tea_ctx_t* context, const tea_node_t* node)
       if (function_entry) {
         const tea_node_t* function_node = rtl_list_record(function_entry, tea_node_t, link);
         if (function_node && function_node->type == TEA_N_FN) {
-          const bool result = tea_declare_function(function_node, &trait_declaration->methods);
+          const bool result = tea_decl_fn(function_node, &trait_declaration->methods);
           if (!result) {
             return false;
           }
@@ -64,7 +64,7 @@ tea_trait_decl_t* tea_find_trait_declaration(const tea_ctx_t* context, const cha
   return NULL;
 }
 
-bool tea_interpret_trait_implementation(tea_ctx_t* context, const tea_node_t* node)
+bool tea_interp_trait_impl(tea_ctx_t* context, const tea_node_t* node)
 {
   const tea_tok_t* trait_name_token = node->tok;
   if (!trait_name_token) {
@@ -131,7 +131,7 @@ bool tea_interpret_trait_implementation(tea_ctx_t* context, const tea_node_t* no
       if (function_entry) {
         const tea_node_t* function_node = rtl_list_record(function_entry, tea_node_t, link);
         if (function_node && function_node->type == TEA_N_FN) {
-          const bool result = tea_declare_function(function_node, &trait_impl->methods);
+          const bool result = tea_decl_fn(function_node, &trait_impl->methods);
           if (!result) {
             return false;
           }

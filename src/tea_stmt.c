@@ -379,7 +379,7 @@ bool tea_exec(tea_ctx_t* context, tea_scope_t* scope, const tea_node_t* node,
     case TEA_N_WHILE:
       return tea_exec_while(context, scope, node, return_context);
     case TEA_N_FN:
-      return tea_interpret_function_declaration(context, node);
+      return tea_interp_fn_decl(context, node);
     case TEA_N_RET:
       return tea_exec_return(context, scope, node, return_context);
     case TEA_N_BREAK:
@@ -390,13 +390,13 @@ bool tea_exec(tea_ctx_t* context, tea_scope_t* scope, const tea_node_t* node,
       tea_eval_fn_call(context, scope, node);
       return true;
     case TEA_N_STRUCT:
-      return tea_interpret_struct_declaration(context, node);
+      return tea_interp_struct_decl(context, node);
     case TEA_N_IMPL_BLK:
-      return tea_interpret_impl_block(context, node);
+      return tea_interp_impl_blk(context, node);
     case TEA_N_TRAIT:
-      return tea_interpret_trait_declaration(context, node);
+      return tea_interp_trait_decl(context, node);
     case TEA_N_TRAIT_IMPL:
-      return tea_interpret_trait_implementation(context, node);
+      return tea_interp_trait_impl(context, node);
     case TEA_N_PROG:
     case TEA_N_STMT:
     case TEA_N_FN_ARGS:
