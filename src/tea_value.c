@@ -74,7 +74,7 @@ tea_val_t tea_val_null()
       case TEA_TOKEN_SLASH:                                                                        \
         if (b == 0) {                                                                              \
           rtl_log_err("Runtime error: Division by zero at line %d, column %d", op->line, op->col); \
-          return tea_val_undef();                                                                \
+          return tea_val_undef();                                                                  \
         }                                                                                          \
         result = a / b;                                                                            \
         break;                                                                                     \
