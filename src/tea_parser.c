@@ -17,7 +17,7 @@ static void parser_free(void *ptr)
 
 extern void *ParseAlloc(void *(*cb_malloc)(size_t));
 extern void ParseFree(void *p, void (*cb_free)(void *));
-extern void Parse(void *yyp, int yymajor, tea_token_t *yyminor, tea_ast_node_t **result);
+extern void Parse(void *yyp, int yymajor, tea_tok_t *yyminor, tea_node_t **result);
 
 static char *read_file(const char *filename)
 {
@@ -46,7 +46,7 @@ static char *read_file(const char *filename)
   return buffer;
 }
 
-tea_ast_node_t *tea_parse_string(tea_lexer_t *lexer, const char *input)
+tea_node_t *tea_parse_string(tea_lexer_t *lexer, const char *input)
 {
   void *parser = ParseAlloc(parser_malloc);
   if (!parser) {
@@ -54,14 +54,14 @@ tea_ast_node_t *tea_parse_string(tea_lexer_t *lexer, const char *input)
     return NULL;
   }
 
-  tea_ast_node_t *result = NULL;
+  tea_node_t *result = NULL;
   tea_lexer_tokenize(lexer, input);
-  const bool is_lexer_empty = rtl_list_empty(&lexer->tokens);
+  const bool is_lexer_empty = rtl_list_empty(&lexer->toks);
 
   rtl_list_entry_t *entry;
-  rtl_list_for_each(entry, &lexer->tokens)
+  rtl_list_for_each(entry, &lexer->toks)
   {
-    tea_token_t *token = rtl_list_record(entry, tea_token_t, link);
+    tea_tok_t *token = rtl_list_record(entry, tea_tok_t, link);
     Parse(parser, token->type, token, &result);
   }
 
@@ -74,14 +74,14 @@ tea_ast_node_t *tea_parse_string(tea_lexer_t *lexer, const char *input)
   return result;
 }
 
-tea_ast_node_t *tea_parse_file(tea_lexer_t *lexer, const char *filename)
+tea_node_t *tea_parse_file(tea_lexer_t *lexer, const char *filename)
 {
   char *content = read_file(filename);
   if (!content) {
     return NULL;
   }
 
-  tea_ast_node_t *result = tea_parse_string(lexer, content);
+  tea_node_t *result = tea_parse_string(lexer, content);
   rtl_free(content);
 
   return result;

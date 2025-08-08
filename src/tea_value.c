@@ -8,18 +8,18 @@
 
 #include "tea_grammar.h"
 
-const char* tea_value_get_type_string(const tea_value_type_t type)
+const char* tea_val_type_str(const tea_val_type_t type)
 {
   switch (type) {
-    case TEA_VALUE_INVALID:
+    case TEA_V_UNDEF:
       return "unset";
-    case TEA_VALUE_I32:
+    case TEA_V_I32:
       return "i32";
-    case TEA_VALUE_F32:
+    case TEA_V_F32:
       return "f32";
-    case TEA_VALUE_INSTANCE:
+    case TEA_V_INST:
       return "object";
-    case TEA_VALUE_NULL:
+    case TEA_V_NULL:
       return "null";
   }
 
@@ -29,13 +29,13 @@ const char* tea_value_get_type_string(const tea_value_type_t type)
 typedef struct
 {
   const char* name;
-  tea_value_type_t type;
+  tea_val_type_t type;
 } tea_type_string_id;
 
-tea_value_type_t tea_value_get_type_by_string(const char* name)
+tea_val_type_t tea_value_get_type_by_string(const char* name)
 {
-  static tea_type_string_id ids[] = { { "i32", TEA_VALUE_I32 }, { "f32", TEA_VALUE_F32 },
-    { "string", TEA_VALUE_INSTANCE }, { NULL, TEA_VALUE_INVALID } };
+  static tea_type_string_id ids[] = { { "i32", TEA_V_I32 }, { "f32", TEA_V_F32 },
+    { "string", TEA_V_INST }, { NULL, TEA_V_UNDEF } };
 
   for (int i = 0; ids[i].name; ++i) {
     if (!strcmp(name, ids[i].name)) {
@@ -43,19 +43,19 @@ tea_value_type_t tea_value_get_type_by_string(const char* name)
     }
   }
 
-  return TEA_VALUE_INVALID;
+  return TEA_V_UNDEF;
 }
 
-tea_value_t tea_value_invalid()
+tea_val_t tea_val_undef()
 {
-  static tea_value_t result = { .type = TEA_VALUE_INVALID };
+  static tea_val_t result = { .type = TEA_V_UNDEF };
   return result;
 }
 
-tea_value_t tea_value_null()
+tea_val_t tea_val_null()
 {
   // For the keyword 'null' we don't know the exact type, so let it be just null
-  static tea_value_t result = { .type = TEA_VALUE_NULL, .null_type = TEA_VALUE_NULL };
+  static tea_val_t result = { .type = TEA_V_NULL, .null_type = TEA_V_NULL };
   return result;
 }
 
@@ -73,9 +73,8 @@ tea_value_t tea_value_null()
         break;                                                                                     \
       case TEA_TOKEN_SLASH:                                                                        \
         if (b == 0) {                                                                              \
-          rtl_log_err(                                                                             \
-            "Runtime error: Division by zero at line %d, column %d", op->line, op->column);        \
-          return tea_value_invalid();                                                              \
+          rtl_log_err("Runtime error: Division by zero at line %d, column %d", op->line, op->col); \
+          return tea_val_undef();                                                                \
         }                                                                                          \
         result = a / b;                                                                            \
         break;                                                                                     \
@@ -100,13 +99,12 @@ tea_value_t tea_value_null()
     }                                                                                              \
   } while (0)
 
-tea_value_t tea_value_binop(
-  const tea_value_t lhs_val, const tea_value_t rhs_val, const tea_token_t* op)
+tea_val_t tea_val_binop(const tea_val_t lhs_val, const tea_val_t rhs_val, const tea_tok_t* op)
 {
-  tea_value_t result;
+  tea_val_t result;
 
   // By-default it's i32 for boolean ops
-  result.type = TEA_VALUE_I32;
+  result.type = TEA_V_I32;
 
   switch (op->type) {
     case TEA_TOKEN_OR:
@@ -119,27 +117,27 @@ tea_value_t tea_value_binop(
       break;
   }
 
-  if (lhs_val.type == TEA_VALUE_I32) {
-    if (rhs_val.type == TEA_VALUE_I32) {
-      result.type = TEA_VALUE_I32;
+  if (lhs_val.type == TEA_V_I32) {
+    if (rhs_val.type == TEA_V_I32) {
+      result.type = TEA_V_I32;
       TEA_APPLY_BINOP(lhs_val.i32, rhs_val.i32, op, result.i32);
       return result;
     }
-    if (rhs_val.type == TEA_VALUE_F32) {
-      result.type = TEA_VALUE_F32;
+    if (rhs_val.type == TEA_V_F32) {
+      result.type = TEA_V_F32;
       TEA_APPLY_BINOP(lhs_val.i32, rhs_val.f32, op, result.f32);
       return result;
     }
   }
 
-  if (lhs_val.type == TEA_VALUE_F32) {
-    if (rhs_val.type == TEA_VALUE_I32) {
-      result.type = TEA_VALUE_F32;
+  if (lhs_val.type == TEA_V_F32) {
+    if (rhs_val.type == TEA_V_I32) {
+      result.type = TEA_V_F32;
       TEA_APPLY_BINOP(lhs_val.f32, rhs_val.i32, op, result.f32);
       return result;
     }
-    if (rhs_val.type == TEA_VALUE_F32) {
-      result.type = TEA_VALUE_F32;
+    if (rhs_val.type == TEA_V_F32) {
+      result.type = TEA_V_F32;
       TEA_APPLY_BINOP(lhs_val.f32, rhs_val.f32, op, result.f32);
       return result;
     }
@@ -148,9 +146,9 @@ tea_value_t tea_value_binop(
   rtl_log_err(
     "Runtime error: Unsupported binary operation '%s' between types %s and %s at line %d, column "
     "%d",
-    tea_token_get_name(op->type), tea_value_get_type_string(lhs_val.type),
-    tea_value_get_type_string(rhs_val.type), op->line, op->column);
-  return tea_value_invalid();
+    tea_tok_name(op->type), tea_val_type_str(lhs_val.type), tea_val_type_str(rhs_val.type),
+    op->line, op->col);
+  return tea_val_undef();
 }
 
 #undef TEA_APPLY_BINOP

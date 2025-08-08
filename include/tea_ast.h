@@ -6,53 +6,53 @@
 
 typedef enum
 {
-  TEA_AST_NODE_PROGRAM,
-  TEA_AST_NODE_FUNCTION,
-  TEA_AST_NODE_RETURN_TYPE,
-  TEA_AST_NODE_PARAM,
-  TEA_AST_NODE_ATTR,
-  TEA_AST_NODE_STMT,
-  TEA_AST_NODE_LET,
-  TEA_AST_NODE_MUT,
-  TEA_AST_NODE_ASSIGN,
-  TEA_AST_NODE_BINOP,
-  TEA_AST_NODE_UNARY,
-  TEA_AST_NODE_IDENT,
-  TEA_AST_NODE_TYPE_ANNOT,
-  TEA_AST_NODE_INTEGER_NUMBER,
-  TEA_AST_NODE_FLOAT_NUMBER,
-  TEA_AST_NODE_FUNCTION_CALL,
-  TEA_AST_NODE_FUNCTION_CALL_ARGS,
-  TEA_AST_NODE_RETURN,
-  TEA_AST_NODE_BREAK,
-  TEA_AST_NODE_CONTINUE,
-  TEA_AST_NODE_IF,
-  TEA_AST_NODE_THEN,
-  TEA_AST_NODE_ELSE,
-  TEA_AST_NODE_WHILE,
-  TEA_AST_NODE_WHILE_COND,
-  TEA_AST_NODE_WHILE_BODY,
-  TEA_AST_NODE_STRUCT,
-  TEA_AST_NODE_STRUCT_FIELD,
-  TEA_AST_NODE_STRUCT_INSTANCE,
-  TEA_AST_NODE_STRUCT_FIELD_INIT,
-  TEA_AST_NODE_IMPL_ITEM,
-  TEA_AST_NODE_IMPL_BLOCK,
-  TEA_AST_NODE_STRING,
-  TEA_AST_NODE_FIELD_ACCESS,
-  TEA_AST_NODE_OPTIONAL_TYPE,
-  TEA_AST_NODE_NULL,
-  TEA_AST_NODE_TRAIT,
-  TEA_AST_NODE_TRAIT_METHOD,
-  TEA_AST_NODE_TRAIT_IMPL,
-  TEA_AST_NODE_TRAIT_IMPL_ITEM,
-} tea_ast_node_type_t;
+  TEA_N_PROG,
+  TEA_N_FN,
+  TEA_N_RET_TYPE,
+  TEA_N_PARAM,
+  TEA_N_ATTR,
+  TEA_N_STMT,
+  TEA_N_LET,
+  TEA_N_MUT,
+  TEA_N_ASSIGN,
+  TEA_N_BINOP,
+  TEA_N_UNARY,
+  TEA_N_IDENT,
+  TEA_N_TYPE_ANNOT,
+  TEA_N_INT,
+  TEA_N_FLOAT,
+  TEA_N_FN_CALL,
+  TEA_N_FN_ARGS,
+  TEA_N_RET,
+  TEA_N_BREAK,
+  TEA_N_CONT,
+  TEA_N_IF,
+  TEA_N_THEN,
+  TEA_N_ELSE,
+  TEA_N_WHILE,
+  TEA_N_WHILE_COND,
+  TEA_N_WHILE_BODY,
+  TEA_N_STRUCT,
+  TEA_N_STRUCT_FIELD,
+  TEA_N_STRUCT_INST,
+  TEA_N_STRUCT_INIT,
+  TEA_N_IMPL_ITEM,
+  TEA_N_IMPL_BLK,
+  TEA_N_STR,
+  TEA_N_FIELD_ACC,
+  TEA_N_OPT_TYPE,
+  TEA_N_NULL,
+  TEA_N_TRAIT,
+  TEA_N_TRAIT_METHOD,
+  TEA_N_TRAIT_IMPL,
+  TEA_N_TRAIT_IMPL_ITEM,
+} tea_node_type_t;
 
-typedef struct tea_ast_node
+typedef struct tea_node
 {
   rtl_list_entry_t link;
-  tea_ast_node_type_t type;
-  tea_token_t* token;
+  tea_node_type_t type;
+  tea_tok_t* tok;
 
   union
   {
@@ -60,36 +60,32 @@ typedef struct tea_ast_node
 
     struct
     {
-      struct tea_ast_node* lhs;
-      struct tea_ast_node* rhs;
+      struct tea_node* lhs;
+      struct tea_node* rhs;
     } binop;
 
     struct
     {
-      struct tea_ast_node* object;
-      struct tea_ast_node* field;
-    } field_access;
+      struct tea_node* obj;
+      struct tea_node* field;
+    } field_acc;
   };
-} tea_ast_node_t;
+} tea_node_t;
 
-#define tea_ast_node_create(type, token) _tea_ast_node_create(__FILE__, __LINE__, type, token)
+#define tea_node_create(type, token) _tea_node_create(__FILE__, __LINE__, type, token)
 
-tea_ast_node_t* _tea_ast_node_create(
-  const char* file, unsigned long line, tea_ast_node_type_t type, tea_token_t* token);
+tea_node_t* _tea_node_create(
+  const char* file, unsigned long line, tea_node_type_t type, tea_tok_t* tok);
 
-tea_ast_node_t* tea_ast_node_create_integer_number(
-  const char* file, unsigned long line, tea_token_t* token);
+tea_node_t* tea_node_create_int(const char* file, unsigned long line, tea_tok_t* tok);
 
-tea_ast_node_t* tea_ast_node_create_float_number(
-  const char* file, unsigned long line, tea_token_t* token);
+tea_node_t* tea_node_create_float(const char* file, unsigned long line, tea_tok_t* tok);
 
-void tea_ast_node_add_child(tea_ast_node_t* parent, tea_ast_node_t* child);
-void tea_ast_node_add_children(tea_ast_node_t* parent, const rtl_list_entry_t* children);
-void tea_ast_node_set_binop_children(
-  tea_ast_node_t* parent, tea_ast_node_t* lhs, tea_ast_node_t* rhs);
-void tea_ast_node_set_field_access_children(
-  tea_ast_node_t* parent, tea_ast_node_t* object, tea_ast_node_t* field);
-void tea_ast_node_free(tea_ast_node_t* node);
-void tea_ast_node_print(tea_ast_node_t* node, int depth);
+void tea_node_add_child(tea_node_t* parent, tea_node_t* child);
+void tea_node_add_children(tea_node_t* parent, const rtl_list_entry_t* children);
+void tea_node_set_binop(tea_node_t* parent, tea_node_t* lhs, tea_node_t* rhs);
+void tea_node_set_field_acc(tea_node_t* parent, tea_node_t* obj, tea_node_t* field);
+void tea_node_free(tea_node_t* node);
+void tea_node_print(tea_node_t* node, int depth);
 
-const char* tea_ast_node_get_type_name(tea_ast_node_type_t type);
+const char* tea_node_type_name(tea_node_type_t type);

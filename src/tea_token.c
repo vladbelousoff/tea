@@ -4,12 +4,12 @@
 
 #include <string.h>
 
-static const tea_keyword_entry_t tea_keywords[] = { { "fn", TEA_TOKEN_FN },
-  { "let", TEA_TOKEN_LET }, { "mut", TEA_TOKEN_MUT }, { "if", TEA_TOKEN_IF },
-  { "else", TEA_TOKEN_ELSE }, { "while", TEA_TOKEN_WHILE }, { "break", TEA_TOKEN_BREAK },
-  { "continue", TEA_TOKEN_CONTINUE }, { "struct", TEA_TOKEN_STRUCT }, { "impl", TEA_TOKEN_IMPL },
-  { "return", TEA_TOKEN_RETURN }, { "new", TEA_TOKEN_NEW }, { "null", TEA_TOKEN_NULL },
-  { "trait", TEA_TOKEN_TRAIT }, { "for", TEA_TOKEN_FOR }, { NULL, 0 } };
+static const tea_kw_entry_t tea_keywords[] = { { "fn", TEA_TOKEN_FN }, { "let", TEA_TOKEN_LET },
+  { "mut", TEA_TOKEN_MUT }, { "if", TEA_TOKEN_IF }, { "else", TEA_TOKEN_ELSE },
+  { "while", TEA_TOKEN_WHILE }, { "break", TEA_TOKEN_BREAK }, { "continue", TEA_TOKEN_CONTINUE },
+  { "struct", TEA_TOKEN_STRUCT }, { "impl", TEA_TOKEN_IMPL }, { "return", TEA_TOKEN_RETURN },
+  { "new", TEA_TOKEN_NEW }, { "null", TEA_TOKEN_NULL }, { "trait", TEA_TOKEN_TRAIT },
+  { "for", TEA_TOKEN_FOR }, { NULL, 0 } };
 
 static bool equals(const char *a, const char *b, const int n)
 {
@@ -20,22 +20,22 @@ static bool equals(const char *a, const char *b, const int n)
   return !strcmp(a, b);
 }
 
-int tea_get_ident_token_type(const char *ident, const int length)
+int tea_get_ident_type(const char *ident, const int length)
 {
-  for (int i = 0; tea_keywords[i].keyword; ++i) {
-    const size_t keyword_len = strlen(tea_keywords[i].keyword);
+  for (int i = 0; tea_keywords[i].kw; ++i) {
+    const size_t keyword_len = strlen(tea_keywords[i].kw);
     if (keyword_len != length) {
       continue;
     }
-    if (equals(ident, tea_keywords[i].keyword, length)) {
-      return tea_keywords[i].token_type;
+    if (equals(ident, tea_keywords[i].kw, length)) {
+      return tea_keywords[i].type;
     }
   }
 
   return TEA_TOKEN_IDENT;
 }
 
-const char *tea_token_get_name(const int token_type)
+const char *tea_tok_name(const int token_type)
 {
   switch (token_type) {
     case TEA_TOKEN_FN:

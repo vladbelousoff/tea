@@ -4,10 +4,10 @@
 #include <string.h>
 
 #include "tea_ast.h"
-#include "tea_function.h"
-#include "tea_interpret.h"
+#include "tea_fn.h"
+#include "tea_interp.h"
 #include "tea_parser.h"
-#include "tea_statement.h"
+#include "tea_stmt.h"
 
 void print_usage(const char *program_name)
 {
@@ -19,42 +19,42 @@ void print_usage(const char *program_name)
   rtl_log_inf("  %s example.tea", program_name);
 }
 
-static tea_value_t tea_print(tea_context_t *context, const tea_function_args_t *args)
+static tea_val_t tea_print(tea_ctx_t *context, const tea_fn_args_t *args)
 {
   for (;;) {
-    tea_variable_t *arg = tea_function_args_pop(args);
+    tea_var_t *arg = tea_fn_args_pop(args);
     if (!arg) {
       break;
     }
 
-    const tea_value_t value = arg->value;
+    const tea_val_t value = arg->val;
     switch (value.type) {
-      case TEA_VALUE_NULL:
+      case TEA_V_NULL:
         printf("null");
-      case TEA_VALUE_I32:
+      case TEA_V_I32:
         printf("%d", value.i32);
         break;
-      case TEA_VALUE_F32:
+      case TEA_V_F32:
         printf("%f", value.f32);
         break;
-      case TEA_VALUE_INSTANCE:
-        if (!strcmp(value.object->type, "string")) {
-          printf("%s", (char *)value.object->buffer);
+      case TEA_V_INST:
+        if (!strcmp(value.obj->type, "string")) {
+          printf("%s", (char *)value.obj->buf);
         }
         break;
-      case TEA_VALUE_INVALID:
+      case TEA_V_UNDEF:
         break;
     }
 
-    tea_free_variable(context, arg);
+    tea_free_var(context, arg);
   }
 
-  return tea_value_invalid();
+  return tea_val_undef();
 }
 
-static tea_value_t tea_println(tea_context_t *context, const tea_function_args_t *args)
+static tea_val_t tea_println(tea_ctx_t *context, const tea_fn_args_t *args)
 {
-  const tea_value_t value = tea_print(context, args);
+  const tea_val_t value = tea_print(context, args);
   printf("\n");
   return value;
 }
@@ -99,37 +99,37 @@ int main(const int argc, char *argv[])
 
   tea_lexer_t lexer;
   tea_lexer_init(&lexer);
-  tea_ast_node_t *ast = tea_parse_file(&lexer, filename);
+  tea_node_t *ast = tea_parse_file(&lexer, filename);
 
   rtl_log_dbg("Parsing summary:");
   rtl_log_dbg("File: %s", filename);
   rtl_log_dbg("Status: successfully parsed");
 
   if (ast) {
-    tea_ast_node_print(ast, 0);
-    rtl_log_dbg("Root node type: %s", ast->type == TEA_AST_NODE_PROGRAM ? "PROGRAM" : "OTHER");
+    tea_node_print(ast, 0);
+    rtl_log_dbg("Root node type: %s", ast->type == TEA_N_PROG ? "PROGRAM" : "OTHER");
   }
 
   rtl_log_dbg("Parsing completed successfully!");
 
   int ret_code = 0;
   if (ast) {
-    tea_context_t context;
-    tea_interpret_init(&context, filename);
+    tea_ctx_t context;
+    tea_interp_init(&context, filename);
 
-    tea_bind_native_function(&context, "print", tea_print);
-    tea_bind_native_function(&context, "println", tea_println);
+    tea_bind_native_fn(&context, "print", tea_print);
+    tea_bind_native_fn(&context, "println", tea_println);
 
     tea_scope_t global_scope;
     tea_scope_init(&global_scope, NULL);
-    if (!tea_interpret_execute(&context, &global_scope, ast, NULL, NULL)) {
+    if (!tea_exec(&context, &global_scope, ast, NULL, NULL)) {
       ret_code = 1;
     }
 
     tea_scope_cleanup(&context, &global_scope);
-    tea_interpret_cleanup(&context);
+    tea_interp_cleanup(&context);
 
-    tea_ast_node_free(ast);
+    tea_node_free(ast);
   }
 
   tea_lexer_cleanup(&lexer);

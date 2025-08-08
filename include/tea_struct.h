@@ -7,21 +7,17 @@
 typedef struct
 {
   rtl_list_entry_t link;
-  const tea_ast_node_t* node;
-  unsigned long field_count;
-  rtl_list_entry_t functions;
-} tea_struct_declaration_t;
+  const tea_node_t* node;
+  unsigned long field_cnt;
+  rtl_list_entry_t fns;
+} tea_struct_decl_t;
 
-bool tea_interpret_struct_declaration(tea_context_t* context, const tea_ast_node_t* node);
-tea_struct_declaration_t* tea_find_struct_declaration(
-  const tea_context_t* context, const char* name);
+bool tea_interp_struct_decl(tea_ctx_t* ctx, const tea_node_t* node);
+tea_struct_decl_t* tea_find_struct_decl(const tea_ctx_t* ctx, const char* name);
 
-bool tea_interpret_impl_block(const tea_context_t* context, const tea_ast_node_t* node);
+bool tea_interp_impl_blk(const tea_ctx_t* ctx, const tea_node_t* node);
 
-tea_value_t tea_interpret_evaluate_new(
-  tea_context_t* context, tea_scope_t* scope, const tea_ast_node_t* node);
+tea_val_t tea_eval_new(tea_ctx_t* ctx, tea_scope_t* scp, const tea_node_t* node);
 
-tea_value_t tea_interpret_field_access(
-  const tea_context_t* context, const tea_scope_t* scope, const tea_ast_node_t* node);
-tea_value_t* tea_get_field_pointer(
-  const tea_context_t* context, const tea_scope_t* scope, const tea_ast_node_t* node);
+tea_val_t tea_eval_field_acc(const tea_ctx_t* ctx, const tea_scope_t* scp, const tea_node_t* node);
+tea_val_t* tea_get_field_ptr(const tea_ctx_t* ctx, const tea_scope_t* scp, const tea_node_t* node);

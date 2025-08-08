@@ -4,20 +4,20 @@
 
 typedef struct
 {
-  const char *keyword;
-  int token_type;
-} tea_keyword_entry_t;
+  const char *kw;
+  int type;
+} tea_kw_entry_t;
 
 typedef struct
 {
   rtl_list_entry_t link;
   int type;
   int line;
-  int column;
-  int position;
-  int buffer_size;
-  char buffer[0];
-} tea_token_t;
+  int col;
+  int pos;
+  int size;
+  char buf[0];
+} tea_tok_t;
 
-int tea_get_ident_token_type(const char *ident, int length);
-const char *tea_token_get_name(int token_type);
+int tea_get_ident_type(const char *ident, int len);
+const char *tea_tok_name(int type);

@@ -18,10 +18,10 @@
 
 void tea_lexer_init(tea_lexer_t *self)
 {
-  self->position = 0;
+  self->pos = 0;
   self->line = 1;
-  self->column = 1;
-  rtl_list_init(&self->tokens);
+  self->col = 1;
+  rtl_list_init(&self->toks);
 }
 
 void tea_lexer_cleanup(const tea_lexer_t *self)
@@ -29,9 +29,9 @@ void tea_lexer_cleanup(const tea_lexer_t *self)
   rtl_list_entry_t *entry;
   rtl_list_entry_t *safe;
 
-  rtl_list_for_each_safe(entry, safe, &self->tokens)
+  rtl_list_for_each_safe(entry, safe, &self->toks)
   {
-    tea_token_t *token = rtl_list_record(entry, tea_token_t, link);
+    tea_tok_t *token = rtl_list_record(entry, tea_tok_t, link);
     rtl_list_remove(entry);
     rtl_free(token);
   }
@@ -40,56 +40,56 @@ void tea_lexer_cleanup(const tea_lexer_t *self)
 static void create_token(
   tea_lexer_t *self, const int token_type, const char *buffer, const int buffer_size)
 {
-  int token_size = sizeof(tea_token_t);
+  int token_size = sizeof(tea_tok_t);
   if (buffer_size > 0) {
     token_size += buffer_size + 1;
   }
 
-  tea_token_t *token = rtl_malloc(token_size);
+  tea_tok_t *token = rtl_malloc(token_size);
   token->type = token_type;
   token->line = self->line;
-  token->column = self->column;
-  token->position = self->position;
-  token->buffer_size = buffer_size;
+  token->col = self->col;
+  token->pos = self->pos;
+  token->size = buffer_size;
 
   if (buffer) {
-    memcpy(token->buffer, buffer, buffer_size);
+    memcpy(token->buf, buffer, buffer_size);
   }
 
   if (buffer_size > 0) {
-    token->buffer[buffer_size] = EOS;
+    token->buf[buffer_size] = EOS;
   }
 
   if (token_type == TEA_TOKEN_STRING) {
-    rtl_log_dbg("Token: <STRING> (line: %d, col: %d)", token->line, token->column);
+    rtl_log_dbg("Token: <STRING> (line: %d, col: %d)", token->line, token->col);
   } else if (token_type == TEA_TOKEN_IDENT) {
-    rtl_log_dbg("Token: %.*s (line: %d, col: %d)", buffer_size, buffer, token->line, token->column);
+    rtl_log_dbg("Token: %.*s (line: %d, col: %d)", buffer_size, buffer, token->line, token->col);
   } else if (token_type == TEA_TOKEN_INTEGER_NUMBER) {
-    rtl_log_dbg("Token: %d (line: %d, col: %d)", *(int *)buffer, token->line, token->column);
+    rtl_log_dbg("Token: %d (line: %d, col: %d)", *(int *)buffer, token->line, token->col);
   } else if (token_type == TEA_TOKEN_FLOAT_NUMBER) {
-    rtl_log_dbg("Token: %f (line: %d, col: %d)", *(float *)buffer, token->line, token->column);
+    rtl_log_dbg("Token: %f (line: %d, col: %d)", *(float *)buffer, token->line, token->col);
   } else {
-    rtl_log_dbg("Token: <%s> (line: %d, col: %d)", tea_token_get_name(token_type), token->line,
-      token->column);
+    rtl_log_dbg(
+      "Token: <%s> (line: %d, col: %d)", tea_tok_name(token_type), token->line, token->col);
   }
 
-  rtl_list_add_tail(&self->tokens, &token->link);
+  rtl_list_add_tail(&self->toks, &token->link);
 }
 
 static void skip_whitespaces(tea_lexer_t *self, const char *input)
 {
   while (true) {
-    const char c = input[self->position];
+    const char c = input[self->pos];
     switch (c) {
       case WHITESPACE:
       case CRR:
       case TAB:
-        self->column++;
-        self->position++;
+        self->col++;
+        self->pos++;
         break;
       case EOL:
-        self->column = 1;
-        self->position++;
+        self->col = 1;
+        self->pos++;
         self->line++;
         break;
       default:
@@ -100,43 +100,43 @@ static void skip_whitespaces(tea_lexer_t *self, const char *input)
 
 static bool scan_comments(tea_lexer_t *self, const char *input)
 {
-  if (input[self->position] == '/') {
-    int position = self->position + 2;
-    switch (input[self->position + 1]) {
+  if (input[self->pos] == '/') {
+    int position = self->pos + 2;
+    switch (input[self->pos + 1]) {
       case '*':
         while (true) {
           if (input[position] == 0) {
-            self->position = position;
+            self->pos = position;
             return true;
           }
           if (input[position] == EOL) {
             position++;
             self->line++;
-            self->column = 1;
+            self->col = 1;
           } else if (input[position] == '*' && input[position + 1] == '/') {
             // The section is correct, just return true
-            self->position = position + 2;
-            self->column += 2;
+            self->pos = position + 2;
+            self->col += 2;
             return true;
           } else {
             position++;
-            self->column++;
+            self->col++;
           }
         }
       case '/':
         while (true) {
           if (input[position] == 0) {
-            self->position = position;
+            self->pos = position;
             return true;
           }
           if (input[position] == EOL) {
             self->line += 1;
-            self->column = 1;
-            self->position = position + 1;
+            self->col = 1;
+            self->pos = position + 1;
             return true;
           }
           position++;
-          self->column++;
+          self->col++;
         }
       default:
         return false;
@@ -151,7 +151,7 @@ static bool scan_operator(tea_lexer_t *self, const char *input)
   int token_length = 1;
   int token_type;
 
-  switch (input[self->position]) {
+  switch (input[self->pos]) {
     case '@':
       token_type = TEA_TOKEN_AT;
       break;
@@ -165,7 +165,7 @@ static bool scan_operator(tea_lexer_t *self, const char *input)
       token_type = TEA_TOKEN_SEMICOLON;
       break;
     case '=':
-      if (input[self->position + 1] == '=') {
+      if (input[self->pos + 1] == '=') {
         token_type = TEA_TOKEN_EQ;
         token_length = 2;
         break;
@@ -173,7 +173,7 @@ static bool scan_operator(tea_lexer_t *self, const char *input)
       token_type = TEA_TOKEN_ASSIGN;
       break;
     case '!':
-      if (input[self->position + 1] == '=') {
+      if (input[self->pos + 1] == '=') {
         token_type = TEA_TOKEN_NE;
         token_length = 2;
         break;
@@ -181,7 +181,7 @@ static bool scan_operator(tea_lexer_t *self, const char *input)
       token_type = TEA_TOKEN_EXCLAMATION_MARK;
       break;
     case '-':
-      if (input[self->position + 1] == '>') {
+      if (input[self->pos + 1] == '>') {
         token_type = TEA_TOKEN_ARROW;
         token_length = 2;
         break;
@@ -210,21 +210,21 @@ static bool scan_operator(tea_lexer_t *self, const char *input)
       token_type = TEA_TOKEN_RBRACE;
       break;
     case '&':
-      if (input[self->position + 1] == '&') {
+      if (input[self->pos + 1] == '&') {
         token_type = TEA_TOKEN_AND;
         token_length = 2;
         break;
       }
       return false;
     case '|':
-      if (input[self->position + 1] == '|') {
+      if (input[self->pos + 1] == '|') {
         token_type = TEA_TOKEN_OR;
         token_length = 2;
         break;
       }
       return false;
     case '>':
-      if (input[self->position + 1] == '=') {
+      if (input[self->pos + 1] == '=') {
         token_type = TEA_TOKEN_GE;
         token_length = 2;
         break;
@@ -232,7 +232,7 @@ static bool scan_operator(tea_lexer_t *self, const char *input)
       token_type = TEA_TOKEN_GT;
       break;
     case '<':
-      if (input[self->position + 1] == '=') {
+      if (input[self->pos + 1] == '=') {
         token_type = TEA_TOKEN_LE;
         token_length = 2;
         break;
@@ -249,20 +249,20 @@ static bool scan_operator(tea_lexer_t *self, const char *input)
       return false;
   }
 
-  create_token(self, token_type, &input[self->position], token_length);
+  create_token(self, token_type, &input[self->pos], token_length);
 
-  self->column += token_length;
-  self->position += token_length;
+  self->col += token_length;
+  self->pos += token_length;
 
   return true;
 }
 
 static bool scan_number(tea_lexer_t *self, const char *input)
 {
-  const char first_char = input[self->position];
+  const char first_char = input[self->pos];
 
-  if (isdigit(first_char) || (first_char == '.' && isdigit(input[self->position + 1]))) {
-    const int start_position = self->position;
+  if (isdigit(first_char) || (first_char == '.' && isdigit(input[self->pos + 1]))) {
+    const int start_position = self->pos;
     int current_position = start_position;
     bool is_float = false;
 
@@ -299,7 +299,7 @@ static bool scan_number(tea_lexer_t *self, const char *input)
     } else {
       rtl_log_err(
         "Lexer error: Number literal too large (exceeds 32 characters) at line %d, column %d",
-        self->line, self->column);
+        self->line, self->col);
       return false;
     }
 
@@ -310,7 +310,7 @@ static bool scan_number(tea_lexer_t *self, const char *input)
         create_token(self, TEA_TOKEN_FLOAT_NUMBER, (char *)&value, sizeof(value));
       } else {
         rtl_log_err("Lexer error: Invalid float literal '%s' at line %d, column %d", tmp_buffer,
-          self->line, self->column);
+          self->line, self->col);
         return false;
       }
     } else {
@@ -319,13 +319,13 @@ static bool scan_number(tea_lexer_t *self, const char *input)
         create_token(self, TEA_TOKEN_INTEGER_NUMBER, (char *)&value, sizeof(value));
       } else {
         rtl_log_err("Lexer error: Invalid integer literal '%s' at line %d, column %d", tmp_buffer,
-          self->line, self->column);
+          self->line, self->col);
         return false;
       }
     }
 
-    self->column += length;
-    self->position = current_position;
+    self->col += length;
+    self->pos = current_position;
 
     return true;
   }
@@ -337,8 +337,8 @@ static bool scan_number(tea_lexer_t *self, const char *input)
 
 static bool scan_string(tea_lexer_t *self, const char *input)
 {
-  if (input[self->position] == '\'') {
-    const int start_position = self->position + 1;  // Skip the opening quote
+  if (input[self->pos] == '\'') {
+    const int start_position = self->pos + 1;  // Skip the opening quote
     int current_position = start_position;
 
     char tmp_string[TEA_STRING_MAX_SIZE] = { 0 };
@@ -349,8 +349,8 @@ static bool scan_string(tea_lexer_t *self, const char *input)
       const char c = input[current_position];
 
       if (c == EOS) {
-        rtl_log_err("Lexer error: Unterminated string literal at line %d, column %d", self->line,
-          self->column);
+        rtl_log_err(
+          "Lexer error: Unterminated string literal at line %d, column %d", self->line, self->col);
         return false;
       }
 
@@ -361,7 +361,7 @@ static bool scan_string(tea_lexer_t *self, const char *input)
       if (c == EOL) {
         rtl_log_err(
           "Lexer error: String literals cannot contain newline characters at line %d, column %d",
-          self->line, self->column);
+          self->line, self->col);
         return false;
       }
 
@@ -391,14 +391,14 @@ static bool scan_string(tea_lexer_t *self, const char *input)
         shift = 2;
       }
 
-      self->column += shift;
+      self->col += shift;
       current_position += shift;
     }
 
     create_token(self, TEA_TOKEN_STRING, tmp_string, tmp_string_length);
 
-    self->position = current_position + 1;  // Skip the closing quote
-    self->column++;
+    self->pos = current_position + 1;  // Skip the closing quote
+    self->col++;
 
     return true;
   }
@@ -408,12 +408,12 @@ static bool scan_string(tea_lexer_t *self, const char *input)
 
 static bool scan_ident(tea_lexer_t *self, const char *input)
 {
-  char c = input[self->position];
+  char c = input[self->pos];
   if (isalpha(c) || c == '_') {
     int token_length = 0;
 
     while (true) {
-      c = input[self->position + token_length];
+      c = input[self->pos + token_length];
       if (!isalnum(c) && c != '_') {
         break;
       }
@@ -421,16 +421,16 @@ static bool scan_ident(tea_lexer_t *self, const char *input)
       token_length++;
     }
 
-    const char *token_name = &input[self->position];
-    const int token_type = tea_get_ident_token_type(token_name, token_length);
+    const char *token_name = &input[self->pos];
+    const int token_type = tea_get_ident_type(token_name, token_length);
     if (token_type != TEA_TOKEN_IDENT) {
       create_token(self, token_type, NULL, 0);
     } else {
       create_token(self, token_type, token_name, token_length);
     }
 
-    self->position += token_length;
-    self->column += token_length;
+    self->pos += token_length;
+    self->col += token_length;
 
     return true;
   }
@@ -440,15 +440,15 @@ static bool scan_ident(tea_lexer_t *self, const char *input)
 
 static void unknown_character(const tea_lexer_t *self, const char *input)
 {
-  const char c = input[self->position];
+  const char c = input[self->pos];
   if (c != EOS) {
     if (c != EOL) {
       rtl_log_err("Lexer error: Unknown character '%c' at line %d, column %d, position %d", c,
-        self->line, self->column, self->position);
+        self->line, self->col, self->pos);
     } else {
       rtl_log_err(
         "Lexer error: Unexpected end of line character at line %d, column %d, position %d",
-        self->line, self->column, self->position);
+        self->line, self->col, self->pos);
     }
     exit(1);
   }
@@ -478,7 +478,7 @@ static bool try_lexer_scanners(void *self, const char *input)
 
 void tea_lexer_tokenize(tea_lexer_t *self, const char *input)
 {
-  while (input[self->position] != EOS) {
+  while (input[self->pos] != EOS) {
     skip_whitespaces(self, input);
 
     const bool success = try_lexer_scanners(self, input);

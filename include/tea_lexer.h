@@ -4,12 +4,12 @@
 
 typedef struct
 {
-  int position;
+  int pos;
   int line;
-  int column;
-  rtl_list_entry_t tokens;
+  int col;
+  rtl_list_entry_t toks;
 } tea_lexer_t;
 
-void tea_lexer_init(tea_lexer_t *self);
-void tea_lexer_cleanup(const tea_lexer_t *self);
-void tea_lexer_tokenize(tea_lexer_t *self, const char *input);
+void tea_lexer_init(tea_lexer_t *lex);
+void tea_lexer_cleanup(const tea_lexer_t *lex);
+void tea_lexer_tokenize(tea_lexer_t *lex, const char *input);
