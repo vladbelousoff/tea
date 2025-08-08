@@ -2,14 +2,12 @@
 
 #include "rtl_list.h"
 
-typedef struct
-{
+typedef struct {
   const char *kw;
   int type;
 } tea_kw_entry_t;
 
-typedef struct
-{
+typedef struct {
   rtl_list_entry_t link;
   int type;
   int line;

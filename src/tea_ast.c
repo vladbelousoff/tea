@@ -5,8 +5,8 @@
 #include <rtl_log.h>
 #include <string.h>
 
-tea_node_t *_tea_node_create(
-  const char *file, const unsigned long line, const tea_node_type_t type, tea_tok_t *token)
+tea_node_t *_tea_node_create(const char *file, const unsigned long line,
+                             const tea_node_type_t type, tea_tok_t *token)
 {
   tea_node_t *node = _rtl_malloc(file, line, sizeof(*node));
   if (!node) {
@@ -86,88 +86,88 @@ void tea_node_free(tea_node_t *node)
 const char *tea_node_type_name(const tea_node_type_t type)
 {
   switch (type) {
-    case TEA_N_PROG:
-      return "PROGRAM";
-    case TEA_N_FN:
-      return "FUNCTION";
-    case TEA_N_RET_TYPE:
-      return "RETURN_TYPE";
-    case TEA_N_PARAM:
-      return "PARAM";
-    case TEA_N_ATTR:
-      return "ATTR";
-    case TEA_N_STMT:
-      return "STMT";
-    case TEA_N_LET:
-      return "LET";
-    case TEA_N_MUT:
-      return "MUT";
-    case TEA_N_ASSIGN:
-      return "ASSIGN";
-    case TEA_N_BINOP:
-      return "BINOP";
-    case TEA_N_UNARY:
-      return "UNARY";
-    case TEA_N_IDENT:
-      return "IDENT";
-    case TEA_N_TYPE_ANNOT:
-      return "TYPE_ANNOT";
-    case TEA_N_INT:
-      return "INTEGER";
-    case TEA_N_FLOAT:
-      return "FLOAT";
-    case TEA_N_FN_CALL:
-      return "FUNCTION_CALL";
-    case TEA_N_FN_ARGS:
-      return "FUNCTION_CALL_ARGS";
-    case TEA_N_RET:
-      return "RETURN";
-    case TEA_N_BREAK:
-      return "BREAK";
-    case TEA_N_CONT:
-      return "CONTINUE";
-    case TEA_N_IF:
-      return "IF";
-    case TEA_N_THEN:
-      return "THEN";
-    case TEA_N_ELSE:
-      return "ELSE";
-    case TEA_N_WHILE:
-      return "WHILE";
-    case TEA_N_WHILE_COND:
-      return "WHILE_COND";
-    case TEA_N_WHILE_BODY:
-      return "WHILE_BODY";
-    case TEA_N_STRUCT:
-      return "STRUCT";
-    case TEA_N_STRUCT_FIELD:
-      return "STRUCT_FIELD";
-    case TEA_N_STRUCT_INST:
-      return "STRUCT_INSTANCE";
-    case TEA_N_STRUCT_INIT:
-      return "STRUCT_FIELD_INIT";
-    case TEA_N_STR:
-      return "STRING";
-    case TEA_N_FIELD_ACC:
-      return "FIELD_ACCESS";
-    case TEA_N_IMPL_ITEM:
-      return "IMPL_ITEM";
-    case TEA_N_IMPL_BLK:
-      return "IMPL_BLOCK";
-    case TEA_N_OPT_TYPE:
-      return "OPTIONAL_TYPE";
-    case TEA_N_NULL:
-      return "NULL";
-    case TEA_N_TRAIT:
-      return "TRAIT";
-    case TEA_N_TRAIT_METHOD:
-      return "TRAIT_METHOD";
-    case TEA_N_TRAIT_IMPL:
-      return "TRAIT_IMPL";
-    case TEA_N_TRAIT_IMPL_ITEM:
-      return "TRAIT_IMPL_ITEM";
-    default:
-      return "UNKNOWN";
+  case TEA_N_PROG:
+    return "PROGRAM";
+  case TEA_N_FN:
+    return "FUNCTION";
+  case TEA_N_RET_TYPE:
+    return "RETURN_TYPE";
+  case TEA_N_PARAM:
+    return "PARAM";
+  case TEA_N_ATTR:
+    return "ATTR";
+  case TEA_N_STMT:
+    return "STMT";
+  case TEA_N_LET:
+    return "LET";
+  case TEA_N_MUT:
+    return "MUT";
+  case TEA_N_ASSIGN:
+    return "ASSIGN";
+  case TEA_N_BINOP:
+    return "BINOP";
+  case TEA_N_UNARY:
+    return "UNARY";
+  case TEA_N_IDENT:
+    return "IDENT";
+  case TEA_N_TYPE_ANNOT:
+    return "TYPE_ANNOT";
+  case TEA_N_INT:
+    return "INTEGER";
+  case TEA_N_FLOAT:
+    return "FLOAT";
+  case TEA_N_FN_CALL:
+    return "FUNCTION_CALL";
+  case TEA_N_FN_ARGS:
+    return "FUNCTION_CALL_ARGS";
+  case TEA_N_RET:
+    return "RETURN";
+  case TEA_N_BREAK:
+    return "BREAK";
+  case TEA_N_CONT:
+    return "CONTINUE";
+  case TEA_N_IF:
+    return "IF";
+  case TEA_N_THEN:
+    return "THEN";
+  case TEA_N_ELSE:
+    return "ELSE";
+  case TEA_N_WHILE:
+    return "WHILE";
+  case TEA_N_WHILE_COND:
+    return "WHILE_COND";
+  case TEA_N_WHILE_BODY:
+    return "WHILE_BODY";
+  case TEA_N_STRUCT:
+    return "STRUCT";
+  case TEA_N_STRUCT_FIELD:
+    return "STRUCT_FIELD";
+  case TEA_N_STRUCT_INST:
+    return "STRUCT_INSTANCE";
+  case TEA_N_STRUCT_INIT:
+    return "STRUCT_FIELD_INIT";
+  case TEA_N_STR:
+    return "STRING";
+  case TEA_N_FIELD_ACC:
+    return "FIELD_ACCESS";
+  case TEA_N_IMPL_ITEM:
+    return "IMPL_ITEM";
+  case TEA_N_IMPL_BLK:
+    return "IMPL_BLOCK";
+  case TEA_N_OPT_TYPE:
+    return "OPTIONAL_TYPE";
+  case TEA_N_NULL:
+    return "NULL";
+  case TEA_N_TRAIT:
+    return "TRAIT";
+  case TEA_N_TRAIT_METHOD:
+    return "TRAIT_METHOD";
+  case TEA_N_TRAIT_IMPL:
+    return "TRAIT_IMPL";
+  case TEA_N_TRAIT_IMPL_ITEM:
+    return "TRAIT_IMPL_ITEM";
+  default:
+    return "UNKNOWN";
   }
 }
 
@@ -249,9 +249,9 @@ void tea_node_set_binop(tea_node_t *parent, tea_node_t *lhs, tea_node_t *rhs)
   parent->binop.rhs = rhs;
 }
 
-void tea_node_set_field_acc(tea_node_t *parent, tea_node_t *obj, tea_node_t *field)
+void tea_node_set_field_acc(tea_node_t *parent, tea_node_t *obj,
+                            tea_node_t *field)
 {
   parent->field_acc.obj = obj;
   parent->field_acc.field = field;
 }
-

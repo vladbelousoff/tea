@@ -17,13 +17,15 @@ static void parser_free(void *ptr)
 
 extern void *ParseAlloc(void *(*cb_malloc)(size_t));
 extern void ParseFree(void *p, void (*cb_free)(void *));
-extern void Parse(void *yyp, int yymajor, tea_tok_t *yyminor, tea_node_t **result);
+extern void Parse(void *yyp, int yymajor, tea_tok_t *yyminor,
+                  tea_node_t **result);
 
 static char *read_file(const char *filename)
 {
   FILE *file = fopen(filename, "r");
   if (!file) {
-    rtl_log_err("Parser error: Cannot open input file '%s' for reading", filename);
+    rtl_log_err("Parser error: Cannot open input file '%s' for reading",
+                filename);
     return NULL;
   }
 
@@ -33,7 +35,8 @@ static char *read_file(const char *filename)
 
   char *buffer = rtl_malloc(file_size + 1);
   if (!buffer) {
-    rtl_log_err("Parser error: Cannot allocate memory to read file '%s'", filename);
+    rtl_log_err("Parser error: Cannot allocate memory to read file '%s'",
+                filename);
     fclose(file);
     return NULL;
   }
