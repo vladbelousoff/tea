@@ -151,7 +151,7 @@ let negation = -value;
 ## Example Program
 
 ```tea
-struct Rectangle {
+type Rectangle {
     width: f32;
     height: f32;
 }
