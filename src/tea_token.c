@@ -11,8 +11,7 @@ static const tea_kw_entry_t tea_keywords[] = {
   { "break", TEA_TOKEN_BREAK },   { "continue", TEA_TOKEN_CONTINUE },
   { "struct", TEA_TOKEN_STRUCT }, { "impl", TEA_TOKEN_IMPL },
   { "return", TEA_TOKEN_RETURN }, { "new", TEA_TOKEN_NEW },
-  { "null", TEA_TOKEN_NULL },     { "trait", TEA_TOKEN_TRAIT },
-  { "for", TEA_TOKEN_FOR },       { NULL, 0 }
+  { "null", TEA_TOKEN_NULL },     { NULL, 0 }
 };
 
 static bool equals(const char *a, const char *b, const int n)
@@ -66,10 +65,7 @@ const char *tea_tok_name(const int token_type)
     return "RETURN";
   case TEA_TOKEN_NEW:
     return "NEW";
-  case TEA_TOKEN_TRAIT:
-    return "TRAIT";
-  case TEA_TOKEN_FOR:
-    return "FOR";
+
   case TEA_TOKEN_IDENT:
     return "IDENT";
   case TEA_TOKEN_LPAREN:

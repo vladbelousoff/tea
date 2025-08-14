@@ -158,14 +158,7 @@ const char *tea_node_type_name(const tea_node_type_t type)
     return "OPTIONAL_TYPE";
   case TEA_N_NULL:
     return "NULL";
-  case TEA_N_TRAIT:
-    return "TRAIT";
-  case TEA_N_TRAIT_METHOD:
-    return "TRAIT_METHOD";
-  case TEA_N_TRAIT_IMPL:
-    return "TRAIT_IMPL";
-  case TEA_N_TRAIT_IMPL_ITEM:
-    return "TRAIT_IMPL_ITEM";
+
   default:
     return "UNKNOWN";
   }

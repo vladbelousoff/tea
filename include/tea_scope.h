@@ -8,8 +8,7 @@ typedef struct {
   rtl_list_entry_t fns;
   rtl_list_entry_t nfns;
   rtl_list_entry_t structs;
-  rtl_list_entry_t traits;
-  rtl_list_entry_t impls;
+
   rtl_list_entry_t vars;
 } tea_ctx_t;
 

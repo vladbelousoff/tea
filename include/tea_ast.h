@@ -41,10 +41,7 @@ typedef enum {
   TEA_N_FIELD_ACC,
   TEA_N_OPT_TYPE,
   TEA_N_NULL,
-  TEA_N_TRAIT,
-  TEA_N_TRAIT_METHOD,
-  TEA_N_TRAIT_IMPL,
-  TEA_N_TRAIT_IMPL_ITEM,
+
 } tea_node_type_t;
 
 typedef struct tea_node {

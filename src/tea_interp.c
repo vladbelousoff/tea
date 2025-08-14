@@ -12,8 +12,7 @@ void tea_interp_init(tea_ctx_t *ctx, const char *fname)
   rtl_list_init(&ctx->fns);
   rtl_list_init(&ctx->nfns);
   rtl_list_init(&ctx->structs);
-  rtl_list_init(&ctx->traits);
-  rtl_list_init(&ctx->impls);
+
   rtl_list_init(&ctx->vars);
 }
 

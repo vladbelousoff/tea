@@ -29,8 +29,7 @@
 %token DOT.
 %token EXCLAMATION_MARK QUESTION_MARK.
 %token NULL.
-%token TRAIT.
-%token FOR.
+
 
 %left ASSIGN.
 %left PLUS MINUS.
@@ -69,8 +68,7 @@ item(item_node) ::= function(func). { item_node = func; }
 item(item_node) ::= statement(stmt). { item_node = stmt; }
 item(item_node) ::= struct_definition(struct_def). { item_node = struct_def; }
 item(item_node) ::= impl_block(impl_block_node). { item_node = impl_block_node; }
-item(item_node) ::= trait_definition(trait_def). { item_node = trait_def; }
-item(item_node) ::= trait_impl_block(trait_impl_node). { item_node = trait_impl_node; }
+
 
 attr_list(attr_list_node) ::= attr_list(existing_attrs) attribute(new_attr). {
     attr_list_node = existing_attrs ? existing_attrs : tea_node_create(TEA_N_ATTR, NULL);
@@ -157,60 +155,7 @@ impl_method(method_node) ::= function_header(header) function_body(body). {
     tea_node_add_child(header, body);
 }
 
-trait_definition(trait_def_node) ::= TRAIT IDENT(trait_name) LBRACE trait_method_list_opt(methods) RBRACE. {
-    trait_def_node = tea_node_create(TEA_N_TRAIT, trait_name);
-    if (methods) {
-        tea_node_add_children(trait_def_node, &methods->children);
-        tea_node_free(methods);
-    }
-}
 
-trait_method_list_opt(method_list_node) ::= trait_method_list(methods). { method_list_node = methods; }
-trait_method_list_opt(method_list_node) ::= . { method_list_node = NULL; }
-
-trait_method_list(method_list_node) ::= trait_method_list(existing_methods) trait_method(new_method). {
-    method_list_node = existing_methods ? existing_methods : tea_node_create(TEA_N_TRAIT_METHOD, NULL);
-    tea_node_add_child(method_list_node, new_method);
-}
-
-trait_method_list(method_list_node) ::= trait_method(single_method). {
-    method_list_node = tea_node_create(TEA_N_TRAIT_METHOD, NULL);
-    tea_node_add_child(method_list_node, single_method);
-}
-
-trait_method(method_node) ::= function_header(header) SEMICOLON. {
-    method_node = tea_node_create(TEA_N_TRAIT_METHOD, NULL);
-    tea_node_add_child(method_node, header);
-}
-
-trait_impl_block(trait_impl_node) ::= IMPL IDENT(trait_name) FOR IDENT(struct_name) LBRACE trait_impl_method_list_opt(methods) RBRACE. {
-    trait_impl_node = tea_node_create(TEA_N_TRAIT_IMPL, trait_name);
-    tea_node_t* struct_name_node = tea_node_create(TEA_N_IDENT, struct_name);
-    tea_node_add_child(trait_impl_node, struct_name_node);
-    if (methods) {
-        tea_node_add_children(trait_impl_node, &methods->children);
-        tea_node_free(methods);
-    }
-}
-
-trait_impl_method_list_opt(method_list_node) ::= trait_impl_method_list(methods). { method_list_node = methods; }
-trait_impl_method_list_opt(method_list_node) ::= . { method_list_node = NULL; }
-
-trait_impl_method_list(method_list_node) ::= trait_impl_method_list(existing_methods) trait_impl_method(new_method). {
-    method_list_node = existing_methods ? existing_methods : tea_node_create(TEA_N_TRAIT_IMPL_ITEM, NULL);
-    tea_node_add_child(method_list_node, new_method);
-}
-
-trait_impl_method_list(method_list_node) ::= trait_impl_method(single_method). {
-    method_list_node = tea_node_create(TEA_N_TRAIT_IMPL_ITEM, NULL);
-    tea_node_add_child(method_list_node, single_method);
-}
-
-trait_impl_method(method_node) ::= function_header(header) function_body(body). {
-    method_node = tea_node_create(TEA_N_TRAIT_IMPL_ITEM, NULL);
-    tea_node_add_child(method_node, header);
-    tea_node_add_child(header, body);
-}
 
 struct_field_init_list_opt(field_init_list_node) ::= struct_field_init_list(field_inits). { field_init_list_node = field_inits; }
 struct_field_init_list_opt(field_init_list_node) ::= . { field_init_list_node = NULL; }

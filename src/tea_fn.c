@@ -3,7 +3,7 @@
 #include "tea_expr.h"
 #include "tea_stmt.h"
 #include "tea_struct.h"
-#include "tea_trait.h"
+
 
 #include <stdlib.h>
 #include <string.h>
@@ -271,11 +271,7 @@ tea_val_t tea_eval_fn_call(tea_ctx_t *ctx, tea_scope_t *scp,
     function_name = field_token->buf;
     function = tea_ctx_find_fn(&struct_declaration->fns, function_name);
 
-    // If not found in struct methods, try trait methods
-    if (!function) {
-      function =
-        tea_resolve_trait_method(ctx, variable->val.obj->type, function_name);
-    }
+
   } else {
     const tea_tok_t *token = node->tok;
     if (token) {

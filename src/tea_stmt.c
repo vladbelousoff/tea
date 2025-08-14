@@ -2,7 +2,7 @@
 #include "tea_expr.h"
 #include "tea_fn.h"
 #include "tea_struct.h"
-#include "tea_trait.h"
+
 
 #include <stdlib.h>
 
@@ -405,10 +405,6 @@ bool tea_exec(tea_ctx_t *ctx, tea_scope_t *scp, const tea_node_t *node,
     return tea_interp_struct_decl(ctx, node);
   case TEA_N_IMPL_BLK:
     return tea_interp_impl_blk(ctx, node);
-  case TEA_N_TRAIT:
-    return tea_interp_trait_decl(ctx, node);
-  case TEA_N_TRAIT_IMPL:
-    return tea_interp_trait_impl(ctx, node);
   case TEA_N_PROG:
   case TEA_N_STMT:
   case TEA_N_FN_ARGS:
