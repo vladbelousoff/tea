@@ -83,7 +83,7 @@ bool tea_decl_fn(const tea_node_t *node, tea_list_entry_t *functions)
     case TEA_N_RET_TYPE:
       fn_ret_type = child;
       break;
-    case TEA_TOKEN_MUT:
+    case TEA_N_MUT:
       is_mutable = true;
       break;
     default:

@@ -100,7 +100,7 @@ tea_val_t tea_eval_ident(const tea_scope_t *scp, const tea_node_t *node)
   return variable->val;
 }
 
-tea_val_t tea_interpret_evaluate_string(const tea_node_t *node)
+tea_val_t tea_eval_str(const tea_node_t *node)
 {
   const tea_tok_t *token = node->tok;
   if (!token) {
@@ -144,7 +144,7 @@ tea_val_t tea_eval_expr(tea_ctx_t *ctx, tea_scope_t *scp,
   case TEA_N_IDENT:
     return tea_eval_ident(scp, node);
   case TEA_N_STR:
-    return tea_interpret_evaluate_string(node);
+    return tea_eval_str(node);
   case TEA_N_FN_CALL:
     return tea_eval_fn_call(ctx, scp, node);
   case TEA_N_STRUCT_INST:

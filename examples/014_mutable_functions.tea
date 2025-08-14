@@ -12,7 +12,7 @@ fn mut increment_counter() {
 }
 
 // Mutable function with parameters that still modifies global state
-fn mut add_to_total(amount: int) {
+fn mut add_to_total(amount: i32) {
     global_total = global_total + amount;
 }
 
@@ -25,14 +25,14 @@ fn mut reset_and_increment() {
 }
 
 // Regular function (non-mutable) for comparison
-fn get_current_state() -> int {
+fn get_current_state() -> i32 {
     // This function can read global variables but cannot modify them
     let current_sum = global_counter + global_total;
     return current_sum;
 }
 
 // Mutable function with conditional modifications
-fn mut conditional_update(threshold: int) {
+fn mut conditional_update(threshold: i32) {
     if global_counter < threshold {
         global_counter = global_counter + 5;
     } else {
@@ -42,7 +42,7 @@ fn mut conditional_update(threshold: int) {
 }
 
 // Mutable function with loops
-fn mut batch_increment(times: int) {
+fn mut batch_increment(times: i32) {
     let mut i = 0;
     while i < times {
         global_counter = global_counter + 1;
@@ -66,13 +66,13 @@ reset_and_increment();                  // global_counter = 1, global_total = 10
 let mut status_flag = 0;
 let mut error_count = 0;
 
-fn mut update_status(new_status: int, errors: int) {
+fn mut update_status(new_status: i32, errors: i32) {
     status_flag = new_status;
     error_count = error_count + errors;
 }
 
 // Mutable function with return value (can both modify and return)
-fn mut increment_and_get() -> int {
+fn mut increment_and_get() -> i32 {
     global_counter = global_counter + 1;
     return global_counter;
 }

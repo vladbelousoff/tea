@@ -235,88 +235,85 @@ functionality, I/O operations, and performance-critical code written in C.
 Native functions in C must follow this signature:
 
 ```c
-tea_value_t your_function_name(tea_context_t* context, const tea_function_args_t* args)
+tea_val_t your_function_name(tea_ctx_t* context, const tea_fn_args_t* args)
 ```
 
 The function receives a context and a list of arguments, and must return a `tea_value_t`. Arguments are accessed by calling `tea_function_args_pop()` in a loop. Here's an example:
 
 ```c
 // Native function to print values (similar to built-in print)
-static tea_value_t tea_print_values(tea_context_t* context, const tea_function_args_t* args) {
+static tea_val_t tea_print_values(tea_ctx_t* context, const tea_fn_args_t* args) {
     for (;;) {
-        tea_variable_t* arg = tea_function_args_pop(args);
+        tea_var_t* arg = tea_fn_args_pop(args);
         if (!arg) {
             break; // No more arguments
         }
         
-        const tea_value_t value = arg->value;
+        const tea_val_t value = arg->val;
         switch (value.type) {
-            case TEA_VALUE_I32:
+            case TEA_V_I32:
                 printf("%d ", value.i32);
                 break;
-            case TEA_VALUE_F32:
+            case TEA_V_F32:
                 printf("%f ", value.f32);
                 break;
-            case TEA_VALUE_STRING:
-                printf("%s ", value.string);
-                break;
-            case TEA_VALUE_INSTANCE:
-            case TEA_VALUE_INVALID:
+            case TEA_V_INST:
+            case TEA_V_UNDEF:
                 break;
         }
         
-        tea_free_variable(context, arg);
+        tea_free_var(context, arg);
     }
     printf("\n");
     
-    return tea_value_invalid();
+    return tea_val_undef();
 }
 
 // Native function to add two numbers
-static tea_value_t tea_add_numbers(tea_context_t* context, const tea_function_args_t* args) {
-    tea_variable_t* arg1 = tea_function_args_pop(args);
-    tea_variable_t* arg2 = tea_function_args_pop(args);
+static tea_val_t tea_add_numbers(tea_ctx_t* context, const tea_fn_args_t* args) {
+    tea_var_t* arg1 = tea_fn_args_pop(args);
+    tea_var_t* arg2 = tea_fn_args_pop(args);
     
     if (!arg1 || !arg2) {
         // Handle error case - not enough arguments
-        if (arg1) tea_free_variable(context, arg1);
-        if (arg2) tea_free_variable(context, arg2);
-        return tea_value_invalid();
+        if (arg1) tea_free_var(context, arg1);
+        if (arg2) tea_free_var(context, arg2);
+        return tea_val_undef();
     }
     
-    if (arg1->value.type == TEA_VALUE_I32 && arg2->value.type == TEA_VALUE_I32) {
-        tea_value_t result = {0};
-        result.type = TEA_VALUE_I32;
-        result.i32 = arg1->value.i32 + arg2->value.i32;
+    if (arg1->val.type == TEA_V_I32 && arg2->val.type == TEA_V_I32) {
+        tea_val_t result = {0};
+        result.type = TEA_V_I32;
+        result.i32 = arg1->val.i32 + arg2->val.i32;
         
-        tea_free_variable(context, arg1);
-        tea_free_variable(context, arg2);
+        tea_free_var(context, arg1);
+        tea_free_var(context, arg2);
         return result;
     }
     
-    tea_free_variable(context, arg1);
-    tea_free_variable(context, arg2);
-    return tea_value_invalid();
+    tea_free_var(context, arg1);
+    tea_free_var(context, arg2);
+    return tea_val_undef();
 }
 ```
 
 ### Binding Functions
 
-Register your native functions with the Tea context using `tea_bind_native_function`:
+Register your native functions with the Tea context using `tea_bind_native_fn`:
 
 ```c
 int main() {
-    tea_context_t context;
-    tea_interpret_init(&context, "example.tea");
+    tea_ctx_t context;
+    tea_interp_init(&context, "example.tea");
     
     // Bind native functions
-    tea_bind_native_function(&context, "print", tea_print);
-    tea_bind_native_function(&context, "add_numbers", tea_add_numbers);
-    tea_bind_native_function(&context, "print_values", tea_print_values);
+    tea_bind_native_fn(&context, "print", tea_print);
+    tea_bind_native_fn(&context, "add_numbers", tea_add_numbers);
+    tea_bind_native_fn(&context, "print_values", tea_print_values);
     
     // Execute Tea code...
     
-    tea_interpret_cleanup(&context);
+    tea_interp_cleanup(&context);
     return 0;
 }
 ```
@@ -339,23 +336,23 @@ print_values('Result:', sum, 'Done');
 
 ### Tea Value Types
 
-Native functions work with the `tea_value_t` type system:
+Native functions work with the `tea_val_t` type system:
 
-- `TEA_VALUE_I32` - 32-bit signed integers
-- `TEA_VALUE_F32` - 32-bit floating-point numbers
-- `TEA_VALUE_STRING` - Null-terminated strings
-- `TEA_VALUE_INSTANCE` - Complex objects (structs)
-- `TEA_VALUE_INVALID` - Uninitialized or error state
+- `i32` (TEA_V_I32) - 32-bit signed integers
+- `f32` (TEA_V_F32) - 32-bit floating-point numbers
+- `string` (TEA_V_INST) - Null-terminated strings wrapped as instances
+- `instance` (TEA_V_INST) - Complex objects (structs)
+- `undef` (TEA_V_UNDEF) - Uninitialized or error state
 
 ### Best Practices
 
-1. **Always validate arguments**: Use `tea_function_args_pop()` to safely access arguments and check for NULL
-2. **Handle errors gracefully**: Return `tea_value_invalid()` for error conditions
+1. **Always validate arguments**: Use `tea_fn_args_pop()` to safely access arguments and check for NULL
+2. **Handle errors gracefully**: Return `tea_val_undef()` for error conditions
 3. **Memory management**: 
-   - Always call `tea_free_variable(context, arg)` for each argument you pop
-   - Strings returned from native functions should be allocated with `rtl_malloc`
+   - Always call `tea_free_var(context, arg)` for each argument you pop
+   - Strings returned from native functions should be allocated with `tea_malloc`
 4. **Performance**: Use native functions for computationally intensive operations
-5. **Argument handling**: Process arguments in the order they were passed by calling `tea_function_args_pop()` sequentially
+5. **Argument handling**: Process arguments in the order they were passed by calling `tea_fn_args_pop()` sequentially
 
 ## Building
 

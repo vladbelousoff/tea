@@ -29,21 +29,21 @@ static tea_val_t tea_print(tea_ctx_t *context, const tea_fn_args_t *args)
 
     const tea_val_t value = arg->val;
     switch (value.type) {
-      case TEA_V_NULL:
-        printf("null");
-      case TEA_V_I32:
-        printf("%d", value.i32);
-        break;
-      case TEA_V_F32:
-        printf("%f", value.f32);
-        break;
-      case TEA_V_INST:
-        if (!strcmp(value.obj->type, "string")) {
-          printf("%s", (char *)value.obj->buf);
-        }
-        break;
-      case TEA_V_UNDEF:
-        break;
+    case TEA_V_NULL:
+      printf("null");
+    case TEA_V_I32:
+      printf("%d", value.i32);
+      break;
+    case TEA_V_F32:
+      printf("%f", value.f32);
+      break;
+    case TEA_V_INST:
+      if (!strcmp(value.obj->type, "string")) {
+        printf("%s", (char *)value.obj->buf);
+      }
+      break;
+    case TEA_V_UNDEF:
+      break;
     }
 
     tea_free_var(context, arg);
@@ -107,7 +107,8 @@ int main(const int argc, char *argv[])
 
   if (ast) {
     tea_node_print(ast, 0);
-    tea_log_dbg("Root node type: %s", ast->type == TEA_N_PROG ? "PROGRAM" : "OTHER");
+    tea_log_dbg("Root node type: %s",
+                ast->type == TEA_N_PROG ? "PROGRAM" : "OTHER");
   }
 
   tea_log_dbg("Parsing completed successfully!");

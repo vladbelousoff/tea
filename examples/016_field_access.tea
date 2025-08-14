@@ -2,19 +2,19 @@
 
 // Define types for examples
 type Point {
-    x: float;
-    y: float;
+    x: f32;
+    y: f32;
 }
 
 type Person {
     name: string;
-    age: int;
-    height: float;
+    age: i32;
+    height: f32;
 }
 
 type Counter {
-    value: int;
-    max_value: int;
+    value: i32;
+    max_value: i32;
 }
 
 // Create type instances
@@ -69,7 +69,7 @@ point2.y = point.y;           // Copy y coordinate
 let total_coordinates = point.x + point.y + point2.x + point2.y;
 
 // Field access with function calls (conceptual)
-fn get_point_info(p: Point) -> float {
+fn get_point_info(p: Point) -> f32 {
     return p.x + p.y;
 }
 
@@ -91,7 +91,7 @@ point.y = temp_x;             // Swap x and y coordinates
 let points_equal = (point.x == point2.x) && (point.y == point2.y);
 
 // Using fields as function arguments
-fn calculate_area(width: float, height: float) -> float {
+fn calculate_area(width: f32, height: f32) -> f32 {
     return width * height;
 }
 

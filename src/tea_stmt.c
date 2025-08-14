@@ -49,7 +49,7 @@ static void tea_extract_type_info(const tea_node_t *type_annot,
   }
 }
 
-bool tea_interpret_let(tea_ctx_t *ctx, tea_scope_t *scp, const tea_node_t *node)
+bool tea_exec_let(tea_ctx_t *ctx, tea_scope_t *scp, const tea_node_t *node)
 {
   const tea_tok_t *name = node->tok;
 
@@ -159,8 +159,7 @@ static bool tea_perform_assignment(tea_val_t *target_value,
   return true;
 }
 
-bool tea_interpret_assign(tea_ctx_t *ctx, tea_scope_t *scp,
-                          const tea_node_t *node)
+bool tea_exec_assign(tea_ctx_t *ctx, tea_scope_t *scp, const tea_node_t *node)
 {
   const tea_node_t *lhs = node->binop.lhs;
   const tea_node_t *rhs = node->binop.rhs;
@@ -381,9 +380,9 @@ bool tea_exec(tea_ctx_t *ctx, tea_scope_t *scp, const tea_node_t *node,
 
   switch (node->type) {
   case TEA_N_LET:
-    return tea_interpret_let(ctx, scp, node);
+    return tea_exec_let(ctx, scp, node);
   case TEA_N_ASSIGN:
-    return tea_interpret_assign(ctx, scp, node);
+    return tea_exec_assign(ctx, scp, node);
   case TEA_N_IF:
     return tea_exec_if(ctx, scp, node, ret_ctx, loop_ctx);
   case TEA_N_WHILE:

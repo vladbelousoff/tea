@@ -1,7 +1,7 @@
 // Advanced function features: return values, complex logic, and function composition
 
 // Function with multiple return points
-fn classify_number(n: int) -> int {
+fn classify_number(n: i32) -> i32 {
     if n < 0 {
         return -1;  // Negative
     }
@@ -12,7 +12,7 @@ fn classify_number(n: int) -> int {
 }
 
 // Function with complex calculation
-fn fibonacci(n: int) -> int {
+fn fibonacci(n: i32) -> i32 {
     if n <= 1 {
         return n;
     }
@@ -34,7 +34,7 @@ fn fibonacci(n: int) -> int {
 fn square(x: i32) -> i32 { return x * x; }
 
 // Function that uses other functions
-fn sum_of_squares(a: int, b: int) -> int {
+fn sum_of_squares(a: i32, b: i32) -> i32 {
     let sq_a = square(a);      // Assumes square function from previous example
     let sq_b = square(b);      // Assumes square function from previous example
     return sq_a + sq_b;
@@ -47,7 +47,7 @@ fn create_greeting(name: string) -> string {
 }
 
 // Function with optional type parameter
-fn safe_divide(a: int, b: int) -> int? {
+fn safe_divide(a: i32, b: i32) -> i32? {
     if b == 0 {
         return null;  // Cannot divide by zero
     }
@@ -55,7 +55,7 @@ fn safe_divide(a: int, b: int) -> int? {
 }
 
 // Function that processes arrays/collections conceptually
-fn find_maximum(a: int, b: int, c: int) -> int {
+fn find_maximum(a: i32, b: i32, c: i32) -> i32 {
     let mut max_ab = 0;
     
     if a > b {
@@ -72,7 +72,7 @@ fn find_maximum(a: int, b: int, c: int) -> int {
 }
 
 // Function with accumulator pattern
-fn sum_range(start: int, end: int) -> int {
+fn sum_range(start: i32, end: i32) -> i32 {
     let mut sum = 0;
     let mut current = start;
     
@@ -85,7 +85,7 @@ fn sum_range(start: int, end: int) -> int {
 }
 
 // Nested function calls
-fn complex_calculation(x: int, y: int) -> int {
+fn complex_calculation(x: i32, y: i32) -> i32 {
     let step1 = multiply(x, 2);              // x * 2
     let step2 = square(y);                   // y^2
     let step3 = sum_of_squares(step1, step2); // (x*2)^2 + (y^2)^2
@@ -107,7 +107,7 @@ let combined = fibonacci(5) + sum_range(1, 5);  // 5 + 15 = 20
 let comparison = find_maximum(10, 20, 15) > square(4);  // 20 > 16 = 1
 
 // Functions with early returns
-fn check_conditions(a: int, b: int, c: int) -> int {
+fn check_conditions(a: i32, b: i32, c: i32) -> i32 {
     if a <= 0 {
         return 0;  // Early return for invalid input
     }

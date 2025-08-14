@@ -6,29 +6,29 @@ fn greet() {
 }
 
 // Function with parameters
-fn add_numbers(a: int, b: int) {
+fn add_numbers(a: i32, b: i32) {
     let sum = a + b;
     // sum is calculated but not returned
 }
 
 // Function with return type and return statement
-fn multiply(x: int, y: int) -> int {
+fn multiply(x: i32, y: i32) -> i32 {
     let result = x * y;
     return result;
 }
 
 // Function with single parameter
-fn square(n: int) -> int {
+fn square(n: i32) -> i32 {
     return n * n;
 }
 
 // Function that returns a constant
-fn get_magic_number() -> int {
+fn get_magic_number() -> i32 {
     return 42;
 }
 
 // Function with floating-point parameters and return
-fn calculate_area(width: float, height: float) -> float {
+fn calculate_area(width: f32, height: f32) -> f32 {
     return width * height;
 }
 
@@ -43,7 +43,7 @@ let complex_result = multiply(3, 4) + square(2);  // 12 + 4 = 16
 add_numbers(10, 20);                // Note: add_numbers doesn't return a value
 
 // Function with conditional logic
-fn absolute_value(x: int) -> int {
+fn absolute_value(x: i32) -> i32 {
     if x < 0 {
         return -x;
     } else {
@@ -52,7 +52,7 @@ fn absolute_value(x: int) -> int {
 }
 
 // Function with loop
-fn factorial(n: int) -> int {
+fn factorial(n: i32) -> i32 {
     let mut result = 1;
     let mut i = 1;
     
@@ -65,22 +65,22 @@ fn factorial(n: int) -> int {
 }
 
 // Function that calls other functions
-fn calculate_perimeter(width: float, height: float) -> float {
+fn calculate_perimeter(width: f32, height: f32) -> f32 {
     let double_width = multiply(2, width);   // Note: multiply expects int, this may cause issues
     let double_height = multiply(2, height); // Note: multiply expects int, this may cause issues
     return double_width + double_height;
 }
 
 // Functions with different parameter counts
-fn no_params() -> int {
+fn no_params() -> i32 {
     return 1;
 }
 
-fn one_param(x: int) -> int {
+fn one_param(x: i32) -> i32 {
     return x + 1;
 }
 
-fn three_params(a: int, b: int, c: int) -> int {
+fn three_params(a: i32, b: i32, c: i32) -> i32 {
     return a + b + c;
 }
 

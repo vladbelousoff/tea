@@ -24,9 +24,9 @@ bool tea_exec_if(tea_ctx_t *ctx, tea_scope_t *scp, const tea_node_t *node,
 bool tea_exec_while(tea_ctx_t *ctx, tea_scope_t *scp, const tea_node_t *node,
                     tea_ret_ctx_t *ret_ctx);
 
-bool tea_exec_ret(tea_ctx_t *ctx, tea_scope_t *scp, const tea_node_t *node,
-                  tea_ret_ctx_t *ret_ctx);
+bool tea_exec_return(tea_ctx_t *ctx, tea_scope_t *scp, const tea_node_t *node,
+                     tea_ret_ctx_t *ret_ctx);
 
 bool tea_exec_break(tea_loop_ctx_t *loop_ctx);
 
-bool tea_exec_cont(tea_loop_ctx_t *loop_ctx);
+bool tea_exec_continue(tea_loop_ctx_t *loop_ctx);
