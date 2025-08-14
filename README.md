@@ -11,7 +11,6 @@ the expressiveness and ease-of-use of scripting languages with Rust's key design
 - **Static Typing**: Type annotations with inference capabilities for safer scripts
 - **Types and Methods**: Data structures with associated methods via `impl` blocks
 - **Control Flow**: Standard control structures (`if`/`else`, `while` loops)
-- **Traits**: Define shared behavior across types with trait definitions
 
 ## Rust Influences
 
@@ -21,7 +20,6 @@ Tea brings Rust's safety concepts to scripting:
 - **Impl Blocks**: Methods are defined separately from type definitions using `impl` blocks
 - **Type Annotations**: Optional but explicit type annotations with `:` for safer scripts
 - **Arrow Syntax**: Function return types specified with `->`
-- **Traits**: Rust-style trait system for defining shared behavior
 - **Memory Safety Focus**: Controlled mutability helps prevent common scripting errors
 
 ## Syntax Overview
@@ -39,7 +37,8 @@ let opt_var: i32? = 5;   // Optional type
 let mut opt_mut: f32? = 2.0; // Optional mutable type
 ```
 
-**Optional Types**: Types can be marked as optional using the `?` suffix. Optional types can hold a value or be null, providing safer handling of potentially absent values.
+**Optional Types**: Types can be marked as optional using the `?` suffix. Optional types can hold a value or be null,
+providing safer handling of potentially absent values.
 
 ### Functions
 
@@ -142,47 +141,6 @@ let comparison = x > y && z <= w;
 let negation = -value;
 ```
 
-### Traits
-
-Define shared behavior across types with traits:
-
-```tea
-trait Drawable {
-    fn draw();
-    fn area() -> f32;
-}
-
-trait Movable {
-    fn mut move_to(x: f32, y: f32);
-    fn get_position() -> Point;
-}
-```
-
-Implement traits for structs:
-
-```tea
-impl Drawable for Rectangle {
-    fn draw() {
-        // Draw rectangle implementation
-    }
-    
-    fn area() -> f32 {
-        return self.width * self.height;
-    }
-}
-
-impl Movable for Rectangle {
-    fn mut move_to(x: f32, y: f32) {
-        self.x = x;
-        self.y = y;
-    }
-    
-    fn get_position() -> Point {
-        return new Point { x: self.x, y: self.y };
-    }
-}
-```
-
 ## Data Types
 
 - `i32` - 32-bit signed integer numbers
@@ -238,7 +196,8 @@ Native functions in C must follow this signature:
 tea_val_t your_function_name(tea_ctx_t* context, const tea_fn_args_t* args)
 ```
 
-The function receives a context and a list of arguments, and must return a `tea_value_t`. Arguments are accessed by calling `tea_function_args_pop()` in a loop. Here's an example:
+The function receives a context and a list of arguments, and must return a `tea_value_t`. Arguments are accessed by
+calling `tea_function_args_pop()` in a loop. Here's an example:
 
 ```c
 // Native function to print values (similar to built-in print)
@@ -348,9 +307,9 @@ Native functions work with the `tea_val_t` type system:
 
 1. **Always validate arguments**: Use `tea_fn_args_pop()` to safely access arguments and check for NULL
 2. **Handle errors gracefully**: Return `tea_val_undef()` for error conditions
-3. **Memory management**: 
-   - Always call `tea_free_var(context, arg)` for each argument you pop
-   - Strings returned from native functions should be allocated with `tea_malloc`
+3. **Memory management**:
+    - Always call `tea_free_var(context, arg)` for each argument you pop
+    - Strings returned from native functions should be allocated with `tea_malloc`
 4. **Performance**: Use native functions for computationally intensive operations
 5. **Argument handling**: Process arguments in the order they were passed by calling `tea_fn_args_pop()` sequentially
 
@@ -370,21 +329,6 @@ cmake -B build -DCMAKE_BUILD_TYPE=Debug
 cmake --build build --parallel
 ```
 
-### With Ninja (Faster builds)
-
-```bash
-cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
-cmake --build build
-```
-
-### Traditional approach
-
-```bash
-mkdir build && cd build
-cmake .. -DCMAKE_BUILD_TYPE=Release
-make -j$(nproc)
-```
-
 ## Language Status
 
 Tea is currently in development. The core language features are implemented including:
@@ -398,8 +342,8 @@ Tea is currently in development. The core language features are implemented incl
 - ✅ Expression evaluation
 - ✅ Type system foundations
 - ✅ Native function binding
-- ✅ Trait system for shared behavior
 
 **Planned Features:**
+
 - 🔄 Advanced type inference
 - 🔄 Module system
