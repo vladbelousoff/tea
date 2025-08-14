@@ -3,8 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <rtl.h>
-#include <rtl_log.h>
+#include "tea.h"
+#include "tea_log.h"
 
 #include "tea_grammar.h"
 
@@ -74,7 +74,7 @@ tea_val_t tea_val_null()
       break;                                                                   \
     case TEA_TOKEN_SLASH:                                                      \
       if (b == 0) {                                                            \
-        rtl_log_err("Runtime error: Division by zero at line %d, column %d",   \
+        tea_log_err("Runtime error: Division by zero at line %d, column %d",   \
                     op->line, op->col);                                        \
         return tea_val_undef();                                                \
       }                                                                        \
@@ -146,7 +146,7 @@ tea_val_t tea_val_binop(const tea_val_t lhs_val, const tea_val_t rhs_val,
     }
   }
 
-  rtl_log_err(
+  tea_log_err(
     "Runtime error: Unsupported binary operation '%s' between types %s and %s at line %d, column "
     "%d",
     tea_tok_name(op->type), tea_val_type_str(lhs_val.type),

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "rtl_list.h"
+#include "tea_list.h"
 
 typedef struct {
   const char *kw;
@@ -8,7 +8,7 @@ typedef struct {
 } tea_kw_entry_t;
 
 typedef struct {
-  rtl_list_entry_t link;
+  tea_list_entry_t link;
   int type;
   int line;
   int col;

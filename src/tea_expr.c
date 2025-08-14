@@ -5,8 +5,8 @@
 
 #include <stdlib.h>
 
-#include <rtl.h>
-#include <rtl_log.h>
+#include "tea.h"
+#include "tea_log.h"
 
 #include "tea_grammar.h"
 
@@ -40,8 +40,8 @@ tea_val_t tea_eval_binop(tea_ctx_t *ctx, tea_scope_t *scp,
 tea_val_t tea_eval_unary(tea_ctx_t *ctx, tea_scope_t *scp,
                          const tea_node_t *node)
 {
-  rtl_list_entry_t *entry = rtl_list_first(&node->children);
-  const tea_node_t *operand = rtl_list_record(entry, tea_node_t, link);
+  tea_list_entry_t *entry = tea_list_first(&node->children);
+  const tea_node_t *operand = tea_list_record(entry, tea_node_t, link);
   tea_val_t operand_val = tea_eval_expr(ctx, scp, operand);
   const tea_tok_t *token = node->tok;
 
@@ -70,7 +70,7 @@ tea_val_t tea_eval_unary(tea_ctx_t *ctx, tea_scope_t *scp,
     }
     break;
   default:
-    rtl_log_err(
+    tea_log_err(
       "Expression evaluation error: Invalid unary operator '%s' at line %d, column %d",
       token->buf, token->line, token->col);
     break;
@@ -84,14 +84,14 @@ tea_val_t tea_eval_ident(const tea_scope_t *scp, const tea_node_t *node)
 {
   const tea_tok_t *token = node->tok;
   if (!token) {
-    rtl_log_err(
+    tea_log_err(
       "Internal error: Missing token for identifier node during expression evaluation");
     return tea_val_undef();
   }
 
   const tea_var_t *variable = tea_scope_find(scp, token->buf);
   if (!variable) {
-    rtl_log_err(
+    tea_log_err(
       "Runtime error: Undefined variable '%s' referenced at line %d, column %d",
       token->buf, token->line, token->col);
     return tea_val_undef();
@@ -104,14 +104,14 @@ tea_val_t tea_interpret_evaluate_string(const tea_node_t *node)
 {
   const tea_tok_t *token = node->tok;
   if (!token) {
-    rtl_log_err(
+    tea_log_err(
       "Internal error: Missing token for string literal node during expression evaluation");
     return tea_val_undef();
   }
 
-  tea_inst_t *object = rtl_malloc(sizeof(tea_inst_t) + token->size + 1);
+  tea_inst_t *object = tea_malloc(sizeof(tea_inst_t) + token->size + 1);
   if (!object) {
-    rtl_log_err(
+    tea_log_err(
       "Memory error: Failed to allocate memory for type '%s' instance at line %d, column %d",
       token->buf, token->line, token->col);
     return tea_val_undef();
@@ -128,7 +128,7 @@ tea_val_t tea_eval_expr(tea_ctx_t *ctx, tea_scope_t *scp,
                         const tea_node_t *node)
 {
   if (!node) {
-    rtl_log_err("Internal error: Null AST node passed to expression evaluator");
+    tea_log_err("Internal error: Null AST node passed to expression evaluator");
     return tea_val_undef();
   }
 
@@ -156,13 +156,13 @@ tea_val_t tea_eval_expr(tea_ctx_t *ctx, tea_scope_t *scp,
   default: {
     tea_tok_t *token = node->tok;
     if (token) {
-      rtl_log_err(
+      tea_log_err(
         "Expression evaluation error: Unsupported node type <%s> with token <%s> '%.*s' at line "
         "%d, column %d",
         tea_node_type_name(node->type), tea_tok_name(token->type), token->size,
         token->buf, token->line, token->col);
     } else {
-      rtl_log_err(
+      tea_log_err(
         "Expression evaluation error: Unsupported node type <%s> (no token available)",
         tea_node_type_name(node->type));
     }

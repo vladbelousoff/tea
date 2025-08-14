@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include "tea_ast.h"
-#include <rtl_log.h>
+#include "tea_log.h"
 }
 
 %token_type {tea_tok_t*}
@@ -416,14 +416,14 @@ field_access(field_access_node) ::= primary_expr(object_expr) DOT IDENT(field_na
 
 %syntax_error {
     if (yyminor) {
-        rtl_log_err("Syntax error: Unexpected token <%s> '%.*s' at line %d, column %d",
+        tea_log_err("Syntax error: Unexpected token <%s> '%.*s' at line %d, column %d",
                 tea_tok_name(yymajor),
                 yyminor->size,
                 yyminor->buf,
                 yyminor->line,
                 yyminor->col);
     } else {
-        rtl_log_err("Syntax error: Unexpected end of input");
+        tea_log_err("Syntax error: Unexpected end of input");
     }
     exit(1);
 }

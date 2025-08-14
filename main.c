@@ -1,5 +1,5 @@
-#include <rtl.h>
-#include <rtl_log.h>
+#include "tea.h"
+#include "tea_log.h"
 
 #include <string.h>
 
@@ -11,12 +11,12 @@
 
 void print_usage(const char *program_name)
 {
-  rtl_log_inf("Usage: %s [options] <tea_file>", program_name);
-  rtl_log_inf("Options:");
-  rtl_log_inf("  -h, --help     Show this help message");
-  rtl_log_inf("");
-  rtl_log_inf("Examples:");
-  rtl_log_inf("  %s example.tea", program_name);
+  tea_log_inf("Usage: %s [options] <tea_file>", program_name);
+  tea_log_inf("Options:");
+  tea_log_inf("  -h, --help     Show this help message");
+  tea_log_inf("");
+  tea_log_inf("Examples:");
+  tea_log_inf("  %s example.tea", program_name);
 }
 
 static tea_val_t tea_print(tea_ctx_t *context, const tea_fn_args_t *args)
@@ -63,7 +63,7 @@ int main(const int argc, char *argv[])
 {
   const char *filename = NULL;
 
-  rtl_init(NULL, NULL);
+  tea_init(NULL, NULL);
 
   // Parse command line arguments
   for (int i = 1; i < argc; i++) {
@@ -74,7 +74,7 @@ int main(const int argc, char *argv[])
     if (argv[i][0] != '-') {
       filename = argv[i];
     } else {
-      rtl_log_err("Unknown option: %s", argv[i]);
+      tea_log_err("Unknown option: %s", argv[i]);
       print_usage(argv[0]);
       return 1;
     }
@@ -82,7 +82,7 @@ int main(const int argc, char *argv[])
 
   // Check if filename was provided
   if (!filename) {
-    rtl_log_err("Error: No input file specified");
+    tea_log_err("Error: No input file specified");
     print_usage(argv[0]);
     return 1;
   }
@@ -90,27 +90,27 @@ int main(const int argc, char *argv[])
   // Check if file exists
   FILE *test_file = fopen(filename, "r");
   if (!test_file) {
-    rtl_log_err("Error: Cannot open file '%s'", filename);
+    tea_log_err("Error: Cannot open file '%s'", filename);
     return 1;
   }
   fclose(test_file);
 
-  rtl_log_inf("Parsing file: %s", filename);
+  tea_log_inf("Parsing file: %s", filename);
 
   tea_lexer_t lexer;
   tea_lexer_init(&lexer);
   tea_node_t *ast = tea_parse_file(&lexer, filename);
 
-  rtl_log_dbg("Parsing summary:");
-  rtl_log_dbg("File: %s", filename);
-  rtl_log_dbg("Status: successfully parsed");
+  tea_log_dbg("Parsing summary:");
+  tea_log_dbg("File: %s", filename);
+  tea_log_dbg("Status: successfully parsed");
 
   if (ast) {
     tea_node_print(ast, 0);
-    rtl_log_dbg("Root node type: %s", ast->type == TEA_N_PROG ? "PROGRAM" : "OTHER");
+    tea_log_dbg("Root node type: %s", ast->type == TEA_N_PROG ? "PROGRAM" : "OTHER");
   }
 
-  rtl_log_dbg("Parsing completed successfully!");
+  tea_log_dbg("Parsing completed successfully!");
 
   int ret_code = 0;
   if (ast) {
@@ -133,7 +133,7 @@ int main(const int argc, char *argv[])
   }
 
   tea_lexer_cleanup(&lexer);
-  rtl_cleanup();
+  tea_cleanup();
 
   return ret_code;
 }

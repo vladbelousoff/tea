@@ -7,31 +7,31 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <rtl_log.h>
-#include <rtl_memory.h>
+#include "tea_log.h"
+#include "tea_memory.h"
 
 #include "tea_grammar.h"
 
 tea_var_t *tea_fn_args_pop(const tea_fn_args_t *args)
 {
-  rtl_list_entry_t *first = rtl_list_first(&args->head);
+  tea_list_entry_t *first = tea_list_first(&args->head);
   if (first) {
-    tea_var_t *arg = rtl_list_record(first, tea_var_t, link);
-    rtl_list_remove(first);
+    tea_var_t *arg = tea_list_record(first, tea_var_t, link);
+    tea_list_remove(first);
     return arg;
   }
 
   return NULL;
 }
 
-const tea_native_fn_t *tea_ctx_find_native_fn(const rtl_list_entry_t *functions,
+const tea_native_fn_t *tea_ctx_find_native_fn(const tea_list_entry_t *functions,
                                               const char *name)
 {
-  rtl_list_entry_t *entry;
-  rtl_list_for_each(entry, functions)
+  tea_list_entry_t *entry;
+  tea_list_for_each(entry, functions)
   {
     const tea_native_fn_t *function =
-      rtl_list_record(entry, tea_native_fn_t, link);
+      tea_list_record(entry, tea_native_fn_t, link);
     if (!strcmp(function->name, name)) {
       return function;
     }
@@ -40,13 +40,13 @@ const tea_native_fn_t *tea_ctx_find_native_fn(const rtl_list_entry_t *functions,
   return NULL;
 }
 
-const tea_fn_t *tea_ctx_find_fn(const rtl_list_entry_t *functions,
+const tea_fn_t *tea_ctx_find_fn(const tea_list_entry_t *functions,
                                 const char *name)
 {
-  rtl_list_entry_t *entry;
-  rtl_list_for_each(entry, functions)
+  tea_list_entry_t *entry;
+  tea_list_for_each(entry, functions)
   {
-    const tea_fn_t *function = rtl_list_record(entry, tea_fn_t, link);
+    const tea_fn_t *function = tea_list_record(entry, tea_fn_t, link);
     const tea_tok_t *function_name = function->name;
     if (!function_name) {
       continue;
@@ -59,7 +59,7 @@ const tea_fn_t *tea_ctx_find_fn(const rtl_list_entry_t *functions,
   return NULL;
 }
 
-bool tea_decl_fn(const tea_node_t *node, rtl_list_entry_t *functions)
+bool tea_decl_fn(const tea_node_t *node, tea_list_entry_t *functions)
 {
   const tea_tok_t *fn_name = node->tok;
   if (!fn_name) {
@@ -72,10 +72,10 @@ bool tea_decl_fn(const tea_node_t *node, rtl_list_entry_t *functions)
 
   bool is_mutable = false;
 
-  rtl_list_entry_t *entry;
-  rtl_list_for_each(entry, &node->children)
+  tea_list_entry_t *entry;
+  tea_list_for_each(entry, &node->children)
   {
-    const tea_node_t *child = rtl_list_record(entry, tea_node_t, link);
+    const tea_node_t *child = tea_list_record(entry, tea_node_t, link);
     switch (child->type) {
     case TEA_N_PARAM:
       fn_params = child;
@@ -92,7 +92,7 @@ bool tea_decl_fn(const tea_node_t *node, rtl_list_entry_t *functions)
     }
   }
 
-  tea_fn_t *fn = rtl_malloc(sizeof(*fn));
+  tea_fn_t *fn = tea_malloc(sizeof(*fn));
   if (!fn) {
     return false;
   }
@@ -107,13 +107,13 @@ bool tea_decl_fn(const tea_node_t *node, rtl_list_entry_t *functions)
     fn->ret_type = NULL;
   }
 
-  rtl_list_add_tail(functions, &fn->link);
+  tea_list_add_tail(functions, &fn->link);
 
   if (fn->ret_type) {
-    rtl_log_dbg("Declare function: '%.*s' -> %.*s", fn_name->size, fn_name->buf,
+    tea_log_dbg("Declare function: '%.*s' -> %.*s", fn_name->size, fn_name->buf,
                 fn->ret_type->size, fn->ret_type->buf);
   } else {
-    rtl_log_dbg("Declare function: '%.*s'", fn_name->size, fn_name->buf);
+    tea_log_dbg("Declare function: '%.*s'", fn_name->size, fn_name->buf);
   }
 
   return true;
@@ -129,24 +129,24 @@ tea_val_t tea_eval_native_fn_call(tea_ctx_t *ctx, tea_scope_t *scp,
                                   const tea_node_t *args)
 {
   tea_fn_args_t fn_args;
-  rtl_list_init(&fn_args.head);
+  tea_list_init(&fn_args.head);
 
-  rtl_list_entry_t *arg_entry;
-  rtl_list_for_each(arg_entry, &args->children)
+  tea_list_entry_t *arg_entry;
+  tea_list_for_each(arg_entry, &args->children)
   {
-    const tea_node_t *arg_expr = rtl_list_record(arg_entry, tea_node_t, link);
+    const tea_node_t *arg_expr = tea_list_record(arg_entry, tea_node_t, link);
     tea_var_t *arg = tea_alloc_var(ctx);
     if (!arg) {
-      rtl_log_err(
+      tea_log_err(
         "Memory error: Failed to allocate variable for function argument");
       // Clean up any previously allocated args
-      rtl_list_entry_t *cleanup_entry;
-      rtl_list_entry_t *cleanup_safe;
-      rtl_list_for_each_safe(cleanup_entry, cleanup_safe, &fn_args.head)
+      tea_list_entry_t *cleanup_entry;
+      tea_list_entry_t *cleanup_safe;
+      tea_list_for_each_safe(cleanup_entry, cleanup_safe, &fn_args.head)
       {
         tea_var_t *cleanup_arg =
-          rtl_list_record(cleanup_entry, tea_var_t, link);
-        rtl_list_remove(cleanup_entry);
+          tea_list_record(cleanup_entry, tea_var_t, link);
+        tea_list_remove(cleanup_entry);
         tea_free_var(ctx, cleanup_arg);
       }
       return tea_val_undef();
@@ -155,13 +155,13 @@ tea_val_t tea_eval_native_fn_call(tea_ctx_t *ctx, tea_scope_t *scp,
     if (arg->val.type == TEA_V_UNDEF) {
       tea_free_var(ctx, arg);
       // Clean up any previously allocated args
-      rtl_list_entry_t *cleanup_entry;
-      rtl_list_entry_t *cleanup_safe;
-      rtl_list_for_each_safe(cleanup_entry, cleanup_safe, &fn_args.head)
+      tea_list_entry_t *cleanup_entry;
+      tea_list_entry_t *cleanup_safe;
+      tea_list_for_each_safe(cleanup_entry, cleanup_safe, &fn_args.head)
       {
         tea_var_t *cleanup_arg =
-          rtl_list_record(cleanup_entry, tea_var_t, link);
-        rtl_list_remove(cleanup_entry);
+          tea_list_record(cleanup_entry, tea_var_t, link);
+        tea_list_remove(cleanup_entry);
         tea_free_var(ctx, cleanup_arg);
       }
       return tea_val_undef();
@@ -171,18 +171,18 @@ tea_val_t tea_eval_native_fn_call(tea_ctx_t *ctx, tea_scope_t *scp,
     // TODO: Set the proper arg name
     arg->name = "unknown";
 
-    rtl_list_add_tail(&fn_args.head, &arg->link);
+    tea_list_add_tail(&fn_args.head, &arg->link);
   }
 
   const tea_val_t result = nat_fn->cb(ctx, &fn_args);
 
   // Deallocate all the args
-  rtl_list_entry_t *cleanup_entry;
-  rtl_list_entry_t *safe;
-  rtl_list_for_each_safe(cleanup_entry, safe, &fn_args.head)
+  tea_list_entry_t *cleanup_entry;
+  tea_list_entry_t *safe;
+  tea_list_for_each_safe(cleanup_entry, safe, &fn_args.head)
   {
-    tea_var_t *arg = rtl_list_record(cleanup_entry, tea_var_t, link);
-    rtl_list_remove(cleanup_entry);
+    tea_var_t *arg = tea_list_record(cleanup_entry, tea_var_t, link);
+    tea_list_remove(cleanup_entry);
     tea_free_var(ctx, arg);
   }
 
@@ -195,10 +195,10 @@ tea_val_t tea_eval_fn_call(tea_ctx_t *ctx, tea_scope_t *scp,
   const tea_node_t *args = NULL;
   const tea_node_t *field_access = NULL;
 
-  rtl_list_entry_t *entry;
-  rtl_list_for_each(entry, &node->children)
+  tea_list_entry_t *entry;
+  tea_list_for_each(entry, &node->children)
   {
-    const tea_node_t *child = rtl_list_record(entry, tea_node_t, link);
+    const tea_node_t *child = tea_list_record(entry, tea_node_t, link);
     switch (child->type) {
     case TEA_N_FN_ARGS:
       args = child;
@@ -223,7 +223,7 @@ tea_val_t tea_eval_fn_call(tea_ctx_t *ctx, tea_scope_t *scp,
     const tea_node_t *object_node = field_access->field_acc.obj;
     const tea_node_t *field_node = field_access->field_acc.field;
     if (!field_node || !object_node) {
-      rtl_log_err(
+      tea_log_err(
         "Internal error: Missing field or object node in method call - AST structure corrupted");
       tea_scope_cleanup(ctx, &inner_scope);
       return tea_val_undef();
@@ -232,7 +232,7 @@ tea_val_t tea_eval_fn_call(tea_ctx_t *ctx, tea_scope_t *scp,
     const tea_tok_t *object_token = object_node->tok;
     const tea_tok_t *field_token = field_node->tok;
     if (!field_token || !object_token) {
-      rtl_log_err(
+      tea_log_err(
         "Internal error: Missing field or object token in method call - AST structure corrupted");
       tea_scope_cleanup(ctx, &inner_scope);
       return tea_val_undef();
@@ -240,7 +240,7 @@ tea_val_t tea_eval_fn_call(tea_ctx_t *ctx, tea_scope_t *scp,
 
     tea_var_t *variable = tea_scope_find(scp, object_token->buf);
     if (!variable) {
-      rtl_log_err(
+      tea_log_err(
         "Runtime error: Undefined variable '%s' used in method call at line %d, column %d",
         object_token->buf, object_token->line, object_token->col);
       tea_scope_cleanup(ctx, &inner_scope);
@@ -248,7 +248,7 @@ tea_val_t tea_eval_fn_call(tea_ctx_t *ctx, tea_scope_t *scp,
     }
 
     if (variable->val.type != TEA_V_INST) {
-      rtl_log_err(
+      tea_log_err(
         "Runtime error: Methods can only be called on object instances, not on primitive types");
       tea_scope_cleanup(ctx, &inner_scope);
       return tea_val_undef();
@@ -257,7 +257,7 @@ tea_val_t tea_eval_fn_call(tea_ctx_t *ctx, tea_scope_t *scp,
     tea_struct_decl_t *struct_declaration =
       tea_find_struct_decl(ctx, variable->val.obj->type);
     if (!struct_declaration) {
-      rtl_log_err(
+      tea_log_err(
         "Runtime error: Cannot find type declaration for type '%s' when calling method",
         variable->val.obj->type);
       tea_scope_cleanup(ctx, &inner_scope);
@@ -287,17 +287,17 @@ tea_val_t tea_eval_fn_call(tea_ctx_t *ctx, tea_scope_t *scp,
   if (!function) {
     if (field_access) {
       const tea_tok_t *field_token = field_access->field_acc.field->tok;
-      rtl_log_err(
+      tea_log_err(
         "Runtime error: Undefined method '%s' called at line %d, column %d",
         function_name, field_token->line, field_token->col);
     } else {
       const tea_tok_t *token = node->tok;
       if (token) {
-        rtl_log_err(
+        tea_log_err(
           "Runtime error: Undefined function '%s' called at line %d, column %d",
           function_name, token->line, token->col);
       } else {
-        rtl_log_err(
+        tea_log_err(
           "Runtime error: Undefined function '%s' called (no position information available)",
           function_name);
       }
@@ -308,15 +308,15 @@ tea_val_t tea_eval_fn_call(tea_ctx_t *ctx, tea_scope_t *scp,
 
   const tea_node_t *function_params = function->params;
   if (function_params && args) {
-    rtl_list_entry_t *param_name_entry =
-      rtl_list_first(&function_params->children);
-    rtl_list_entry_t *param_expr_entry = rtl_list_first(&args->children);
+    tea_list_entry_t *param_name_entry =
+      tea_list_first(&function_params->children);
+    tea_list_entry_t *param_expr_entry = tea_list_first(&args->children);
 
     while (param_name_entry && param_expr_entry) {
       const tea_node_t *param_name =
-        rtl_list_record(param_name_entry, tea_node_t, link);
+        tea_list_record(param_name_entry, tea_node_t, link);
       const tea_node_t *param_expr =
-        rtl_list_record(param_expr_entry, tea_node_t, link);
+        tea_list_record(param_expr_entry, tea_node_t, link);
 
       if (!param_name) {
         break;
@@ -333,7 +333,7 @@ tea_val_t tea_eval_fn_call(tea_ctx_t *ctx, tea_scope_t *scp,
 
       tea_var_t *variable = tea_alloc_var(ctx);
       if (!variable) {
-        rtl_log_err(
+        tea_log_err(
           "Memory error: Failed to allocate memory for function parameter '%.*s' at line %d, "
           "column %d",
           param_name_token->size, param_name_token->buf, param_name_token->line,
@@ -349,11 +349,11 @@ tea_val_t tea_eval_fn_call(tea_ctx_t *ctx, tea_scope_t *scp,
 
       switch (variable->val.type) {
       case TEA_V_I32:
-        rtl_log_dbg("Declare param %s : %s = %d", param_name_token->buf,
+        tea_log_dbg("Declare param %s : %s = %d", param_name_token->buf,
                     tea_val_type_str(variable->val.type), variable->val.i32);
         break;
       case TEA_V_F32:
-        rtl_log_dbg("Declare param %s : %s = %f", param_name_token->buf,
+        tea_log_dbg("Declare param %s : %s = %f", param_name_token->buf,
                     tea_val_type_str(variable->val.type), variable->val.f32);
         break;
       default:
@@ -361,11 +361,11 @@ tea_val_t tea_eval_fn_call(tea_ctx_t *ctx, tea_scope_t *scp,
       }
 
       // TODO: Check if the param already exists
-      rtl_list_add_tail(&inner_scope.vars, &variable->link);
+      tea_list_add_tail(&inner_scope.vars, &variable->link);
 
       param_name_entry =
-        rtl_list_next(param_name_entry, &function_params->children);
-      param_expr_entry = rtl_list_next(param_expr_entry, &args->children);
+        tea_list_next(param_name_entry, &function_params->children);
+      param_expr_entry = tea_list_next(param_expr_entry, &args->children);
     }
   }
 
@@ -383,10 +383,10 @@ tea_val_t tea_eval_fn_call(tea_ctx_t *ctx, tea_scope_t *scp,
 void tea_bind_native_fn(tea_ctx_t *ctx, const char *name,
                         const tea_native_fn_cb_t cb)
 {
-  tea_native_fn_t *function = rtl_malloc(sizeof(*function));
+  tea_native_fn_t *function = tea_malloc(sizeof(*function));
   if (function) {
     function->name = name;
     function->cb = cb;
-    rtl_list_add_tail(&ctx->nfns, &function->link);
+    tea_list_add_tail(&ctx->nfns, &function->link);
   }
 }

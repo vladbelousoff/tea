@@ -5,16 +5,16 @@
 
 #include <stdlib.h>
 
-#include <rtl.h>
-#include <rtl_log.h>
+#include "tea.h"
+#include "tea_log.h"
 
 bool tea_exec_stmt(tea_ctx_t *ctx, tea_scope_t *scp, const tea_node_t *node,
                    tea_ret_ctx_t *ret_ctx, tea_loop_ctx_t *loop_ctx)
 {
-  rtl_list_entry_t *entry;
-  rtl_list_for_each(entry, &node->children)
+  tea_list_entry_t *entry;
+  tea_list_for_each(entry, &node->children)
   {
-    const tea_node_t *child = rtl_list_record(entry, tea_node_t, link);
+    const tea_node_t *child = tea_list_record(entry, tea_node_t, link);
     if (!tea_exec(ctx, scp, child, ret_ctx, loop_ctx)) {
       return false;
     }
@@ -33,12 +33,12 @@ static void tea_extract_type_info(const tea_node_t *type_annot,
     return;
   }
 
-  rtl_list_entry_t *entry = rtl_list_first(&type_annot->children);
+  tea_list_entry_t *entry = tea_list_first(&type_annot->children);
   if (!entry) {
     return;
   }
 
-  const tea_node_t *type_spec = rtl_list_record(entry, tea_node_t, link);
+  const tea_node_t *type_spec = tea_list_record(entry, tea_node_t, link);
 
   if (type_spec->tok) {
     *type_name = type_spec->tok->buf;
@@ -57,10 +57,10 @@ bool tea_interpret_let(tea_ctx_t *ctx, tea_scope_t *scp, const tea_node_t *node)
   const tea_node_t *type_annot = NULL;
   const tea_node_t *expr = NULL;
 
-  rtl_list_entry_t *entry;
-  rtl_list_for_each(entry, &node->children)
+  tea_list_entry_t *entry;
+  tea_list_for_each(entry, &node->children)
   {
-    const tea_node_t *child = rtl_list_record(entry, tea_node_t, link);
+    const tea_node_t *child = tea_list_record(entry, tea_node_t, link);
     switch (child->type) {
     case TEA_N_MUT:
       flags |= TEA_VAR_MUT;
@@ -89,7 +89,7 @@ static bool tea_check_field_mutability(const tea_scope_t *scp,
                                        const tea_node_t *object_node)
 {
   if (!object_node || !object_node->tok) {
-    rtl_log_err(
+    tea_log_err(
       "Internal error: Field access expression missing object component in AST");
     return false;
   }
@@ -97,7 +97,7 @@ static bool tea_check_field_mutability(const tea_scope_t *scp,
   const tea_tok_t *object_name = object_node->tok;
   const tea_var_t *variable = tea_scope_find(scp, object_name->buf);
   if (!variable) {
-    rtl_log_err(
+    tea_log_err(
       "Runtime error: Variable '%s' not found in current scope when checking field mutability, "
       "line: %d, column: %d",
       object_name->buf, object_name->line, object_name->col);
@@ -105,7 +105,7 @@ static bool tea_check_field_mutability(const tea_scope_t *scp,
   }
 
   if (!(variable->flags & TEA_VAR_MUT)) {
-    rtl_log_err(
+    tea_log_err(
       "Runtime error: Cannot modify field of immutable variable '%s' at line %d, column %d",
       object_name->buf, object_name->line, object_name->col);
     return false;
@@ -135,7 +135,7 @@ static bool tea_perform_assignment(tea_val_t *target_value,
   } else if (types_match || null_type_match) {
     *target_value = new_value;
   } else {
-    rtl_log_err(
+    tea_log_err(
       "Runtime error: Type mismatch in assignment to '%s%s' at line %d, column %d: cannot "
       "assign %s value to %s target",
       target_name, is_optional ? "?" : "", error_token->line, error_token->col,
@@ -145,11 +145,11 @@ static bool tea_perform_assignment(tea_val_t *target_value,
 
   switch (target_value->type) {
   case TEA_V_I32:
-    rtl_log_dbg("New value for %s : %s = %d", target_name,
+    tea_log_dbg("New value for %s : %s = %d", target_name,
                 tea_val_type_str(target_value->type), target_value->i32);
     break;
   case TEA_V_F32:
-    rtl_log_dbg("New value for %s : %s = %f", target_name,
+    tea_log_dbg("New value for %s : %s = %f", target_name,
                 tea_val_type_str(target_value->type), target_value->f32);
     break;
   default:
@@ -167,7 +167,7 @@ bool tea_interpret_assign(tea_ctx_t *ctx, tea_scope_t *scp,
 
   const tea_val_t new_value = tea_eval_expr(ctx, scp, rhs);
   if (new_value.type == TEA_V_UNDEF) {
-    rtl_log_err(
+    tea_log_err(
       "Runtime error: Failed to evaluate right-hand side expression in assignment");
     return false;
   }
@@ -193,14 +193,14 @@ bool tea_interpret_assign(tea_ctx_t *ctx, tea_scope_t *scp,
   const tea_tok_t *name = lhs->tok;
   tea_var_t *variable = tea_scope_find(scp, name->buf);
   if (!variable) {
-    rtl_log_err(
+    tea_log_err(
       "Runtime error: Undefined variable '%s' used in assignment at line %d, column %d",
       name->buf, name->line, name->col);
     return false;
   }
 
   if (!(variable->flags & TEA_VAR_MUT)) {
-    rtl_log_err(
+    tea_log_err(
       "Runtime error: Cannot modify immutable variable '%s' at line %d, column %d",
       name->buf, name->line, name->col);
     return false;
@@ -218,10 +218,10 @@ bool tea_exec_if(tea_ctx_t *ctx, tea_scope_t *scp, const tea_node_t *node,
   const tea_node_t *then_node = NULL;
   const tea_node_t *else_node = NULL;
 
-  rtl_list_entry_t *entry;
-  rtl_list_for_each(entry, &node->children)
+  tea_list_entry_t *entry;
+  tea_list_for_each(entry, &node->children)
   {
-    const tea_node_t *child = rtl_list_record(entry, tea_node_t, link);
+    const tea_node_t *child = tea_list_record(entry, tea_node_t, link);
     switch (child->type) {
     case TEA_N_THEN:
       then_node = child;
@@ -261,14 +261,14 @@ bool tea_exec_while(tea_ctx_t *ctx, tea_scope_t *scp, const tea_node_t *node,
   const tea_node_t *cond = NULL;
   const tea_node_t *body = NULL;
 
-  rtl_list_entry_t *child_entry;
-  rtl_list_for_each(child_entry, &node->children)
+  tea_list_entry_t *child_entry;
+  tea_list_for_each(child_entry, &node->children)
   {
-    const tea_node_t *child = rtl_list_record(child_entry, tea_node_t, link);
+    const tea_node_t *child = tea_list_record(child_entry, tea_node_t, link);
     switch (child->type) {
     case TEA_N_WHILE_COND:
       cond =
-        rtl_list_record(rtl_list_first(&child->children), tea_node_t, link);
+        tea_list_record(tea_list_first(&child->children), tea_node_t, link);
       break;
     case TEA_N_WHILE_BODY:
       body = child;
@@ -321,9 +321,9 @@ bool tea_exec_while(tea_ctx_t *ctx, tea_scope_t *scp, const tea_node_t *node,
 bool tea_exec_return(tea_ctx_t *ctx, tea_scope_t *scp, const tea_node_t *node,
                      tea_ret_ctx_t *ret_ctx)
 {
-  rtl_list_entry_t *first_entry = rtl_list_first(&node->children);
+  tea_list_entry_t *first_entry = tea_list_first(&node->children);
   if (first_entry) {
-    const tea_node_t *expr = rtl_list_record(first_entry, tea_node_t, link);
+    const tea_node_t *expr = tea_list_record(first_entry, tea_node_t, link);
     if (expr && ret_ctx) {
       ret_ctx->ret_val = tea_eval_expr(ctx, scp, expr);
       if (ret_ctx->ret_val.type == TEA_V_UNDEF) {
@@ -343,7 +343,7 @@ bool tea_exec_break(tea_loop_ctx_t *loop_ctx)
     return true;
   }
 
-  rtl_log_err("Runtime error: 'break' statement can only be used inside loops");
+  tea_log_err("Runtime error: 'break' statement can only be used inside loops");
   return false;
 }
 
@@ -354,7 +354,7 @@ bool tea_exec_continue(tea_loop_ctx_t *loop_ctx)
     return true;
   }
 
-  rtl_log_err(
+  tea_log_err(
     "Runtime error: 'continue' statement can only be used inside loops");
   return false;
 }
@@ -375,7 +375,7 @@ bool tea_exec(tea_ctx_t *ctx, tea_scope_t *scp, const tea_node_t *node,
   }
 
   if (!node) {
-    rtl_log_err("Node is null");
+    tea_log_err("Node is null");
     return true;
   }
 
@@ -414,13 +414,13 @@ bool tea_exec(tea_ctx_t *ctx, tea_scope_t *scp, const tea_node_t *node,
   default: {
     const tea_tok_t *token = node->tok;
     if (token) {
-      rtl_log_err(
+      tea_log_err(
         "Interpreter error: Unimplemented statement type <%s> in file %s, token: <%s> '%.*s' "
         "(line %d, col %d)",
         tea_node_type_name(node->type), ctx->fname, tea_tok_name(token->type),
         token->size, token->buf, token->line, token->col);
     } else {
-      rtl_log_err(
+      tea_log_err(
         "Interpreter error: Unimplemented statement type <%s> in file %s",
         tea_node_type_name(node->type), ctx->fname);
     }

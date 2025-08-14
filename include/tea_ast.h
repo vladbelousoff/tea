@@ -1,6 +1,6 @@
 #pragma once
 
-#include <rtl_list.h>
+#include "tea_list.h"
 
 #include "tea_token.h"
 
@@ -45,12 +45,12 @@ typedef enum {
 } tea_node_type_t;
 
 typedef struct tea_node {
-  rtl_list_entry_t link;
+  tea_list_entry_t link;
   tea_node_type_t type;
   tea_tok_t *tok;
 
   union {
-    rtl_list_entry_t children;
+    tea_list_entry_t children;
 
     struct {
       struct tea_node *lhs;
@@ -78,7 +78,7 @@ tea_node_t *tea_node_create_float(const char *file, unsigned long line,
 
 void tea_node_add_child(tea_node_t *parent, tea_node_t *child);
 void tea_node_add_children(tea_node_t *parent,
-                           const rtl_list_entry_t *children);
+                           const tea_list_entry_t *children);
 void tea_node_set_binop(tea_node_t *parent, tea_node_t *lhs, tea_node_t *rhs);
 void tea_node_set_field_acc(tea_node_t *parent, tea_node_t *obj,
                             tea_node_t *field);

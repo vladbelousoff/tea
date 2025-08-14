@@ -1,16 +1,16 @@
 #include "tea_ast.h"
 
-#include "rtl_memory.h"
+#include "tea_memory.h"
 
-#include <rtl_log.h>
+#include "tea_log.h"
 #include <string.h>
 
 tea_node_t *_tea_node_create(const char *file, const unsigned long line,
                              const tea_node_type_t type, tea_tok_t *token)
 {
-  tea_node_t *node = _rtl_malloc(file, line, sizeof(*node));
+  tea_node_t *node = _tea_malloc(file, line, sizeof(*node));
   if (!node) {
-    rtl_log_err("Critical error: Failed to allocate memory for AST node");
+    tea_log_err("Critical error: Failed to allocate memory for AST node");
     return NULL;
   }
 
@@ -24,7 +24,7 @@ tea_node_t *_tea_node_create(const char *file, const unsigned long line,
     node->field_acc.obj = NULL;
     node->field_acc.field = NULL;
   } else {
-    rtl_list_init(&node->children);
+    tea_list_init(&node->children);
   }
 
   return node;
@@ -33,18 +33,18 @@ tea_node_t *_tea_node_create(const char *file, const unsigned long line,
 void tea_node_add_child(tea_node_t *parent, tea_node_t *child)
 {
   if (parent && child) {
-    rtl_list_add_tail(&parent->children, &child->link);
+    tea_list_add_tail(&parent->children, &child->link);
   }
 }
 
-void tea_node_add_children(tea_node_t *parent, const rtl_list_entry_t *children)
+void tea_node_add_children(tea_node_t *parent, const tea_list_entry_t *children)
 {
-  rtl_list_entry_t *entry;
-  rtl_list_entry_t *safe;
-  rtl_list_for_each_safe(entry, safe, children)
+  tea_list_entry_t *entry;
+  tea_list_entry_t *safe;
+  tea_list_for_each_safe(entry, safe, children)
   {
-    tea_node_t *child = rtl_list_record(entry, tea_node_t, link);
-    rtl_list_remove(entry);
+    tea_node_t *child = tea_list_record(entry, tea_node_t, link);
+    tea_list_remove(entry);
     tea_node_add_child(parent, child);
   }
 }
@@ -70,17 +70,17 @@ void tea_node_free(tea_node_t *node)
       tea_node_free(node->field_acc.field);
     }
   } else {
-    rtl_list_entry_t *entry;
-    rtl_list_entry_t *safe;
-    rtl_list_for_each_safe(entry, safe, &node->children)
+    tea_list_entry_t *entry;
+    tea_list_entry_t *safe;
+    tea_list_for_each_safe(entry, safe, &node->children)
     {
-      tea_node_t *child = rtl_list_record(entry, tea_node_t, link);
-      rtl_list_remove(entry);
+      tea_node_t *child = tea_list_record(entry, tea_node_t, link);
+      tea_list_remove(entry);
       tea_node_free(child);
     }
   }
 
-  rtl_free(node);
+  tea_free(node);
 }
 
 const char *tea_node_type_name(const tea_node_type_t type)
@@ -218,10 +218,10 @@ static void tea_node_print_tree_recursive(tea_node_t *node, const int depth)
       tea_node_print_tree_recursive(node->field_acc.field, depth + 1);
     }
   } else {
-    rtl_list_entry_t *entry;
-    rtl_list_for_each(entry, &node->children)
+    tea_list_entry_t *entry;
+    tea_list_for_each(entry, &node->children)
     {
-      tea_node_t *child = rtl_list_record(entry, tea_node_t, link);
+      tea_node_t *child = tea_list_record(entry, tea_node_t, link);
       tea_node_print_tree_recursive(child, depth + 1);
     }
   }

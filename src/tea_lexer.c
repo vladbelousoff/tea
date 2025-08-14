@@ -7,8 +7,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <rtl_log.h>
-#include <rtl_memory.h>
+#include "tea_log.h"
+#include "tea_memory.h"
 
 #define EOL        '\n'
 #define TAB        '\t'
@@ -21,19 +21,19 @@ void tea_lexer_init(tea_lexer_t *self)
   self->pos = 0;
   self->line = 1;
   self->col = 1;
-  rtl_list_init(&self->toks);
+  tea_list_init(&self->toks);
 }
 
 void tea_lexer_cleanup(const tea_lexer_t *self)
 {
-  rtl_list_entry_t *entry;
-  rtl_list_entry_t *safe;
+  tea_list_entry_t *entry;
+  tea_list_entry_t *safe;
 
-  rtl_list_for_each_safe(entry, safe, &self->toks)
+  tea_list_for_each_safe(entry, safe, &self->toks)
   {
-    tea_tok_t *token = rtl_list_record(entry, tea_tok_t, link);
-    rtl_list_remove(entry);
-    rtl_free(token);
+    tea_tok_t *token = tea_list_record(entry, tea_tok_t, link);
+    tea_list_remove(entry);
+    tea_free(token);
   }
 }
 
@@ -45,7 +45,7 @@ static void create_token(tea_lexer_t *self, const int token_type,
     token_size += buffer_size + 1;
   }
 
-  tea_tok_t *token = rtl_malloc(token_size);
+  tea_tok_t *token = tea_malloc(token_size);
   token->type = token_type;
   token->line = self->line;
   token->col = self->col;
@@ -61,22 +61,22 @@ static void create_token(tea_lexer_t *self, const int token_type,
   }
 
   if (token_type == TEA_TOKEN_STRING) {
-    rtl_log_dbg("Token: <STRING> (line: %d, col: %d)", token->line, token->col);
+    tea_log_dbg("Token: <STRING> (line: %d, col: %d)", token->line, token->col);
   } else if (token_type == TEA_TOKEN_IDENT) {
-    rtl_log_dbg("Token: %.*s (line: %d, col: %d)", buffer_size, buffer,
+    tea_log_dbg("Token: %.*s (line: %d, col: %d)", buffer_size, buffer,
                 token->line, token->col);
   } else if (token_type == TEA_TOKEN_INTEGER_NUMBER) {
-    rtl_log_dbg("Token: %d (line: %d, col: %d)", *(int *)buffer, token->line,
+    tea_log_dbg("Token: %d (line: %d, col: %d)", *(int *)buffer, token->line,
                 token->col);
   } else if (token_type == TEA_TOKEN_FLOAT_NUMBER) {
-    rtl_log_dbg("Token: %f (line: %d, col: %d)", *(float *)buffer, token->line,
+    tea_log_dbg("Token: %f (line: %d, col: %d)", *(float *)buffer, token->line,
                 token->col);
   } else {
-    rtl_log_dbg("Token: <%s> (line: %d, col: %d)", tea_tok_name(token_type),
+    tea_log_dbg("Token: <%s> (line: %d, col: %d)", tea_tok_name(token_type),
                 token->line, token->col);
   }
 
-  rtl_list_add_tail(&self->toks, &token->link);
+  tea_list_add_tail(&self->toks, &token->link);
 }
 
 static void skip_whitespaces(tea_lexer_t *self, const char *input)
@@ -301,7 +301,7 @@ static bool scan_number(tea_lexer_t *self, const char *input)
     if (length < 32) {
       strncpy(tmp_buffer, buffer, length);
     } else {
-      rtl_log_err(
+      tea_log_err(
         "Lexer error: Number literal too large (exceeds 32 characters) at line %d, column %d",
         self->line, self->col);
       return false;
@@ -314,7 +314,7 @@ static bool scan_number(tea_lexer_t *self, const char *input)
         create_token(self, TEA_TOKEN_FLOAT_NUMBER, (char *)&value,
                      sizeof(value));
       } else {
-        rtl_log_err(
+        tea_log_err(
           "Lexer error: Invalid float literal '%s' at line %d, column %d",
           tmp_buffer, self->line, self->col);
         return false;
@@ -325,7 +325,7 @@ static bool scan_number(tea_lexer_t *self, const char *input)
         create_token(self, TEA_TOKEN_INTEGER_NUMBER, (char *)&value,
                      sizeof(value));
       } else {
-        rtl_log_err(
+        tea_log_err(
           "Lexer error: Invalid integer literal '%s' at line %d, column %d",
           tmp_buffer, self->line, self->col);
         return false;
@@ -357,7 +357,7 @@ static bool scan_string(tea_lexer_t *self, const char *input)
       const char c = input[current_position];
 
       if (c == EOS) {
-        rtl_log_err(
+        tea_log_err(
           "Lexer error: Unterminated string literal at line %d, column %d",
           self->line, self->col);
         return false;
@@ -368,7 +368,7 @@ static bool scan_string(tea_lexer_t *self, const char *input)
       }
 
       if (c == EOL) {
-        rtl_log_err(
+        tea_log_err(
           "Lexer error: String literals cannot contain newline characters at line %d, column %d",
           self->line, self->col);
         return false;
@@ -452,11 +452,11 @@ static void unknown_character(const tea_lexer_t *self, const char *input)
   const char c = input[self->pos];
   if (c != EOS) {
     if (c != EOL) {
-      rtl_log_err(
+      tea_log_err(
         "Lexer error: Unknown character '%c' at line %d, column %d, position %d",
         c, self->line, self->col, self->pos);
     } else {
-      rtl_log_err(
+      tea_log_err(
         "Lexer error: Unexpected end of line character at line %d, column %d, position %d",
         self->line, self->col, self->pos);
     }

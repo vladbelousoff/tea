@@ -5,18 +5,18 @@
 
 typedef struct {
   const char *fname;
-  rtl_list_entry_t fns;
-  rtl_list_entry_t nfns;
-  rtl_list_entry_t structs;
+  tea_list_entry_t fns;
+  tea_list_entry_t nfns;
+  tea_list_entry_t structs;
 
-  rtl_list_entry_t vars;
+  tea_list_entry_t vars;
 } tea_ctx_t;
 
 #define TEA_VAR_MUT 1 << 0
 #define TEA_VAR_OPT 1 << 1
 
 typedef struct {
-  rtl_list_entry_t link;
+  tea_list_entry_t link;
   const char *name;
   tea_val_t val;
   unsigned char flags;
@@ -24,7 +24,7 @@ typedef struct {
 
 typedef struct tea_scope_t {
   struct tea_scope_t *parent;
-  rtl_list_entry_t vars;
+  tea_list_entry_t vars;
 } tea_scope_t;
 
 tea_var_t *tea_alloc_var(const tea_ctx_t *ctx);

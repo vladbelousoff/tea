@@ -1,5 +1,5 @@
-#include <rtl_log.h>
-#include <rtl_memory.h>
+#include "tea_log.h"
+#include "tea_memory.h"
 #include <string.h>
 
 #include "tea_ast.h"
@@ -7,12 +7,12 @@
 
 static void *parser_malloc(const size_t size)
 {
-  return rtl_malloc(size);
+  return tea_malloc(size);
 }
 
 static void parser_free(void *ptr)
 {
-  rtl_free(ptr);
+  tea_free(ptr);
 }
 
 extern void *ParseAlloc(void *(*cb_malloc)(size_t));
@@ -24,7 +24,7 @@ static char *read_file(const char *filename)
 {
   FILE *file = fopen(filename, "r");
   if (!file) {
-    rtl_log_err("Parser error: Cannot open input file '%s' for reading",
+    tea_log_err("Parser error: Cannot open input file '%s' for reading",
                 filename);
     return NULL;
   }
@@ -33,9 +33,9 @@ static char *read_file(const char *filename)
   const long file_size = ftell(file);
   fseek(file, 0, SEEK_SET);
 
-  char *buffer = rtl_malloc(file_size + 1);
+  char *buffer = tea_malloc(file_size + 1);
   if (!buffer) {
-    rtl_log_err("Parser error: Cannot allocate memory to read file '%s'",
+    tea_log_err("Parser error: Cannot allocate memory to read file '%s'",
                 filename);
     fclose(file);
     return NULL;
@@ -53,18 +53,18 @@ tea_node_t *tea_parse_string(tea_lexer_t *lexer, const char *input)
 {
   void *parser = ParseAlloc(parser_malloc);
   if (!parser) {
-    rtl_log_err("Parser error: Failed to allocate memory for parser instance");
+    tea_log_err("Parser error: Failed to allocate memory for parser instance");
     return NULL;
   }
 
   tea_node_t *result = NULL;
   tea_lexer_tokenize(lexer, input);
-  const bool is_lexer_empty = rtl_list_empty(&lexer->toks);
+  const bool is_lexer_empty = tea_list_empty(&lexer->toks);
 
-  rtl_list_entry_t *entry;
-  rtl_list_for_each(entry, &lexer->toks)
+  tea_list_entry_t *entry;
+  tea_list_for_each(entry, &lexer->toks)
   {
-    tea_tok_t *token = rtl_list_record(entry, tea_tok_t, link);
+    tea_tok_t *token = tea_list_record(entry, tea_tok_t, link);
     Parse(parser, token->type, token, &result);
   }
 
@@ -85,7 +85,7 @@ tea_node_t *tea_parse_file(tea_lexer_t *lexer, const char *filename)
   }
 
   tea_node_t *result = tea_parse_string(lexer, content);
-  rtl_free(content);
+  tea_free(content);
 
   return result;
 }
