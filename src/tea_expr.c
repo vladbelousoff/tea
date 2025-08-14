@@ -112,7 +112,7 @@ tea_val_t tea_interpret_evaluate_string(const tea_node_t *node)
   tea_inst_t *object = rtl_malloc(sizeof(tea_inst_t) + token->size + 1);
   if (!object) {
     rtl_log_err(
-      "Memory error: Failed to allocate memory for struct '%s' instance at line %d, column %d",
+      "Memory error: Failed to allocate memory for type '%s' instance at line %d, column %d",
       token->buf, token->line, token->col);
     return tea_val_undef();
   }

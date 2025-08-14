@@ -1,18 +1,18 @@
-// Struct methods using impl blocks
-// Methods are functions associated with a specific struct type
+// Type methods using impl blocks
+// Methods are functions associated with a specific type
 
-// Define structs
-struct Point {
+// Define types
+type Point {
     x: f32;
     y: f32;
 }
 
-struct Rectangle {
+type Rectangle {
     width: f32;
     height: f32;
 }
 
-struct Counter {
+type Counter {
     value: int;
     max_value: int;
 }
@@ -115,16 +115,16 @@ impl Counter {
     }
 }
 
-// Using struct methods
+// Using type methods
 let mut p1 = new Point { x: 1.0, y: 2.0 };
 let p2 = new Point { x: 4.0, y: 6.0 };
 
-// Call methods on structs
+// Call methods on types
 let distance = p1.distance_to(p2);     // Calculate distance between points
 let x_coord = p1.get_x();              // Get x coordinate
 let is_origin = p1.is_at_origin();     // Check if at origin
 
-// Modify struct through methods
+// Modify type through methods
 p1.move_by(2.0, 3.0);                  // Move point by (2, 3)
 
 // Rectangle methods

@@ -9,7 +9,7 @@ static const tea_kw_entry_t tea_keywords[] = {
   { "mut", TEA_TOKEN_MUT },       { "if", TEA_TOKEN_IF },
   { "else", TEA_TOKEN_ELSE },     { "while", TEA_TOKEN_WHILE },
   { "break", TEA_TOKEN_BREAK },   { "continue", TEA_TOKEN_CONTINUE },
-  { "struct", TEA_TOKEN_STRUCT }, { "impl", TEA_TOKEN_IMPL },
+  { "type", TEA_TOKEN_TYPE },     { "impl", TEA_TOKEN_IMPL },
   { "return", TEA_TOKEN_RETURN }, { "new", TEA_TOKEN_NEW },
   { "null", TEA_TOKEN_NULL },     { NULL, 0 }
 };
@@ -57,8 +57,8 @@ const char *tea_tok_name(const int token_type)
     return "BREAK";
   case TEA_TOKEN_CONTINUE:
     return "CONTINUE";
-  case TEA_TOKEN_STRUCT:
-    return "STRUCT";
+  case TEA_TOKEN_TYPE:
+    return "TYPE";
   case TEA_TOKEN_IMPL:
     return "IMPL";
   case TEA_TOKEN_RETURN:

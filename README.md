@@ -9,7 +9,7 @@ the expressiveness and ease-of-use of scripting languages with Rust's key design
 - **Rust-Inspired Design**: Familiar syntax and concepts for Rust developers
 - **Memory Safety**: Explicit mutability control with `let` and `mut` keywords
 - **Static Typing**: Type annotations with inference capabilities for safer scripts
-- **Structs and Methods**: Data structures with associated methods via `impl` blocks
+- **Types and Methods**: Data structures with associated methods via `impl` blocks
 - **Control Flow**: Standard control structures (`if`/`else`, `while` loops)
 - **Traits**: Define shared behavior across types with trait definitions
 
@@ -18,7 +18,7 @@ the expressiveness and ease-of-use of scripting languages with Rust's key design
 Tea brings Rust's safety concepts to scripting:
 
 - **Explicit Mutability**: Variables are immutable by default (`let`), mutable when specified (`let mut`)
-- **Impl Blocks**: Methods are defined separately from struct definitions using `impl` blocks
+- **Impl Blocks**: Methods are defined separately from type definitions using `impl` blocks
 - **Type Annotations**: Optional but explicit type annotations with `:` for safer scripts
 - **Arrow Syntax**: Function return types specified with `->`
 - **Traits**: Rust-style trait system for defining shared behavior
@@ -62,17 +62,17 @@ fn mut increment_counter() -> i32 {
 }
 ```
 
-### Structs
+### Types
 
-Define custom data types with `struct`:
+Define custom data types with `type`:
 
 ```tea
-struct Point {
+type Point {
     x: f32;
     y: f32;
 }
 
-struct Person {
+type Person {
     name: string;
     age: i32;
 }

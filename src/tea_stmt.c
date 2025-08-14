@@ -3,7 +3,6 @@
 #include "tea_fn.h"
 #include "tea_struct.h"
 
-
 #include <stdlib.h>
 
 #include <rtl.h>
@@ -87,9 +86,8 @@ bool tea_interpret_let(tea_ctx_t *ctx, tea_scope_t *scp, const tea_node_t *node)
 }
 
 static bool tea_check_field_mutability(const tea_scope_t *scp,
-                                       const tea_node_t *field_access_node)
+                                       const tea_node_t *object_node)
 {
-  tea_node_t *object_node = field_access_node->field_acc.obj;
   if (!object_node || !object_node->tok) {
     rtl_log_err(
       "Internal error: Field access expression missing object component in AST");
@@ -175,7 +173,7 @@ bool tea_interpret_assign(tea_ctx_t *ctx, tea_scope_t *scp,
   }
 
   if (lhs->type != TEA_N_IDENT) {
-    if (!tea_check_field_mutability(scp, lhs)) {
+    if (!tea_check_field_mutability(scp, lhs->field_acc.obj)) {
       return false;
     }
 

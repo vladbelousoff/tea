@@ -23,7 +23,7 @@ bool tea_interp_struct_decl(tea_ctx_t *ctx, const tea_node_t *node)
   rtl_list_add_tail(&ctx->structs, &struct_declaration->link);
 
   tea_tok_t *name = node->tok;
-  rtl_log_dbg("Declare struct '%s'", name ? name->buf : "");
+  rtl_log_dbg("Declare type '%s'", name ? name->buf : "");
 
   return true;
 }
@@ -36,12 +36,11 @@ tea_struct_decl_t *tea_find_struct_decl(const tea_ctx_t *ctx, const char *name)
     tea_struct_decl_t *decl =
       rtl_list_record(struct_entry, tea_struct_decl_t, link);
     if (!decl) {
-      rtl_log_err(
-        "Internal error: Struct declaration list contains null entry");
+      rtl_log_err("Internal error: Type declaration list contains null entry");
       continue;
     }
     if (!decl->node) {
-      rtl_log_err("Internal error: Struct declaration has null AST node");
+      rtl_log_err("Internal error: Type declaration has null AST node");
       continue;
     }
     const tea_tok_t *decl_token = decl->node->tok;
@@ -59,7 +58,7 @@ bool tea_interp_impl_blk(const tea_ctx_t *ctx, const tea_node_t *node)
 {
   const tea_tok_t *block_name = node->tok;
   if (!block_name) {
-    rtl_log_err("Runtime error: Implementation block must have a struct name");
+    rtl_log_err("Runtime error: Implementation block must have a type name");
     return false;
   }
 
@@ -67,7 +66,7 @@ bool tea_interp_impl_blk(const tea_ctx_t *ctx, const tea_node_t *node)
     tea_find_struct_decl(ctx, block_name->buf);
   if (!struct_declaration) {
     rtl_log_err(
-      "Runtime error: Cannot implement methods for undeclared struct '%s'",
+      "Runtime error: Cannot implement methods for undeclared type '%s'",
       block_name->buf);
     return false;
   }
@@ -109,7 +108,7 @@ tea_val_t tea_eval_new(tea_ctx_t *ctx, tea_scope_t *scp, const tea_node_t *node)
 {
   const tea_tok_t *struct_name = node->tok;
   if (!struct_name) {
-    rtl_log_err("Runtime error: Struct instantiation missing type name");
+    rtl_log_err("Runtime error: Type instantiation missing type name");
     return tea_val_undef();
   }
 
@@ -120,7 +119,7 @@ tea_val_t tea_eval_new(tea_ctx_t *ctx, tea_scope_t *scp, const tea_node_t *node)
                                   struct_declr->field_cnt * sizeof(tea_val_t));
   if (!object) {
     rtl_log_err(
-      "Memory error: Failed to allocate memory for struct '%s' instance at line %d, column %d",
+      "Memory error: Failed to allocate memory for type '%s' instance at line %d, column %d",
       struct_name->buf, struct_name->line, struct_name->col);
     return tea_val_undef();
   }
@@ -136,7 +135,7 @@ tea_val_t tea_eval_new(tea_ctx_t *ctx, tea_scope_t *scp, const tea_node_t *node)
       rtl_list_record(declr_entry, tea_node_t, link);
     if (!declr_node) {
       rtl_log_err(
-        "Runtime error: Invalid field declaration in struct instantiation");
+        "Runtime error: Invalid field declaration in type instantiation");
       rtl_free(object);
       return tea_val_undef();
     }
@@ -156,7 +155,7 @@ tea_val_t tea_eval_new(tea_ctx_t *ctx, tea_scope_t *scp, const tea_node_t *node)
     }
 
     if (!value_node) {
-      rtl_log_err("Runtime error: Invalid field value in struct instantiation");
+      rtl_log_err("Runtime error: Invalid field value in type instantiation");
       rtl_free(object);
       return tea_val_undef();
     }
@@ -166,7 +165,7 @@ tea_val_t tea_eval_new(tea_ctx_t *ctx, tea_scope_t *scp, const tea_node_t *node)
 
     if (!declr || !field) {
       rtl_log_err(
-        "Runtime error: Missing field name or value tokens during struct instantiation");
+        "Runtime error: Missing field name or value tokens during type instantiation");
       rtl_free(object);
       return tea_val_undef();
     }
@@ -174,7 +173,7 @@ tea_val_t tea_eval_new(tea_ctx_t *ctx, tea_scope_t *scp, const tea_node_t *node)
     if (declr->size != field->size ||
         strncmp(declr->buf, field->buf, field->size) != 0) {
       rtl_log_err(
-        "Runtime error: Struct fields must be initialized in declaration order: field '%s' (line: "
+        "Runtime error: Type fields must be initialized in declaration order: field '%s' (line: "
         "%d) does not match expected field '%s' (line: %d)",
         declr->buf, declr->line, field->buf, field->line);
       rtl_free(object);
@@ -249,12 +248,12 @@ tea_val_t *tea_get_field_ptr(const tea_ctx_t *ctx, const tea_scope_t *scp,
   }
   const tea_inst_t *object = variable->val.obj;
 
-  // Find the struct declaration for this object type
+  // Find the type declaration for this object type
   const tea_struct_decl_t *struct_declr =
     tea_find_struct_decl(ctx, object->type);
   if (!struct_declr) {
     rtl_log_err(
-      "Runtime error: Cannot find struct declaration for type '%s' when accessing field '%s' (line "
+      "Runtime error: Cannot find type declaration for type '%s' when accessing field '%s' (line "
       "%d, col %d)",
       object->type, field_name->buf, field_name->line, field_name->col);
     return NULL;
@@ -269,7 +268,7 @@ tea_val_t *tea_get_field_ptr(const tea_ctx_t *ctx, const tea_scope_t *scp,
   {
     if (field_index >= struct_declr->field_cnt) {
       rtl_log_err(
-        "Internal error: Field index exceeds struct field count during field access");
+        "Internal error: Field index exceeds type field count during field access");
       return NULL;
     }
 
@@ -277,7 +276,7 @@ tea_val_t *tea_get_field_ptr(const tea_ctx_t *ctx, const tea_scope_t *scp,
       rtl_list_record(field_entry, tea_node_t, link);
     if (!field_decl_node || !field_decl_node->tok) {
       rtl_log_err(
-        "Internal error: Invalid field declaration node in struct definition");
+        "Internal error: Invalid field declaration node in type definition");
       return NULL;
     }
 

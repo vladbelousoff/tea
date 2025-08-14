@@ -1,35 +1,35 @@
-// Struct field access and modification using dot notation
+// Type field access and modification using dot notation
 
-// Define structs for examples
-struct Point {
+// Define types for examples
+type Point {
     x: float;
     y: float;
 }
 
-struct Person {
+type Person {
     name: string;
     age: int;
     height: float;
 }
 
-struct Counter {
+type Counter {
     value: int;
     max_value: int;
 }
 
-// Create struct instances
+// Create type instances
 let mut point = new Point { x: 5.0, y: 10.0 };
 let mut person = new Person { name: 'Alice', age: 25, height: 170.5 };
 let mut counter = new Counter { value: 0, max_value: 100 };
 
-// Reading struct fields using dot notation
+// Reading type fields using dot notation
 let point_x = point.x;        // 5.0
 let point_y = point.y;        // 10.0
 let person_name = person.name; // 'Alice'
 let person_age = person.age;   // 25
 let current_count = counter.value; // 0
 
-// Modifying struct fields (requires mutable struct instance)
+// Modifying type fields (requires mutable type instance)
 point.x = 15.0;
 point.y = 20.0;
 
@@ -60,7 +60,7 @@ while counter.value < counter.max_value {
     println('counter.value = ', counter.value);
 }
 
-// Copying field values between structs
+// Copying field values between types
 let mut point2 = new Point { x: 0.0, y: 0.0 };
 point2.x = point.x;           // Copy x coordinate
 point2.y = point.y;           // Copy y coordinate

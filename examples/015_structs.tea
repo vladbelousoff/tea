@@ -1,42 +1,42 @@
-// Struct definitions and instantiation
+// Type definitions and instantiation
 
-// Simple struct with basic fields
-struct Point {
+// Simple type with basic fields
+type Point {
     x: float;
     y: float;
 }
 
-// Struct with mixed data types
-struct Person {
+// Type with mixed data types
+type Person {
     name: string;
     age: int;
     height: float;
     is_student: int;  // Using int for boolean (1 = true, 0 = false)
 }
 
-// Struct with integer fields
-struct Rectangle {
+// Type with integer fields
+type Rectangle {
     width: int;
     height: int;
 }
 
-// Empty struct (no fields)
-struct Empty {
+// Empty type (no fields)
+type Empty {
 }
 
-// Struct with optional fields
-struct User {
+// Type with optional fields
+type User {
     id: int;
     username: string;
     email: string?;    // Optional email
     score: float?;     // Optional score
 }
 
-// Creating struct instances using 'new' keyword
+// Creating type instances using 'new' keyword
 let origin = new Point { x: 0.0, y: 0.0 };
 let my_point = new Point { x: 3.5, y: 7.2 };
 
-// Struct instantiation with all field types
+// Type instantiation with all field types
 let person1 = new Person {
     name: 'Alice',
     age: 25,
@@ -51,19 +51,19 @@ let person2 = new Person {
     is_student: 0
 };
 
-// Struct instantiation with trailing comma (allowed)
+// Type instantiation with trailing comma (allowed)
 let rect1 = new Rectangle {
     width: 10,
     height: 20,
 };
 
-// Struct instantiation in single line
+// Type instantiation in single line
 let rect2 = new Rectangle { width: 5, height: 8 };
 
-// Empty struct instantiation
+// Empty type instantiation
 let empty_instance = new Empty {};
 
-// Struct with optional fields
+// Type with optional fields
 let user1 = new User {
     id: 1,
     username: 'alice123',
@@ -78,16 +78,16 @@ let user2 = new User {
     score: null         // Optional field set to null
 };
 
-// Using struct instances in expressions and assignments
+// Using type instances in expressions and assignments
 let point_a = new Point { x: 1.0, y: 2.0 };
 let point_b = new Point { x: 4.0, y: 6.0 };
 
-// Struct instantiation with computed values
+// Type instantiation with computed values
 let computed_x = 5.0 + 3.0;
 let computed_y = 2.0 * 4.0;
 let computed_point = new Point { x: computed_x, y: computed_y };
 
-// Struct instantiation in function calls (when we get to functions with struct params)
+// Type instantiation in function calls (when we get to functions with type params)
 fn create_default_person() -> Person {
     return new Person {
         name: 'Default',
@@ -99,7 +99,7 @@ fn create_default_person() -> Person {
 
 let default_person = create_default_person();
 
-// Multiple instances of the same struct
+// Multiple instances of the same type
 let top_left = new Point { x: 0.0, y: 10.0 };
 let top_right = new Point { x: 10.0, y: 10.0 };
 let bottom_left = new Point { x: 0.0, y: 0.0 };

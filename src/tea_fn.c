@@ -4,7 +4,6 @@
 #include "tea_stmt.h"
 #include "tea_struct.h"
 
-
 #include <stdlib.h>
 #include <string.h>
 
@@ -259,7 +258,7 @@ tea_val_t tea_eval_fn_call(tea_ctx_t *ctx, tea_scope_t *scp,
       tea_find_struct_decl(ctx, variable->val.obj->type);
     if (!struct_declaration) {
       rtl_log_err(
-        "Runtime error: Cannot find struct declaration for type '%s' when calling method",
+        "Runtime error: Cannot find type declaration for type '%s' when calling method",
         variable->val.obj->type);
       tea_scope_cleanup(ctx, &inner_scope);
       return tea_val_undef();
@@ -270,7 +269,6 @@ tea_val_t tea_eval_fn_call(tea_ctx_t *ctx, tea_scope_t *scp,
 
     function_name = field_token->buf;
     function = tea_ctx_find_fn(&struct_declaration->fns, function_name);
-
 
   } else {
     const tea_tok_t *token = node->tok;
