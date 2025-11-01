@@ -27,7 +27,7 @@ impl Point {
     }
     
     // Method that modifies the point (moves it)
-    fn move_by(dx: f32, dy: f32) {
+    fn mut move_by(dx: f32, dy: f32) {
         self.x = self.x + dx;
         self.y = self.y + dy;
     }
@@ -73,7 +73,7 @@ impl Rectangle {
     }
     
     // Scale the rectangle
-    fn scale(factor: f32) {
+    fn mut scale(factor: f32) {
         self.width = self.width * factor;
         self.height = self.height * factor;
     }
@@ -82,7 +82,7 @@ impl Rectangle {
 // Implement methods for Counter
 impl Counter {
     // Increment counter
-    fn increment() {
+    fn mut increment() {
         if self.value < self.max_value {
             self.value = self.value + 1;
         }
@@ -96,7 +96,7 @@ impl Counter {
     }
     
     // Reset counter
-    fn reset() {
+    fn mut reset() {
         self.value = 0;
     }
     
