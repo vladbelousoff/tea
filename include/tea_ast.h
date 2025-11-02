@@ -1,7 +1,6 @@
 #pragma once
 
 #include "tea_list.h"
-
 #include "tea_token.h"
 
 typedef enum {
@@ -17,6 +16,7 @@ typedef enum {
   TEA_N_BINOP,
   TEA_N_UNARY,
   TEA_N_IDENT,
+  TEA_N_OWNER,
   TEA_N_TYPE_ANNOT,
   TEA_N_INT,
   TEA_N_FLOAT,
@@ -35,13 +35,10 @@ typedef enum {
   TEA_N_STRUCT_FIELD,
   TEA_N_STRUCT_INST,
   TEA_N_STRUCT_INIT,
-  TEA_N_IMPL_ITEM,
-  TEA_N_IMPL_BLK,
   TEA_N_STR,
   TEA_N_FIELD_ACC,
   TEA_N_OPT_TYPE,
   TEA_N_NULL,
-
 } tea_node_type_t;
 
 typedef struct tea_node {

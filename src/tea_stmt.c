@@ -388,7 +388,7 @@ bool tea_exec(tea_ctx_t *ctx, tea_scope_t *scp, const tea_node_t *node,
   case TEA_N_WHILE:
     return tea_exec_while(ctx, scp, node, ret_ctx);
   case TEA_N_FN:
-    return tea_interp_fn_decl(ctx, node);
+    return tea_exec_fn_decl(ctx, node);
   case TEA_N_RET:
     return tea_exec_return(ctx, scp, node, ret_ctx);
   case TEA_N_BREAK:
@@ -399,9 +399,7 @@ bool tea_exec(tea_ctx_t *ctx, tea_scope_t *scp, const tea_node_t *node,
     tea_eval_fn_call(ctx, scp, node);
     return true;
   case TEA_N_STRUCT:
-    return tea_interp_struct_decl(ctx, node);
-  case TEA_N_IMPL_BLK:
-    return tea_interp_impl_blk(ctx, node);
+    return tea_exec_struct_decl(ctx, node);
   case TEA_N_PROG:
   case TEA_N_STMT:
   case TEA_N_FN_ARGS:

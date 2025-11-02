@@ -7,19 +7,17 @@
 typedef struct {
   tea_list_entry_t link;
   const tea_node_t *node;
-  unsigned long field_cnt;
+  unsigned long field_count;
   tea_list_entry_t funcs;
 } tea_struct_decl_t;
 
-bool tea_interp_struct_decl(tea_ctx_t *ctx, const tea_node_t *node);
+bool tea_exec_struct_decl(tea_ctx_t *ctx, const tea_node_t *node);
 tea_struct_decl_t *tea_find_struct_decl(const tea_ctx_t *ctx, const char *name);
-
-bool tea_interp_impl_blk(const tea_ctx_t *ctx, const tea_node_t *node);
 
 tea_val_t tea_eval_new(tea_ctx_t *ctx, tea_scope_t *scp,
                        const tea_node_t *node);
 
-tea_val_t tea_eval_field_acc(const tea_ctx_t *ctx, const tea_scope_t *scp,
-                             const tea_node_t *node);
+tea_val_t tea_eval_field_access(const tea_ctx_t *ctx, const tea_scope_t *scp,
+                                const tea_node_t *node);
 tea_val_t *tea_get_field_ptr(const tea_ctx_t *ctx, const tea_scope_t *scp,
                              const tea_node_t *node);

@@ -37,8 +37,7 @@ const tea_native_fn_t *tea_ctx_find_native_fn(const tea_list_entry_t *functions,
 const tea_fn_t *tea_ctx_find_fn(const tea_list_entry_t *functions,
                                 const char *name);
 
-bool tea_decl_fn(const tea_node_t *node, tea_list_entry_t *functions);
-bool tea_interp_fn_decl(tea_ctx_t *ctx, const tea_node_t *node);
+bool tea_exec_fn_decl(tea_ctx_t *ctx, const tea_node_t *node);
 
 tea_val_t tea_eval_fn_call(tea_ctx_t *ctx, tea_scope_t *scp,
                            const tea_node_t *node);

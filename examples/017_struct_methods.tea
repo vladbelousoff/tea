@@ -17,102 +17,93 @@ typedef Counter {
     max_value: i32;
 }
 
-// Implement methods for Point
-impl Point {
-    // Method that calculates distance to another point
-    fn distance_to(other: Point) -> f32 {
-        let dx = self.x - other.x;
-        let dy = self.y - other.y;
-        return dx * dx + dy * dy;  // Squared distance (avoiding sqrt)
-    }
+// Method that calculates distance to another point
+fn Point.distance_to(other: Point) -> f32 {
+    let dx = self.x - other.x;
+    let dy = self.y - other.y;
+    return dx * dx + dy * dy;  // Squared distance (avoiding sqrt)
+}
     
-    // Method that modifies the point (moves it)
-    fn mut move_by(dx: f32, dy: f32) {
-        self.x = self.x + dx;
-        self.y = self.y + dy;
-    }
-    
-    // Method that returns a coordinate
-    fn get_x() -> f32 {
-        return self.x;
-    }
-    
-    fn get_y() -> f32 {
-        return self.y;
-    }
-    
-    // Method that checks if point is at origin
-    fn is_at_origin() -> f32 {
-        if self.x == 0.0 && self.y == 0.0 {
-            return 1.0;  // true
-        } else {
-            return 0.0;  // false
-        }
+// Method that modifies the point (moves it)
+fn mut Point.move_by(dx: f32, dy: f32) {
+    self.x = self.x + dx;
+    self.y = self.y + dy;
+}
+
+// Method that returns a coordinate
+fn Point.get_x() -> f32 {
+    return self.x;
+}
+
+fn Point.get_y() -> f32 {
+    return self.y;
+}
+
+// Method that checks if point is at origin
+fn Point.is_at_origin() -> f32 {
+    if self.x == 0.0 && self.y == 0.0 {
+        return 1.0;  // true
+    } else {
+        return 0.0;  // false
     }
 }
 
-// Implement methods for Rectangle
-impl Rectangle {
-    // Calculate area
-    fn area() -> f32 {
-        return self.width * self.height;
-    }
-    
-    // Calculate perimeter
-    fn perimeter() -> f32 {
-        return 2.0 * (self.width + self.height);
-    }
-    
-    // Check if it's a square
-    fn is_square() -> f32 {
-        if self.width == self.height {
-            return 1.0;  // true
-        } else {
-            return 0.0;  // false
-        }
-    }
-    
-    // Scale the rectangle
-    fn mut scale(factor: f32) {
-        self.width = self.width * factor;
-        self.height = self.height * factor;
+// Calculate area
+fn Rectangle.area() -> f32 {
+    return self.width * self.height;
+}
+
+// Calculate perimeter
+fn Rectangle.perimeter() -> f32 {
+    return 2.0 * (self.width + self.height);
+}
+
+// Check if it's a square
+fn Rectangle.is_square() -> f32 {
+    if self.width == self.height {
+        return 1.0;  // true
+    } else {
+        return 0.0;  // false
     }
 }
 
-// Implement methods for Counter
-impl Counter {
-    // Increment counter
-    fn mut increment() {
-        if self.value < self.max_value {
-            self.value = self.value + 1;
-        }
+// Scale the rectangle
+fn mut Rectangle.scale(factor: f32) {
+    self.width = self.width * factor;
+    self.height = self.height * factor;
+}
+
+// Increment counter
+fn mut Counter.increment() {
+    if self.value < self.max_value {
+        self.value = self.value + 1;
     }
-    
-    // Decrement counter
-    fn decrement() {
-        if self.value > 0 {
-            self.value = self.value - 1;
-        }
+}
+
+// Decrement counter
+fn Counter.decrement() {
+    if self.value > 0 {
+        self.value = self.value - 1;
     }
-    
-    // Reset counter
-    fn mut reset() {
-        self.value = 0;
+}
+
+// Reset counter
+fn mut Counter.reset() {
+    self.value = 0;
+}
+
+// Check if counter is at maximum
+fn Counter.is_at_max() -> f32 {
+    if self.value == self.max_value {
+        return 1.0;  // true
+    } else {
+        return 0.0;  // false
     }
-    
-    // Check if counter is at maximum
-    fn is_at_max() -> f32 {
-        if self.value == self.max_value {
-            return 1.0;  // true
-        } else {
-            return 0.0;  // false
-        }
-    }
-    
-    // Get percentage
-    fn percentage() -> f32 {
-        return self.value * 100.0 / self.max_value;
-    }
+}
+
+// Get percentage
+fn Counter.percentage() -> f32 {
+    return self.value * 100.0 / self.max_value;
 }
 
 // Using type methods

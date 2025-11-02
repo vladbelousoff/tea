@@ -1,7 +1,6 @@
 #include "tea_struct.h"
 
 #include "tea_expr.h"
-#include "tea_fn.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -9,7 +8,7 @@
 #include "tea_log.h"
 #include "tea_memory.h"
 
-bool tea_interp_struct_decl(tea_ctx_t *ctx, const tea_node_t *node)
+bool tea_exec_struct_decl(tea_ctx_t *ctx, const tea_node_t *node)
 {
   tea_struct_decl_t *struct_declaration =
     tea_malloc(sizeof(*struct_declaration));
@@ -18,7 +17,7 @@ bool tea_interp_struct_decl(tea_ctx_t *ctx, const tea_node_t *node)
   }
 
   struct_declaration->node = node;
-  struct_declaration->field_cnt = tea_list_length(&node->children);
+  struct_declaration->field_count = tea_list_length(&node->children);
   tea_list_init(&struct_declaration->funcs);
   tea_list_add_tail(&ctx->structs, &struct_declaration->link);
 
@@ -54,56 +53,6 @@ tea_struct_decl_t *tea_find_struct_decl(const tea_ctx_t *ctx, const char *name)
   return NULL;
 }
 
-bool tea_interp_impl_blk(const tea_ctx_t *ctx, const tea_node_t *node)
-{
-  const tea_tok_t *block_name = node->tok;
-  if (!block_name) {
-    tea_log_err("Runtime error: Implementation block must have a type name");
-    return false;
-  }
-
-  tea_struct_decl_t *struct_declaration =
-    tea_find_struct_decl(ctx, block_name->buf);
-  if (!struct_declaration) {
-    tea_log_err(
-      "Runtime error: Cannot implement methods for undeclared type '%s'",
-      block_name->buf);
-    return false;
-  }
-
-  tea_list_entry_t *entry;
-  tea_list_for_each(entry, &node->children)
-  {
-    const tea_node_t *child = tea_list_record(entry, tea_node_t, link);
-    if (child->type != TEA_N_IMPL_ITEM) {
-      tea_log_err(
-        "Runtime error: Implementation block contains invalid item - only method implementations "
-        "are allowed");
-      return false;
-    }
-    const tea_list_entry_t *function_entry = tea_list_first(&child->children);
-    if (!function_entry) {
-      tea_log_err(
-        "Runtime error: Implementation item is empty - method definition required");
-      return false;
-    }
-    const tea_node_t *function_node =
-      tea_list_record(function_entry, tea_node_t, link);
-    if (!function_node || function_node->type != TEA_N_FN) {
-      tea_log_err(
-        "Runtime error: Implementation item must contain a method definition");
-      return false;
-    }
-
-    const bool result = tea_decl_fn(function_node, &struct_declaration->funcs);
-    if (!result) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
 tea_val_t tea_eval_new(tea_ctx_t *ctx, tea_scope_t *scp, const tea_node_t *node)
 {
   const tea_tok_t *struct_name = node->tok;
@@ -115,8 +64,8 @@ tea_val_t tea_eval_new(tea_ctx_t *ctx, tea_scope_t *scp, const tea_node_t *node)
   const tea_struct_decl_t *struct_declr =
     tea_find_struct_decl(ctx, struct_name->buf);
 
-  tea_inst_t *object = tea_malloc(sizeof(tea_inst_t) +
-                                  struct_declr->field_cnt * sizeof(tea_val_t));
+  tea_inst_t *object = tea_malloc(
+    sizeof(tea_inst_t) + struct_declr->field_count * sizeof(tea_val_t));
   if (!object) {
     tea_log_err(
       "Memory error: Failed to allocate memory for type '%s' instance at line %d, column %d",
@@ -266,7 +215,7 @@ tea_val_t *tea_get_field_ptr(const tea_ctx_t *ctx, const tea_scope_t *scp,
   tea_list_for_each_indexed(field_index, field_entry,
                             &struct_declr->node->children)
   {
-    if (field_index >= struct_declr->field_cnt) {
+    if (field_index >= struct_declr->field_count) {
       tea_log_err(
         "Internal error: Field index exceeds type field count during field access");
       return NULL;
@@ -288,8 +237,8 @@ tea_val_t *tea_get_field_ptr(const tea_ctx_t *ctx, const tea_scope_t *scp,
   return NULL;
 }
 
-tea_val_t tea_eval_field_acc(const tea_ctx_t *ctx, const tea_scope_t *scp,
-                             const tea_node_t *node)
+tea_val_t tea_eval_field_access(const tea_ctx_t *ctx, const tea_scope_t *scp,
+                                const tea_node_t *node)
 {
   const tea_val_t *result = tea_get_field_ptr(ctx, scp, node);
   if (result) {

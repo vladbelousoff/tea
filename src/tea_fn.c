@@ -58,7 +58,7 @@ const tea_fn_t *tea_ctx_find_fn(const tea_list_entry_t *functions,
   return NULL;
 }
 
-bool tea_decl_fn(const tea_node_t *node, tea_list_entry_t *functions)
+bool tea_exec_fn_decl(tea_ctx_t *ctx, const tea_node_t *node)
 {
   const tea_tok_t *fn_name = node->tok;
   if (!fn_name) {
@@ -68,6 +68,7 @@ bool tea_decl_fn(const tea_node_t *node, tea_list_entry_t *functions)
   const tea_node_t *fn_ret_type = NULL;
   const tea_node_t *fn_body = NULL;
   const tea_node_t *fn_params = NULL;
+  const tea_node_t *fn_owner = NULL;
 
   bool is_mutable = false;
 
@@ -82,6 +83,8 @@ bool tea_decl_fn(const tea_node_t *node, tea_list_entry_t *functions)
     case TEA_N_RET_TYPE:
       fn_ret_type = child;
       break;
+    case TEA_N_OWNER:
+      fn_owner = child;
     case TEA_N_MUT:
       is_mutable = true;
       break;
@@ -106,21 +109,32 @@ bool tea_decl_fn(const tea_node_t *node, tea_list_entry_t *functions)
     fn->ret_type = NULL;
   }
 
-  tea_list_add_tail(functions, &fn->link);
+  if (fn_owner) {
+    const tea_tok_t *owner_name = fn_owner->tok;
+    tea_struct_decl_t *struct_declaration =
+      tea_find_struct_decl(ctx, owner_name->buf);
+    if (!struct_declaration) {
+      tea_log_err(
+        "Runtime error: Cannot implement methods for undeclared type '%s'",
+        owner_name->buf);
+      return false;
+    }
+    tea_list_add_tail(&struct_declaration->funcs, &fn->link);
+  } else {
+    tea_list_add_tail(&ctx->funcs, &fn->link);
+  }
 
   if (fn->ret_type) {
-    tea_log_dbg("Declare function: '%.*s' -> %.*s", fn_name->size, fn_name->buf,
-                fn->ret_type->size, fn->ret_type->buf);
+    tea_log_dbg("Declare function: '%s%s%s' -> %s",
+                fn_owner ? fn_owner->tok->buf : "", fn_owner ? "." : "",
+                fn_name->buf, fn->ret_type->buf);
   } else {
-    tea_log_dbg("Declare function: '%.*s'", fn_name->size, fn_name->buf);
+    tea_log_dbg("Declare function: '%s%s%s'",
+                fn_owner ? fn_owner->tok->buf : "", fn_owner ? "." : "",
+                fn_name->buf);
   }
 
   return true;
-}
-
-bool tea_interp_fn_decl(tea_ctx_t *ctx, const tea_node_t *node)
-{
-  return tea_decl_fn(node, &ctx->funcs);
 }
 
 static void tea_cleanup_fn_args(tea_ctx_t *ctx, const tea_fn_args_t *fn_args)

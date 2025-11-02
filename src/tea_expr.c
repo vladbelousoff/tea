@@ -150,7 +150,7 @@ tea_val_t tea_eval_expr(tea_ctx_t *ctx, tea_scope_t *scp,
   case TEA_N_STRUCT_INST:
     return tea_eval_new(ctx, scp, node);
   case TEA_N_FIELD_ACC:
-    return tea_eval_field_acc(ctx, scp, node);
+    return tea_eval_field_access(ctx, scp, node);
   case TEA_N_NULL:
     return tea_val_null();
   default: {

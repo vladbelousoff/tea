@@ -66,8 +66,6 @@ item(item_node) ::= attr_list(attrs) function(func). {
 item(item_node) ::= function(func). { item_node = func; }
 item(item_node) ::= statement(stmt). { item_node = stmt; }
 item(item_node) ::= struct_definition(struct_def). { item_node = struct_def; }
-item(item_node) ::= impl_block(impl_block_node). { item_node = impl_block_node; }
-
 
 attr_list(attr_list_node) ::= attr_list(existing_attrs) attribute(new_attr). {
     attr_list_node = existing_attrs ? existing_attrs : tea_node_create(TEA_N_ATTR, NULL);
@@ -88,11 +86,21 @@ function(func_node) ::= function_header(header) function_body(body). {
     tea_node_add_child(func_node, body);
 }
 
-function_header(header_node) ::= FN mut_opt(mut) IDENT(func_name) LPAREN param_list_opt(params) RPAREN return_type_opt(return_type). {
-    header_node = tea_node_create(TEA_N_FN, func_name);
+function_header(header_node) ::= FN mut_opt(mut) function_name(func_name) LPAREN param_list_opt(params) RPAREN return_type_opt(return_type). {
+    header_node = func_name;
     tea_node_add_child(header_node, mut);
     tea_node_add_child(header_node, params);
     tea_node_add_child(header_node, return_type);
+}
+
+function_name(function_name_node) ::= IDENT(owner_name) DOT IDENT(method_name). {
+    function_name_node = tea_node_create(TEA_N_FN, method_name);
+    tea_node_t* owner_name_node = tea_node_create(TEA_N_OWNER, owner_name);
+    tea_node_add_child(function_name_node, owner_name_node);
+}
+
+function_name(function_name_node) ::= IDENT(function_name). {
+    function_name_node = tea_node_create(TEA_N_FN, function_name);
 }
 
 mut_opt(mut_node) ::= MUT. { mut_node = tea_node_create(TEA_N_MUT, NULL); }
@@ -127,35 +135,6 @@ struct_field(field_node) ::= IDENT(field_name) COLON type_spec(field_type_node) 
     tea_node_add_child(field_node, field_type_node);
 }
 
-impl_block(impl_block_node) ::= IMPL IDENT(struct_name) LBRACE impl_method_list_opt(methods) RBRACE. {
-    impl_block_node = tea_node_create(TEA_N_IMPL_BLK, struct_name);
-    if (methods) {
-        tea_node_add_children(impl_block_node, &methods->children);
-        tea_node_free(methods);
-    }
-}
-
-impl_method_list_opt(method_list_node) ::= impl_method_list(methods). { method_list_node = methods; }
-impl_method_list_opt(method_list_node) ::= . { method_list_node = NULL; }
-
-impl_method_list(method_list_node) ::= impl_method_list(existing_methods) impl_method(new_method). {
-    method_list_node = existing_methods ? existing_methods : tea_node_create(TEA_N_IMPL_ITEM, NULL);
-    tea_node_add_child(method_list_node, new_method);
-}
-
-impl_method_list(method_list_node) ::= impl_method(single_method). {
-    method_list_node = tea_node_create(TEA_N_IMPL_ITEM, NULL);
-    tea_node_add_child(method_list_node, single_method);
-}
-
-impl_method(method_node) ::= function_header(header) function_body(body). {
-    method_node = tea_node_create(TEA_N_IMPL_ITEM, NULL);
-    tea_node_add_child(method_node, header);
-    tea_node_add_child(header, body);
-}
-
-
-
 struct_field_init_list_opt(field_init_list_node) ::= struct_field_init_list(field_inits). { field_init_list_node = field_inits; }
 struct_field_init_list_opt(field_init_list_node) ::= . { field_init_list_node = NULL; }
 
@@ -182,10 +161,16 @@ struct_field_init(field_init_node) ::= IDENT(field_name) COLON expression(value_
 param_list_opt(param_list_node) ::= param_list(params). { param_list_node = params; }
 param_list_opt(param_list_node) ::= . { param_list_node = NULL; }
 
-return_type_opt(return_type_node) ::= ARROW type_spec(type_node). { return_type_node = tea_node_create(TEA_N_RET_TYPE, NULL); tea_node_add_child(return_type_node, type_node); }
+return_type_opt(return_type_node) ::= ARROW type_spec(type_node). {
+    return_type_node = tea_node_create(TEA_N_RET_TYPE, NULL);
+    tea_node_add_child(return_type_node, type_node);
+}
 return_type_opt(return_type_node) ::= . { return_type_node = NULL; }
 
-type_annotation_opt(type_annotation_node) ::= COLON type_spec(type_node). { type_annotation_node = tea_node_create(TEA_N_TYPE_ANNOT, NULL); tea_node_add_child(type_annotation_node, type_node); }
+type_annotation_opt(type_annotation_node) ::= COLON type_spec(type_node). {
+    type_annotation_node = tea_node_create(TEA_N_TYPE_ANNOT, NULL);
+    tea_node_add_child(type_annotation_node, type_node);
+}
 type_annotation_opt(type_annotation_node) ::= . { type_annotation_node = NULL; }
 
 type_spec(type_spec_node) ::= IDENT(type_name) QUESTION_MARK. {

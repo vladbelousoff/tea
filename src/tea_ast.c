@@ -110,6 +110,8 @@ const char *tea_node_type_name(const tea_node_type_t type)
     return "UNARY";
   case TEA_N_IDENT:
     return "IDENT";
+  case TEA_N_OWNER:
+    return "OWNER";
   case TEA_N_TYPE_ANNOT:
     return "TYPE_ANNOT";
   case TEA_N_INT:
@@ -150,15 +152,10 @@ const char *tea_node_type_name(const tea_node_type_t type)
     return "STRING";
   case TEA_N_FIELD_ACC:
     return "FIELD_ACCESS";
-  case TEA_N_IMPL_ITEM:
-    return "IMPL_ITEM";
-  case TEA_N_IMPL_BLK:
-    return "IMPL_BLOCK";
   case TEA_N_OPT_TYPE:
     return "OPTIONAL_TYPE";
   case TEA_N_NULL:
     return "NULL";
-
   default:
     return "UNKNOWN";
   }
