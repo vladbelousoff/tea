@@ -10,14 +10,13 @@
 #include "tea_log.h"
 #include "tea_memory.h"
 
-#include "tea_grammar.h"
-
-tea_var_t *tea_fn_args_pop(const tea_fn_args_t *args)
+tea_var_t *tea_fn_args_pop(tea_fn_args_t *args)
 {
-  tea_list_entry_t *first = tea_list_first(&args->head);
+  tea_list_entry_t *first = tea_list_first(&args->args);
   if (first) {
     tea_var_t *arg = tea_list_record(first, tea_var_t, link);
     tea_list_remove(first);
+    tea_list_add_tail(&args->popped_args, &arg->link);
     return arg;
   }
 
@@ -124,12 +123,33 @@ bool tea_interp_fn_decl(tea_ctx_t *ctx, const tea_node_t *node)
   return tea_decl_fn(node, &ctx->funcs);
 }
 
+static void tea_cleanup_fn_args(tea_ctx_t *ctx, const tea_fn_args_t *fn_args)
+{
+  tea_list_entry_t *cleanup_entry;
+  tea_list_entry_t *cleanup_safe;
+
+  tea_list_for_each_safe(cleanup_entry, cleanup_safe, &fn_args->popped_args)
+  {
+    tea_var_t *cleanup_arg = tea_list_record(cleanup_entry, tea_var_t, link);
+    tea_list_remove(cleanup_entry);
+    tea_free_var(ctx, cleanup_arg);
+  }
+
+  tea_list_for_each_safe(cleanup_entry, cleanup_safe, &fn_args->args)
+  {
+    tea_var_t *cleanup_arg = tea_list_record(cleanup_entry, tea_var_t, link);
+    tea_list_remove(cleanup_entry);
+    tea_free_var(ctx, cleanup_arg);
+  }
+}
+
 tea_val_t tea_eval_native_fn_call(tea_ctx_t *ctx, tea_scope_t *scp,
                                   const tea_native_fn_t *nat_fn,
                                   const tea_node_t *args)
 {
   tea_fn_args_t fn_args;
-  tea_list_init(&fn_args.head);
+  tea_list_init(&fn_args.args);
+  tea_list_init(&fn_args.popped_args);
 
   tea_list_entry_t *arg_entry;
   tea_list_for_each(arg_entry, &args->children)
@@ -139,52 +159,26 @@ tea_val_t tea_eval_native_fn_call(tea_ctx_t *ctx, tea_scope_t *scp,
     if (!arg) {
       tea_log_err(
         "Memory error: Failed to allocate variable for function argument");
-      // Clean up any previously allocated args
-      tea_list_entry_t *cleanup_entry;
-      tea_list_entry_t *cleanup_safe;
-      tea_list_for_each_safe(cleanup_entry, cleanup_safe, &fn_args.head)
-      {
-        tea_var_t *cleanup_arg =
-          tea_list_record(cleanup_entry, tea_var_t, link);
-        tea_list_remove(cleanup_entry);
-        tea_free_var(ctx, cleanup_arg);
-      }
+      tea_cleanup_fn_args(ctx, &fn_args);
       return tea_val_undef();
     }
     arg->val = tea_eval_expr(ctx, scp, arg_expr);
     if (arg->val.type == TEA_V_UNDEF) {
       tea_free_var(ctx, arg);
-      // Clean up any previously allocated args
-      tea_list_entry_t *cleanup_entry;
-      tea_list_entry_t *cleanup_safe;
-      tea_list_for_each_safe(cleanup_entry, cleanup_safe, &fn_args.head)
-      {
-        tea_var_t *cleanup_arg =
-          tea_list_record(cleanup_entry, tea_var_t, link);
-        tea_list_remove(cleanup_entry);
-        tea_free_var(ctx, cleanup_arg);
-      }
+      tea_cleanup_fn_args(ctx, &fn_args);
       return tea_val_undef();
     }
+
     // TODO: Check mutability and optionality
     arg->flags = 0;
     // TODO: Set the proper arg name
     arg->name = "unknown";
 
-    tea_list_add_tail(&fn_args.head, &arg->link);
+    tea_list_add_tail(&fn_args.args, &arg->link);
   }
 
-  const tea_val_t result = nat_fn->cb(ctx, &fn_args);
-
-  // Deallocate all the args
-  tea_list_entry_t *cleanup_entry;
-  tea_list_entry_t *safe;
-  tea_list_for_each_safe(cleanup_entry, safe, &fn_args.head)
-  {
-    tea_var_t *arg = tea_list_record(cleanup_entry, tea_var_t, link);
-    tea_list_remove(cleanup_entry);
-    tea_free_var(ctx, arg);
-  }
+  const tea_val_t result = nat_fn->cb(&fn_args);
+  tea_cleanup_fn_args(ctx, &fn_args);
 
   return result;
 }

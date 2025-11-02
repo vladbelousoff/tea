@@ -190,7 +190,7 @@ functionality, I/O operations, and performance-critical code written in C.
 Native functions in C must follow this signature:
 
 ```c
-tea_val_t your_function_name(tea_ctx_t* context, const tea_fn_args_t* args)
+tea_val_t your_function_name(tea_fn_args_t* args)
 ```
 
 The function receives a context and a list of arguments, and must return a `tea_value_t`. Arguments are accessed by
@@ -198,7 +198,7 @@ calling `tea_function_args_pop()` in a loop. Here's an example:
 
 ```c
 // Native function to print values (similar to built-in print)
-static tea_val_t tea_print_values(tea_ctx_t* context, const tea_fn_args_t* args) {
+static tea_val_t tea_print_values(tea_fn_args_t* args) {
     for (;;) {
         tea_var_t* arg = tea_fn_args_pop(args);
         if (!arg) {
@@ -217,23 +217,18 @@ static tea_val_t tea_print_values(tea_ctx_t* context, const tea_fn_args_t* args)
             case TEA_V_UNDEF:
                 break;
         }
-        
-        tea_free_var(context, arg);
     }
-    printf("\n");
     
     return tea_val_undef();
 }
 
 // Native function to add two numbers
-static tea_val_t tea_add_numbers(tea_ctx_t* context, const tea_fn_args_t* args) {
+static tea_val_t tea_add_numbers(tea_fn_args_t* args) {
     tea_var_t* arg1 = tea_fn_args_pop(args);
     tea_var_t* arg2 = tea_fn_args_pop(args);
     
     if (!arg1 || !arg2) {
         // Handle error case - not enough arguments
-        if (arg1) tea_free_var(context, arg1);
-        if (arg2) tea_free_var(context, arg2);
         return tea_val_undef();
     }
     
@@ -241,14 +236,9 @@ static tea_val_t tea_add_numbers(tea_ctx_t* context, const tea_fn_args_t* args) 
         tea_val_t result = {0};
         result.type = TEA_V_I32;
         result.i32 = arg1->val.i32 + arg2->val.i32;
-        
-        tea_free_var(context, arg1);
-        tea_free_var(context, arg2);
         return result;
     }
     
-    tea_free_var(context, arg1);
-    tea_free_var(context, arg2);
     return tea_val_undef();
 }
 ```
@@ -305,7 +295,6 @@ Native functions work with the `tea_val_t` type system:
 1. **Always validate arguments**: Use `tea_fn_args_pop()` to safely access arguments and check for NULL
 2. **Handle errors gracefully**: Return `tea_val_undef()` for error conditions
 3. **Memory management**:
-    - Always call `tea_free_var(context, arg)` for each argument you pop
     - Strings returned from native functions should be allocated with `tea_malloc`
 4. **Performance**: Use native functions for computationally intensive operations
 5. **Argument handling**: Process arguments in the order they were passed by calling `tea_fn_args_pop()` sequentially

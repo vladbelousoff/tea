@@ -19,7 +19,7 @@ void print_usage(const char *program_name)
   tea_log_inf("  %s example.tea", program_name);
 }
 
-static tea_val_t tea_print(tea_ctx_t *context, const tea_fn_args_t *args)
+static tea_val_t tea_print(tea_fn_args_t *args)
 {
   for (;;) {
     tea_var_t *arg = tea_fn_args_pop(args);
@@ -45,17 +45,18 @@ static tea_val_t tea_print(tea_ctx_t *context, const tea_fn_args_t *args)
     case TEA_V_UNDEF:
       break;
     }
-
-    tea_free_var(context, arg);
   }
 
   return tea_val_undef();
 }
 
-static tea_val_t tea_println(tea_ctx_t *context, const tea_fn_args_t *args)
+static tea_val_t tea_println(tea_fn_args_t *args)
 {
-  const tea_val_t value = tea_print(context, args);
-  printf("\n");
+  const tea_val_t value = tea_print(args);
+
+  static const char newline = '\n';
+  fwrite(&newline, 1, 1, stdout);
+
   return value;
 }
 
