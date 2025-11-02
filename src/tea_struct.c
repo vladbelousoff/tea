@@ -19,7 +19,7 @@ bool tea_interp_struct_decl(tea_ctx_t *ctx, const tea_node_t *node)
 
   struct_declaration->node = node;
   struct_declaration->field_cnt = tea_list_length(&node->children);
-  tea_list_init(&struct_declaration->fns);
+  tea_list_init(&struct_declaration->funcs);
   tea_list_add_tail(&ctx->structs, &struct_declaration->link);
 
   tea_tok_t *name = node->tok;
@@ -95,7 +95,7 @@ bool tea_interp_impl_blk(const tea_ctx_t *ctx, const tea_node_t *node)
       return false;
     }
 
-    const bool result = tea_decl_fn(function_node, &struct_declaration->fns);
+    const bool result = tea_decl_fn(function_node, &struct_declaration->funcs);
     if (!result) {
       return false;
     }

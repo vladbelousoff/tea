@@ -265,7 +265,7 @@ tea_val_t tea_eval_fn_call(tea_ctx_t *ctx, tea_scope_t *scp,
     }
 
     function_name = field_token->buf;
-    function = tea_ctx_find_fn(&struct_declaration->fns, function_name);
+    function = tea_ctx_find_fn(&struct_declaration->funcs, function_name);
 
     if (function) {
       // declare 'self' for the scope

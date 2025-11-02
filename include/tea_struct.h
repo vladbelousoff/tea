@@ -8,7 +8,7 @@ typedef struct {
   tea_list_entry_t link;
   const tea_node_t *node;
   unsigned long field_cnt;
-  tea_list_entry_t fns;
+  tea_list_entry_t funcs;
 } tea_struct_decl_t;
 
 bool tea_interp_struct_decl(tea_ctx_t *ctx, const tea_node_t *node);

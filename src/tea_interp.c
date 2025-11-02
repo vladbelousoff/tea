@@ -44,7 +44,7 @@ void tea_interp_cleanup(const tea_ctx_t *ctx)
     tea_list_entry_t *function_entry;
     tea_list_entry_t *function_entry_safe;
     tea_list_for_each_safe(function_entry, function_entry_safe,
-                           &struct_declaration->fns)
+                           &struct_declaration->funcs)
     {
       tea_fn_t *function = tea_list_record(function_entry, tea_fn_t, link);
       tea_list_remove(function_entry);
