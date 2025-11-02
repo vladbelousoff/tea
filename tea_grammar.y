@@ -23,13 +23,12 @@
 %token STRING.
 %token ARROW.
 %token IF ELSE WHILE BREAK CONTINUE.
-%token TYPE.
+%token TYPEDEF.
 %token IMPL.
 %token NEW.
 %token DOT.
 %token EXCLAMATION_MARK QUESTION_MARK.
 %token NULL.
-
 
 %left ASSIGN.
 %left PLUS MINUS.
@@ -102,7 +101,7 @@ mut_opt(mut_node) ::= . { mut_node = NULL; }
 function_body(body_node) ::= LBRACE stmt_list_opt(stmts) RBRACE. { body_node = stmts; }
 function_body(body_node) ::= SEMICOLON. { body_node = NULL; }
 
-struct_definition(struct_def_node) ::= TYPE IDENT(struct_name) LBRACE struct_field_list_opt(fields) RBRACE. {
+struct_definition(struct_def_node) ::= TYPEDEF IDENT(struct_name) LBRACE struct_field_list_opt(fields) RBRACE. {
     struct_def_node = tea_node_create(TEA_N_STRUCT, struct_name);
     if (fields) {
         tea_node_add_children(struct_def_node, &fields->children);

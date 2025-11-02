@@ -1,13 +1,13 @@
 // Type definitions and instantiation
 
 // Simple type with basic fields
-type Point {
+typedef Point {
     x: f32;
     y: f32;
 }
 
 // Type with mixed data types
-type Person {
+typedef Person {
     name: string;
     age: i32;
     height: f32;
@@ -15,17 +15,17 @@ type Person {
 }
 
 // Type with integer fields
-type Rectangle {
+typedef Rectangle {
     width: i32;
     height: i32;
 }
 
 // Empty type (no fields)
-type Empty {
+typedef Empty {
 }
 
 // Type with optional fields
-type User {
+typedef User {
     id: i32;
     username: string;
     email: string?;    // Optional email

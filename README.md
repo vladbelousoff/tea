@@ -1,20 +1,17 @@
 # Tea Programming Language
 
-Tea is a Rust-inspired, statically-typed scripting language with a focus on memory safety and modern syntax. It combines
-the expressiveness and ease-of-use of scripting languages with Rust's key design principles for safer code.
+Tea is a statically-typed scripting language with a focus on memory safety and modern syntax. It combines
+the expressiveness and ease-of-use of scripting languages with key design principles for safer code.
 
 ## Features
 
 - **Scripting Language**: Designed for automation, quick tasks, and rapid development
-- **Rust-Inspired Design**: Familiar syntax and concepts for Rust developers
 - **Memory Safety**: Explicit mutability control with `let` and `mut` keywords
 - **Static Typing**: Type annotations with inference capabilities for safer scripts
 - **Types and Methods**: Data structures with associated methods via `impl` blocks
 - **Control Flow**: Standard control structures (`if`/`else`, `while` loops)
 
-## Rust Influences
-
-Tea brings Rust's safety concepts to scripting:
+## Influences
 
 - **Explicit Mutability**: Variables are immutable by default (`let`), mutable when specified (`let mut`)
 - **Impl Blocks**: Methods are defined separately from type definitions using `impl` blocks
@@ -28,13 +25,13 @@ Tea brings Rust's safety concepts to scripting:
 
 Tea uses `let` for variable declarations with optional mutability and optionality:
 
-```tea
-let x = 42;              // Immutable variable
-let mut y = 10;          // Mutable variable
-let z: i32 = 100;        // Explicit type annotation
-let mut w: f32 = 3.14;   // Mutable with type
-let opt_var: i32? = 5;   // Optional type
-let mut opt_mut: f32? = 2.0; // Optional mutable type
+```text
+let x = 42;                   // Immutable variable
+let mut y = 10;               // Mutable variable
+let z: i32 = 100;             // Explicit type annotation
+let mut w: f32 = 3.14;        // Mutable with type
+let opt_var: i32? = 5;        // Optional type
+let mut opt_mut: f32? = 2.0;  // Optional mutable type
 ```
 
 **Optional Types**: Types can be marked as optional using the `?` suffix. Optional types can hold a value or be null,
@@ -44,7 +41,7 @@ providing safer handling of potentially absent values.
 
 Functions are declared with the `fn` keyword:
 
-```tea
+```text
 // Simple function
 fn greet() {
     // Function body
@@ -65,13 +62,13 @@ fn mut increment_counter() -> i32 {
 
 Define custom data types with `type`:
 
-```tea
-type Point {
+```text
+typedef Point {
     x: f32;
     y: f32;
 }
 
-type Person {
+typedef Person {
     name: string;
     age: i32;
 }
@@ -81,7 +78,7 @@ type Person {
 
 Implement methods for structs using `impl` blocks:
 
-```tea
+```text
 impl Point {
     fn distance(other: Point) -> f32 {
         let dx = self.x - other.x;
@@ -96,11 +93,11 @@ impl Point {
 }
 ```
 
-### Struct Instantiation
+### Instantiation
 
-Create struct instances with the `new` keyword:
+Create instances with the `new` keyword:
 
-```tea
+```text
 let point = new Point {
     x: 10.0,
     y: 20.0,
@@ -116,7 +113,7 @@ let person = new Person {
 
 Standard control structures are supported:
 
-```tea
+```text
 // If-else statements
 if x > 0 {
     // Positive
@@ -135,7 +132,7 @@ while i < 10 {
 
 Tea supports rich expressions with operator precedence:
 
-```tea
+```text
 let result = (a + b) * c - d / e;
 let comparison = x > y && z <= w;
 let negation = -value;
@@ -150,8 +147,8 @@ let negation = -value;
 
 ## Example Program
 
-```tea
-type Rectangle {
+```text
+typedef Rectangle {
     width: f32;
     height: f32;
 }
@@ -281,7 +278,7 @@ int main() {
 
 Once bound, native functions can be called like regular Tea functions:
 
-```tea
+```text
 // Call the built-in print function
 print('Hello from Tea!');
 
@@ -315,9 +312,7 @@ Native functions work with the `tea_val_t` type system:
 
 ## Building
 
-Tea uses CMake for building. Here are several approaches:
-
-### Modern CMake (Recommended)
+Tea uses CMake for building:
 
 ```bash
 # Configure and build in one go

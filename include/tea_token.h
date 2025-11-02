@@ -17,5 +17,5 @@ typedef struct {
   char buf[0];
 } tea_tok_t;
 
-int tea_get_ident_type(const char *ident, int len);
-const char *tea_tok_name(int type);
+int tea_get_ident_type(const char *ident, int length);
+const char *tea_tok_name(int token_type);
