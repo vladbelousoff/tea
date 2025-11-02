@@ -8,13 +8,13 @@ the expressiveness and ease-of-use of scripting languages with key design princi
 - **Scripting Language**: Designed for automation, quick tasks, and rapid development
 - **Memory Safety**: Explicit mutability control with `let` and `mut` keywords
 - **Static Typing**: Type annotations with inference capabilities for safer scripts
-- **Types and Methods**: Data structures with associated methods via `impl` blocks
-- **Control Flow**: Standard control structures (`if`/`else`, `while` loops)
+- **Types and Methods**: Data structures with associated methods defined using `fn TypeName.method_name(...)` syntax
+- **Control Flow**: Standard control structures (`if`/`else`, `while` loops) with `break` and `continue`
 
 ## Influences
 
 - **Explicit Mutability**: Variables are immutable by default (`let`), mutable when specified (`let mut`)
-- **Impl Blocks**: Methods are defined separately from type definitions using `impl` blocks
+- **Type Methods**: Methods are defined separately from type definitions using `fn TypeName.method_name(...)` syntax
 - **Type Annotations**: Optional but explicit type annotations with `:` for safer scripts
 - **Arrow Syntax**: Function return types specified with `->`
 - **Memory Safety Focus**: Controlled mutability helps prevent common scripting errors
@@ -34,8 +34,14 @@ let opt_var: i32? = 5;        // Optional type
 let mut opt_mut: f32? = 2.0;  // Optional mutable type
 ```
 
-**Optional Types**: Types can be marked as optional using the `?` suffix. Optional types can hold a value or be null,
-providing safer handling of potentially absent values.
+**Optional Types**: Types can be marked as optional using the `?` suffix. Optional types can hold a value or be `null`,
+providing safer handling of potentially absent values. The `null` keyword is used to represent the absence of a value:
+
+```text
+let opt_var: i32? = null;        // Initialize with null
+let opt_var: i32? = 42;          // Assign a value
+opt_var = null;                  // Assign null to optional type
+```
 
 ### Functions
 
@@ -76,20 +82,20 @@ typedef Person {
 
 ### Methods
 
-Implement methods for structs using `impl` blocks:
+Implement methods for structs using `fn TypeName.method_name(...)` syntax:
 
 ```text
-impl Point {
-    fn distance(other: Point) -> f32 {
-        let dx = self.x - other.x;
-        let dy = self.y - other.y;
-        return dx * dx + dy * dy;
-    }
-    
-    fn mut move(dx: f32, dy: f32) {
-        self.x = self.x + dx;
-        self.y = self.y + dy;
-    }
+// Regular method
+fn Point.distance(other: Point) -> f32 {
+    let dx = self.x - other.x;
+    let dy = self.y - other.y;
+    return dx * dx + dy * dy;
+}
+
+// Mutable method (can modify the instance)
+fn mut Point.move_by(dx: f32, dy: f32) {
+    self.x = self.x + dx;
+    self.y = self.y + dy;
 }
 ```
 
@@ -126,6 +132,27 @@ let mut i = 0;
 while i < 10 {
     i = i + 1;
 }
+
+// Break statement - exits the loop immediately
+let mut j = 0;
+while j < 10 {
+    j = j + 1;
+    if j == 5 {
+        break;  // Exit loop when j equals 5
+    }
+}
+
+// Continue statement - skips to next iteration
+let mut sum = 0;
+let mut k = 0;
+while k < 10 {
+    k = k + 1;
+    // Skip even numbers (using division/multiplication check)
+    if k / 2 * 2 == k {
+        continue;  // Skip even numbers
+    }
+    sum = sum + k;
+}
 ```
 
 ### Expressions
@@ -153,15 +180,13 @@ typedef Rectangle {
     height: f32;
 }
 
-impl Rectangle {
-    fn area() -> f32 {
-        return self.width * self.height;
-    }
-    
-    fn mut scale(factor: f32) {
-        self.width = self.width * factor;
-        self.height = self.height * factor;
-    }
+fn Rectangle.area() -> f32 {
+    return self.width * self.height;
+}
+
+fn mut Rectangle.scale(factor: f32) {
+    self.width = self.width * factor;
+    self.height = self.height * factor;
 }
 
 fn main() {
@@ -174,9 +199,10 @@ fn main() {
     rect.scale(2.0);
     let scaled_area = rect.area();
     
-    // Example with optional types
+    // Example with optional types and null
     let optional_width?: f32 = 15.0;
     let mut optional_height?: f32 = 8.0;
+    let optional_result?: f32 = null;  // Initialize with null
 }
 ```
 
@@ -318,11 +344,13 @@ cmake --build build --parallel
 Tea is currently in development. The core language features are implemented including:
 
 - ✅ Variable declarations and assignments
-- ✅ Optional types with `?` syntax
+- ✅ Optional types with `?` syntax and `null` values
 - ✅ Function definitions and calls
+- ✅ Mutable functions with `fn mut` syntax
 - ✅ Struct definitions and instantiation
-- ✅ Method definitions with impl blocks
-- ✅ Control flow statements
+- ✅ Method definitions using `fn TypeName.method_name(...)` syntax
+- ✅ Control flow statements (`if`/`else`, `while` loops)
+- ✅ Loop control (`break` and `continue` statements)
 - ✅ Expression evaluation
 - ✅ Type system foundations
 - ✅ Native function binding
