@@ -1,4 +1,4 @@
-name: test
+name: Submission
 
 on:
   push:
@@ -75,5 +75,5 @@ jobs:
 
       - name: Check code formatting
         run: |
-          # Check if C files in src/ and include/ are properly formatted
+          # Check if C files are properly formatted
           find src/ include/ -name "*.c" -o -name "*.h" | xargs clang-format --dry-run --Werror
