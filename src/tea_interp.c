@@ -8,9 +8,9 @@
 
 void tea_interp_init(tea_ctx_t *ctx, const char *fname)
 {
-  ctx->fname = fname;
-  tea_list_init(&ctx->fns);
-  tea_list_init(&ctx->nfns);
+  ctx->file_name = fname;
+  tea_list_init(&ctx->funcs);
+  tea_list_init(&ctx->native_funcs);
   tea_list_init(&ctx->structs);
 
   tea_list_init(&ctx->vars);
@@ -21,14 +21,14 @@ void tea_interp_cleanup(const tea_ctx_t *ctx)
   tea_list_entry_t *entry;
   tea_list_entry_t *safe;
 
-  tea_list_for_each_safe(entry, safe, &ctx->fns)
+  tea_list_for_each_safe(entry, safe, &ctx->funcs)
   {
     tea_fn_t *function = tea_list_record(entry, tea_fn_t, link);
     tea_list_remove(entry);
     tea_free(function);
   }
 
-  tea_list_for_each_safe(entry, safe, &ctx->nfns)
+  tea_list_for_each_safe(entry, safe, &ctx->native_funcs)
   {
     tea_native_fn_t *function = tea_list_record(entry, tea_native_fn_t, link);
     tea_list_remove(entry);

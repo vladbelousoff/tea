@@ -416,12 +416,13 @@ bool tea_exec(tea_ctx_t *ctx, tea_scope_t *scp, const tea_node_t *node,
       tea_log_err(
         "Interpreter error: Unimplemented statement type <%s> in file %s, token: <%s> '%.*s' "
         "(line %d, col %d)",
-        tea_node_type_name(node->type), ctx->fname, tea_tok_name(token->type),
-        token->size, token->buf, token->line, token->col);
+        tea_node_type_name(node->type), ctx->file_name,
+        tea_tok_name(token->type), token->size, token->buf, token->line,
+        token->col);
     } else {
       tea_log_err(
         "Interpreter error: Unimplemented statement type <%s> in file %s",
-        tea_node_type_name(node->type), ctx->fname);
+        tea_node_type_name(node->type), ctx->file_name);
     }
   } break;
   }

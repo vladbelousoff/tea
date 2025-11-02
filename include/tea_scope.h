@@ -4,9 +4,9 @@
 #include "tea_value.h"
 
 typedef struct {
-  const char *fname;
-  tea_list_entry_t fns;
-  tea_list_entry_t nfns;
+  const char *file_name;
+  tea_list_entry_t funcs;
+  tea_list_entry_t native_funcs;
   tea_list_entry_t structs;
   tea_list_entry_t vars;
 } tea_ctx_t;

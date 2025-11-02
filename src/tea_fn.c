@@ -121,7 +121,7 @@ bool tea_decl_fn(const tea_node_t *node, tea_list_entry_t *functions)
 
 bool tea_interp_fn_decl(tea_ctx_t *ctx, const tea_node_t *node)
 {
-  return tea_decl_fn(node, &ctx->fns);
+  return tea_decl_fn(node, &ctx->funcs);
 }
 
 tea_val_t tea_eval_native_fn_call(tea_ctx_t *ctx, tea_scope_t *scp,
@@ -269,21 +269,20 @@ tea_val_t tea_eval_fn_call(tea_ctx_t *ctx, tea_scope_t *scp,
 
     if (function) {
       // declare 'self' for the scope
-      tea_decl_var(ctx, &inner_scope, "self",
-        function->mut ? TEA_VAR_MUT : 0,
-        NULL, object_node);
+      tea_decl_var(ctx, &inner_scope, "self", function->mut ? TEA_VAR_MUT : 0,
+                   NULL, object_node);
     }
   } else {
     const tea_tok_t *token = node->tok;
     if (token) {
       const tea_native_fn_t *nat_fn =
-        tea_ctx_find_native_fn(&ctx->nfns, token->buf);
+        tea_ctx_find_native_fn(&ctx->native_funcs, token->buf);
       if (nat_fn) {
         return tea_eval_native_fn_call(ctx, scp, nat_fn, args);
       }
 
       function_name = token->buf;
-      function = tea_ctx_find_fn(&ctx->fns, token->buf);
+      function = tea_ctx_find_fn(&ctx->funcs, token->buf);
     }
   }
 
@@ -394,6 +393,6 @@ void tea_bind_native_fn(tea_ctx_t *ctx, const char *name,
   if (function) {
     function->name = name;
     function->cb = cb;
-    tea_list_add_tail(&ctx->nfns, &function->link);
+    tea_list_add_tail(&ctx->native_funcs, &function->link);
   }
 }
