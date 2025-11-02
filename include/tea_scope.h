@@ -36,4 +36,5 @@ tea_var_t *tea_scope_find_local(const tea_scope_t *scp, const char *name);
 tea_var_t *tea_scope_find(const tea_scope_t *scp, const char *name);
 
 bool tea_decl_var(tea_ctx_t *ctx, tea_scope_t *scp, const char *name,
-                  unsigned int flags, const char *type, const tea_node_t *initial_value);
+                  unsigned int flags, const char *type,
+                  const tea_node_t *initial_value);
