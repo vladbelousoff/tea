@@ -60,7 +60,7 @@ fn mut increment_counter() -> i32 {
 
 ### Types
 
-Define custom data types with `type`:
+Define custom data types with `typedef`:
 
 ```text
 typedef Point {
