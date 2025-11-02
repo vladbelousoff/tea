@@ -1,12 +1,11 @@
 #include "tea_scope.h"
-#include "tea_expr.h"
-
-#include <stdlib.h>
-#include <string.h>
 
 #include "tea.h"
+#include "tea_expr.h"
 #include "tea_log.h"
 #include "tea_memory.h"
+
+#include <string.h>
 
 #define TEA_VARIABLE_POOL_ENABLED 1
 
