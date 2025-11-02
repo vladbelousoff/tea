@@ -119,8 +119,8 @@ int main(const int argc, char *argv[])
     tea_ctx_t context;
     tea_interp_init(&context, filename);
 
-    tea_bind_native_fn(&context, "print", tea_print);
-    tea_bind_native_fn(&context, "println", tea_println);
+    tea_bind_native_fn(&context, NULL, "print", tea_print);
+    tea_bind_native_fn(&context, NULL, "println", tea_println);
 
     tea_scope_t global_scope;
     tea_scope_init(&global_scope, NULL);

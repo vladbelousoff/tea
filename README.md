@@ -219,8 +219,8 @@ Native functions in C must follow this signature:
 tea_val_t your_function_name(tea_fn_args_t* args)
 ```
 
-The function receives a context and a list of arguments, and must return a `tea_value_t`. Arguments are accessed by
-calling `tea_function_args_pop()` in a loop. Here's an example:
+The function receives a context and a list of arguments, and must return a `tea_val_t`. Arguments are accessed by
+calling `tea_fn_args_pop()` in a loop. Here's an example:
 
 ```c
 // Native function to print values (similar to built-in print)
@@ -279,9 +279,11 @@ int main() {
     tea_interp_init(&context, "example.tea");
     
     // Bind native functions
-    tea_bind_native_fn(&context, "print", tea_print);
-    tea_bind_native_fn(&context, "add_numbers", tea_add_numbers);
-    tea_bind_native_fn(&context, "print_values", tea_print_values);
+    // Second NULL agument means that the function is global, but you can use your own types here instead
+    // For example 'Point', 'Foo', 'Bar' and e.t.c
+    tea_bind_native_fn(&context, NULL, "print", tea_print);
+    tea_bind_native_fn(&context, NULL, "add_numbers", tea_add_numbers);
+    tea_bind_native_fn(&context, NULL, "print_values", tea_print_values);
     
     // Execute Tea code...
     

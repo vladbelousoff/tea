@@ -21,7 +21,8 @@ typedef tea_val_t (*tea_native_fn_cb_t)(tea_fn_args_t *args);
 
 typedef struct {
   tea_list_entry_t link;
-  const char *name;
+  const char *owner_name;
+  const char *fn_name;
   tea_native_fn_cb_t cb;
 } tea_native_fn_t;
 
@@ -33,7 +34,8 @@ typedef struct {
 tea_var_t *tea_fn_args_pop(tea_fn_args_t *args);
 
 const tea_native_fn_t *tea_ctx_find_native_fn(const tea_list_entry_t *functions,
-                                              const char *name);
+                                              const char *owner_name,
+                                              const char *fn_name);
 const tea_fn_t *tea_ctx_find_fn(const tea_list_entry_t *functions,
                                 const char *name);
 
@@ -45,5 +47,5 @@ tea_val_t tea_eval_native_fn_call(tea_ctx_t *ctx, tea_scope_t *scp,
                                   const tea_native_fn_t *nat_fn,
                                   const tea_node_t *args);
 
-void tea_bind_native_fn(tea_ctx_t *ctx, const char *name,
-                        tea_native_fn_cb_t cb);
+void tea_bind_native_fn(tea_ctx_t *ctx, const char *owner_name,
+                        const char *fn_name, tea_native_fn_cb_t cb);

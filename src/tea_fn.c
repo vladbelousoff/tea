@@ -24,15 +24,21 @@ tea_var_t *tea_fn_args_pop(tea_fn_args_t *args)
 }
 
 const tea_native_fn_t *tea_ctx_find_native_fn(const tea_list_entry_t *functions,
-                                              const char *name)
+                                              const char *owner_name,
+                                              const char *fn_name)
 {
   tea_list_entry_t *entry;
   tea_list_for_each(entry, functions)
   {
     const tea_native_fn_t *function =
       tea_list_record(entry, tea_native_fn_t, link);
-    if (!strcmp(function->name, name)) {
-      return function;
+    if (!strcmp(function->fn_name, fn_name)) {
+      if (!owner_name && !function->owner_name) {
+        return function;
+      }
+      if (!strcmp(function->owner_name, owner_name)) {
+        return function;
+      }
     }
   }
 
@@ -218,8 +224,8 @@ tea_val_t tea_eval_fn_call(tea_ctx_t *ctx, tea_scope_t *scp,
     }
   }
 
-  const tea_fn_t *function = NULL;
-  const char *function_name = NULL;
+  const tea_fn_t *func = NULL;
+  const char *func_name = NULL;
 
   tea_ret_ctx_t return_context = { 0 };
   return_context.is_set = false;
@@ -262,9 +268,9 @@ tea_val_t tea_eval_fn_call(tea_ctx_t *ctx, tea_scope_t *scp,
       return tea_val_undef();
     }
 
-    tea_struct_decl_t *struct_declaration =
+    tea_struct_decl_t *struct_decl =
       tea_find_struct_decl(ctx, variable->val.obj->type);
-    if (!struct_declaration) {
+    if (!struct_decl) {
       tea_log_err(
         "Runtime error: Cannot find type declaration for type '%s' when calling method",
         variable->val.obj->type);
@@ -272,51 +278,61 @@ tea_val_t tea_eval_fn_call(tea_ctx_t *ctx, tea_scope_t *scp,
       return tea_val_undef();
     }
 
-    function_name = field_token->buf;
-    function = tea_ctx_find_fn(&struct_declaration->funcs, function_name);
+    unsigned int flags = 0;
 
-    if (function) {
-      // declare 'self' for the scope
-      tea_decl_var(ctx, &inner_scope, "self", function->mut ? TEA_VAR_MUT : 0,
-                   NULL, object_node);
+    const tea_native_fn_t *native_func = tea_ctx_find_native_fn(
+      &ctx->native_funcs, variable->val.obj->type, field_token->buf);
+    if (native_func) {
+      // TODO: Pass 'self'
+      return tea_eval_native_fn_call(ctx, scp, native_func, args);
     }
+
+    func_name = field_token->buf;
+    func = tea_ctx_find_fn(&struct_decl->funcs, func_name);
+
+    if (func && func->mut) {
+      flags |= TEA_VAR_MUT;
+    }
+
+    // declare 'self' for the scope
+    tea_decl_var(ctx, &inner_scope, "self", flags, NULL, object_node);
   } else {
     const tea_tok_t *token = node->tok;
     if (token) {
-      const tea_native_fn_t *nat_fn =
-        tea_ctx_find_native_fn(&ctx->native_funcs, token->buf);
-      if (nat_fn) {
-        return tea_eval_native_fn_call(ctx, scp, nat_fn, args);
+      const tea_native_fn_t *native_func =
+        tea_ctx_find_native_fn(&ctx->native_funcs, NULL, token->buf);
+      if (native_func) {
+        return tea_eval_native_fn_call(ctx, scp, native_func, args);
       }
 
-      function_name = token->buf;
-      function = tea_ctx_find_fn(&ctx->funcs, token->buf);
+      func_name = token->buf;
+      func = tea_ctx_find_fn(&ctx->funcs, token->buf);
     }
   }
 
-  if (!function) {
+  if (!func) {
     if (field_access) {
       const tea_tok_t *field_token = field_access->field_acc.field->tok;
       tea_log_err(
         "Runtime error: Undefined method '%s' called at line %d, column %d",
-        function_name, field_token->line, field_token->col);
+        func_name, field_token->line, field_token->col);
     } else {
       const tea_tok_t *token = node->tok;
       if (token) {
         tea_log_err(
           "Runtime error: Undefined function '%s' called at line %d, column %d",
-          function_name, token->line, token->col);
+          func_name, token->line, token->col);
       } else {
         tea_log_err(
           "Runtime error: Undefined function '%s' called (no position information available)",
-          function_name);
+          func_name);
       }
     }
 
     return tea_val_undef();
   }
 
-  const tea_node_t *function_params = function->params;
+  const tea_node_t *function_params = func->params;
   if (function_params && args) {
     tea_list_entry_t *param_name_entry =
       tea_list_first(&function_params->children);
@@ -380,7 +396,7 @@ tea_val_t tea_eval_fn_call(tea_ctx_t *ctx, tea_scope_t *scp,
   }
 
   const bool result =
-    tea_exec(ctx, &inner_scope, function->body, &return_context, NULL);
+    tea_exec(ctx, &inner_scope, func->body, &return_context, NULL);
   tea_scope_cleanup(ctx, &inner_scope);
 
   if (result && return_context.is_set) {
@@ -394,12 +410,13 @@ tea_val_t tea_eval_fn_call(tea_ctx_t *ctx, tea_scope_t *scp,
   return tea_val_undef();
 }
 
-void tea_bind_native_fn(tea_ctx_t *ctx, const char *name,
-                        const tea_native_fn_cb_t cb)
+void tea_bind_native_fn(tea_ctx_t *ctx, const char *owner_name,
+                        const char *fn_name, const tea_native_fn_cb_t cb)
 {
   tea_native_fn_t *function = tea_malloc(sizeof(*function));
   if (function) {
-    function->name = name;
+    function->owner_name = owner_name;
+    function->fn_name = fn_name;
     function->cb = cb;
     tea_list_add_tail(&ctx->native_funcs, &function->link);
   }
