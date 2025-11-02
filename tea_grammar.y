@@ -24,7 +24,6 @@
 %token ARROW.
 %token IF ELSE WHILE BREAK CONTINUE.
 %token TYPEDEF.
-%token IMPL.
 %token NEW.
 %token DOT.
 %token EXCLAMATION_MARK QUESTION_MARK.
