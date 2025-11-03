@@ -147,7 +147,7 @@ let mut sum = 0;
 let mut k = 0;
 while k < 10 {
     k = k + 1;
-    // Skip even numbers (using division/multiplication check)
+    // Skip even numbers
     if k % 2 == 0 {
         continue;  // Skip even numbers
     }
