@@ -156,6 +156,10 @@ const char *tea_node_type_name(const tea_node_type_t type)
     return "OPTIONAL_TYPE";
   case TEA_N_NULL:
     return "NULL";
+  case TEA_N_ARRAY_INST:
+    return "TEA_N_ARRAY_INST";
+  case TEA_N_DICT_INST:
+    return "TEA_N_DICT_INST";
   default:
     return "UNKNOWN";
   }

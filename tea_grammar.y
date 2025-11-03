@@ -12,7 +12,7 @@
 
 %token_prefix TEA_TOKEN_
 
-%token FN IDENT LPAREN RPAREN LBRACE RBRACE.
+%token FN IDENT LPAREN RPAREN LBRACE RBRACE LBRACKET RBRACKET.
 %token AT COLON COMMA.
 %token LET MUT SEMICOLON ASSIGN.
 %token RETURN.
@@ -357,6 +357,22 @@ primary_expr(primary_expr_node) ::= FLOAT_NUMBER(number_value). {
 
 primary_expr(primary_expr_node) ::= NEW IDENT(struct_type) LBRACE struct_field_init_list_opt(field_inits) RBRACE. {
     primary_expr_node = tea_node_create(TEA_N_STRUCT_INST, struct_type);
+    if (field_inits) {
+        tea_node_add_children(primary_expr_node, &field_inits->children);
+        tea_node_free(field_inits);
+    }
+}
+
+primary_expr(primary_expr_node) ::= LBRACE struct_field_init_list_opt(field_inits) RBRACE. {
+    primary_expr_node = tea_node_create(TEA_N_DICT_INST, NULL);
+    if (field_inits) {
+        tea_node_add_children(primary_expr_node, &field_inits->children);
+        tea_node_free(field_inits);
+    }
+}
+
+primary_expr(primary_expr_node) ::= LBRACKET struct_field_init_list_opt(field_inits) RBRACKET. {
+    primary_expr_node = tea_node_create(TEA_N_ARRAY_INST, NULL);
     if (field_inits) {
         tea_node_add_children(primary_expr_node, &field_inits->children);
         tea_node_free(field_inits);

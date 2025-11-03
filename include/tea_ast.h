@@ -39,6 +39,8 @@ typedef enum {
   TEA_N_FIELD_ACC,
   TEA_N_OPT_TYPE,
   TEA_N_NULL,
+  TEA_N_ARRAY_INST,
+  TEA_N_DICT_INST,
 } tea_node_type_t;
 
 typedef struct tea_node {
