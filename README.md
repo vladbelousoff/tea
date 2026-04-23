@@ -1,3 +1,5 @@
+# This project has been abandoned in favor of https://github.com/vladbelousoff/oak
+
 # Tea Programming Language
 
 Tea is a statically-typed scripting language with a focus on memory safety and modern syntax. It combines
